@@ -116,7 +116,7 @@ log "* Install Python3 libraries *"
 log "*****************************"
 ${VENV_DIR}/bin/python3 -m pip install --upgrade pip wheel | log
 echo 75 > ${PROGRESS_FILE}
-${VENV_DIR}/bin/python3 -m pip install aiohttp==3.9.3 androidtvremote2==0.0.14 | log
+${VENV_DIR}/bin/python3 -m pip install zeroconf==0.131.0 aiohttp==3.9.3 androidtvremote2==0.0.14 | log
 
 echo 100 > ${PROGRESS_FILE}
 log "****************"
