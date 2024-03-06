@@ -75,17 +75,28 @@ class Publisher():
         return True
 
     async def _send_async(self):
-        self._logger.debug("send_async started")
+        self._logger.info("Send async started")
         try:
+            last_send_on_error = False
             while True:
-                if len(self.__changes)>0:
+                if len(self.__changes) > 0:
                     changes = self.__changes
                     self.__changes = {}
-                    await self.send_to_jeedom(changes)
+
+                    try:
+                        await self.send_to_jeedom(changes)
+                    except Exception as e:
+                        if last_send_on_error:
+                            self._logger.error("error during send: %s", e)
+                        else:
+                            self._logger.debug("first time error during send: %s", e)
+                            last_send_on_error = True
+                        await self.__merge_dict(self.__changes, changes)
+                    else:
+                        last_send_on_error = False
                 await asyncio.sleep(self._cycle)
         except asyncio.CancelledError:
-            self._logger.debug("send_async cancelled")
-
+            self._logger.info("Send async cancelled")
 
     async def send_to_jeedom(self, payload):
         """
