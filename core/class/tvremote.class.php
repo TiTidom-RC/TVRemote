@@ -44,6 +44,31 @@ class tvremote extends eqLogic {
 		];
 	}
 
+    public static function dependancy_install() {
+        log::remove(__CLASS__ . '_update');
+        return array('script' => __DIR__ . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency', 'log' => log::getPathToLog(__CLASS__ . '_update'));
+    }
+
+    public static function dependancy_info() {
+        $return = array();
+        $return['log'] = log::getPathToLog(__CLASS__ . '_update');
+        $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependency';
+        if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependency')) {
+            $return['state'] = 'in_progress';
+        } else {
+            if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests|python3\-setuptools|python3\-dev|python3\-venv"') < 4) {
+                $return['state'] = 'nok';
+            } elseif (!file_exists(self::PYTHON3_PATH)) {
+                $return['state'] = 'nok';
+            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.131.0|aiohttp==3.9.3|androidtvremote2==0.0.14"') < 3) {
+                $return['state'] = 'nok';
+            } else {
+                $return['state'] = 'ok';
+            }
+        }
+        return $return;
+    }
+
     public static function deamon_info() {
         $return = array();
         $return['log'] = __CLASS__;
@@ -88,10 +113,6 @@ class tvremote extends eqLogic {
             $cmd .= ' --ttsweb ' . network::getNetworkAccess('internal');
         }
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
-        $cmd .= ' --apittskey ' . jeedom::getApiKey("apitts");
-        $cmd .= ' --gcloudapikey ' . config::byKey('gCloudAPIKey', __CLASS__, 'noKey');
-        $cmd .= ' --voicerssapikey ' . config::byKey('voiceRSSAPIKey', __CLASS__, 'noKey');
-        $cmd .= ' --appdisableding ' . config::byKey('appDisableDing', __CLASS__, '0');
         $cmd .= ' --remotetv ' . config::byKey('remoteTV', __CLASS__, '0');
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
         log::add(__CLASS__, 'info', 'Lancement du démon');
@@ -139,11 +160,6 @@ class tvremote extends eqLogic {
             socket_close($socket);
         } catch (Exception $e) {
             log::add('tvremote', 'error', '[SOCKET][SendToDaemon] Exception :: ' . $e->getMessage());
-            /* event::add('jeedom::alert', array(
-                'level' => 'warning',
-                'page' => 'tvremote',
-                'message' => __('[sendToDaemon] Exception :: ' . $e->getMessage(), __FILE__),
-            )); */
             return false;
         }
     }

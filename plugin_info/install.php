@@ -33,7 +33,7 @@ function tvremote_install() {
         config::save('pyenvVersion', '?.?.?', 'tvremote');
     }
     if (config::byKey('socketport', 'tvremote') == '') {
-        config::save('socketport', '55111', 'tvremote');
+        config::save('socketport', '55112', 'tvremote');
     }
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
@@ -88,7 +88,7 @@ function tvremote_update() {
         config::save('pyenvVersion', '?.?.?', 'tvremote');
     }
     if (config::byKey('socketport', 'tvremote') == '') {
-        config::save('socketport', '55111', 'tvremote');
+        config::save('socketport', '55112', 'tvremote');
     }
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');

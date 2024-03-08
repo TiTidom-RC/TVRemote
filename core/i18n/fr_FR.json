@@ -70,7 +70,7 @@
 		"Démon": "Démon",
 		"Port Socket Interne": "Port Socket Interne",
 		"Le démon devra être redémarré après la modification de ce paramètre": "Le démon devra être redémarré après la modification de ce paramètre",
-		"[ATTENTION] Ne changez ce paramètre qu'en cas de nécessité. (Défaut = 55111)": "[ATTENTION] Ne changez ce paramètre qu'en cas de nécessité. (Défaut = 55111)",
+		"[ATTENTION] Ne changez ce paramètre qu'en cas de nécessité. (Défaut = 55112)": "[ATTENTION] Ne changez ce paramètre qu'en cas de nécessité. (Défaut = 55112)",
 		"Fréquence des cycles": "Fréquence des cycles",
 		"Facteur multiplicateur des cycles du démon (Défaut = x1)": "Facteur multiplicateur des cycles du démon (Défaut = x1)",
 		"Rapide +++ (x0.1)": "Rapide +++ (x0.1)",
