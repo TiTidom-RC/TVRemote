@@ -27,5 +27,5 @@ class Config(object):
         return self._kwargs.get('pid', '/tmp/tvremoted.pid')
 
     @property
-    def cycle(self):
-        return self._kwargs.get('cycle', 0.5)
+    def cyclefactor(self):
+        return self._kwargs.get('cyclefactor', 1.0)
