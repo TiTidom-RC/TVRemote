@@ -107,13 +107,7 @@ class tvremote extends eqLogic {
         $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '55112');
         $cmd .= ' --cyclefactor ' . config::byKey('cyclefactor', __CLASS__, '1.0');
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'http:127.0.0.1:port:comp') . '/plugins/tvremote/core/php/jeetvremote.php'; // chemin du callback
-        if (config::byKey('ttsUseExtAddr', 'tvremote') == 1) {
-            $cmd .= ' --ttsweb ' . network::getNetworkAccess('external');
-        } else {
-            $cmd .= ' --ttsweb ' . network::getNetworkAccess('internal');
-        }
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
-        $cmd .= ' --remotetv ' . config::byKey('remoteTV', __CLASS__, '0');
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
         log::add(__CLASS__, 'info', 'Lancement du démon');
         $result = exec($cmd . ' >> ' . log::getPathToLog('tvremote_daemon') . ' 2>&1 &');

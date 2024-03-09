@@ -139,8 +139,9 @@ class TVRemoted:
 def get_args():
     parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
-    parser.add_argument("--socketport", help="Socket Port", type=int)
-    parser.add_argument("--cycle", help="cycle", type=float)
+    parser.add_argument("--pluginversion", help="Plugin Version", type=str)
+    parser.add_argument("--socketport", help="Port for TVRemote server", type=int)
+    parser.add_argument("--cyclefactor", help="Cycle Factor", type=float)
     parser.add_argument("--callback", help="Jeedom callback url", type=str)
     parser.add_argument("--apikey", help="Plugin API Key", type=str)
     parser.add_argument("--pid", help="daemon pid", type=str)
