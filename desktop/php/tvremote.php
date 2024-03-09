@@ -28,31 +28,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					</div>
 				</div>
 			</div>
-			<?php
-			// à conserver
-			// sera afficher uniquement si l'utilisateur est en version 4.4 ou supérieur
-			$jeedomVersion  = jeedom::version() ?? '0';
-			$displayInfoValue = version_compare($jeedomVersion, '4.4.0', '>=');
-			if ($displayInfoValue) {
-			?>
-				<div class="col-sm-2">
-					<legend><i class=" fas fa-comments"></i> {{Community}}</legend>
-					<div class="eqLogicThumbnailContainer">
-						<div class="cursor eqLogicAction logoSecondary" data-action="createCommunityPost">
-							<i class="fas fa-ambulance"></i>
-							<br>
-							<span style="color:var(--txt-color)">{{Créer un post Community}}</span>
-						</div>
-					</div>
-				</div>
-			<?php
-			}
-			?>
 		</div>
-		<legend><i class="fas fa-table"></i> {{Mes tvremotes}}</legend>
+		<legend><i class="fas fa-table"></i> {{Mes TVRemotes}}</legend>
 		<?php
 		if (count($eqLogics) == 0) {
-			echo '<br><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement tvremote trouvé, cliquer sur "Ajouter" pour commencer}}</div>';
+			echo '<br><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement TVRemote trouvé, cliquer sur "Ajouter" pour commencer}}</div>';
 		} else {
 			// Champ de recherche
 			echo '<div class="input-group" style="margin:5px;">';

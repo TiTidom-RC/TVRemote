@@ -18,12 +18,12 @@ class TVRemoted:
         # Standard initialisation
         self._config = config_
         self._listen_task = None
-        self._send_task = None # Not needed if you don't need to send change to Jeedom in cycle
+        self._send_task = None  # Not needed if you don't need to send change to Jeedom in cycle
         self._jeedom_publisher = None
         self._logger = logging.getLogger(__name__)
 
         # Below you can init your own variables if needed
-        self._search_task = None
+        # self._search_task = None
 
     async def main(self):
         """
@@ -36,19 +36,20 @@ class TVRemoted:
 
         # _listen_task & _send_task are 2 background tasks handling communication with the daemon
         self._listen_task = Listener.create_listen_task(self._config.socket_host, self._config.socket_port, self._on_socket_message)
-        self._send_task = self._jeedom_publisher.create_send_task() # Not needed if you don't need to send change to Jeedom in cycle but only immediately
+        self._send_task = self._jeedom_publisher.create_send_task()  # Not needed if you don't need to send change to Jeedom in cycle but only immediately
 
         # create your own background tasks if needed.
         # `_search_task` is here to demo usage of background task in a daemon
-        self._search_task = asyncio.create_task(self._search_animals())
+        # self._search_task = asyncio.create_task(self._search_animals())
 
         # register signal handler
         await self.__add_signal_handler()
-        await asyncio.sleep(1) # allow all tasks to start
+        await asyncio.sleep(1)  # allow all tasks to start
 
         self._logger.info("Ready")
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
-        await asyncio.gather(self._search_task, self._listen_task, self._send_task)
+        #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
+        await asyncio.gather(self._listen_task, self._send_task)
 
     async def __add_signal_handler(self):
         """
@@ -67,20 +68,20 @@ class TVRemoted:
             self._logger.error('Invalid apikey from socket : %s', message)
             return
         try:
-            if message['action'] == 'think':
+            """ if message['action'] == 'think':
                 await self._think(message['message'])
             elif message['action'] == 'ping':
                 for i in range(1, 4):
-                    await self._jeedom_publisher.send_to_jeedom({'pingpong':f'ping {i}'})
+                    await self._jeedom_publisher.send_to_jeedom({'pingpong' : f'ping {i}'})
                     await asyncio.sleep(2)
-                    await self._jeedom_publisher.send_to_jeedom({'pingpong':f'pong {i}'})
+                    await self._jeedom_publisher.send_to_jeedom({'pingpong' : f'pong {i}'})
                     await asyncio.sleep(2)
             else:
-                self._logger.warning('Unknown action: %s', message['action'])
+                self._logger.warning('Unknown action: %s', message['action']) """
         except Exception as message_e:
             self._logger.error('Send command to daemon error: %s', message_e)
 
-    async def _think(self, message):
+    """ async def _think(self, message):
         # this is a demo implementation of a single function, this function will be invoked once the corresponding call is received from Jeedom
         random_int = random.randint(3, 15)
         self._logger.info("==> think on received '%s' during %is", message, random_int)
@@ -113,8 +114,8 @@ class TVRemoted:
                 await self._jeedom_publisher.add_change(animal, nbr)
                 await asyncio.sleep(random.randint(0, 2))
         except asyncio.CancelledError:
-            self._logger.info("Stop searching animals")
-
+            self._logger.info("Stop searching animals") """
+            
     def _ask_exit(self, sig):
         """
         This function will be called in case a signal is received, see `__add_signal_handler`. You don't need to change anything here
@@ -128,7 +129,7 @@ class TVRemoted:
         You need to close your remote connexions and cancel background tasks if any here.
         """
         self._logger.debug('Cancel all tasks')
-        self._search_task.cancel() # don't forget to cancel your background task
+        # self._search_task.cancel()  # don't forget to cancel your background task
         self._listen_task.cancel()
         self._send_task.cancel()
 
@@ -136,7 +137,7 @@ class TVRemoted:
 # ----------------------------------------------------------------------------
 
 def get_args():
-    parser = argparse.ArgumentParser(description='mqttdiscoveryd Daemon for Jeedom plugin')
+    parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
     parser.add_argument("--socketport", help="Socket Port", type=int)
     parser.add_argument("--cycle", help="cycle", type=float)
@@ -170,7 +171,7 @@ try:
     _LOGGER.info('Log level: %s', config.log_level)
     Utils.write_pid(str(config.pid_filename))
 
-    daemon = AIODemod(config)
+    daemon = TVRemoted(config)
     asyncio.run(daemon.main())
 except Exception as e:
     exception_type, exception_object, exception_traceback = sys.exc_info()

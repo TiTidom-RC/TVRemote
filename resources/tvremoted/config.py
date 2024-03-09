@@ -12,7 +12,7 @@ class Config(object):
 
     @property
     def socket_port(self):
-        return self._kwargs.get('socketport', 55009)
+        return self._kwargs.get('socketport', 55112)
 
     @property
     def log_level(self):

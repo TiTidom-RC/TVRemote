@@ -31,126 +31,14 @@ try {
         die();
     }
 
-    if (isset($result['scanState'])) {
-        if ($result['scanState'] == "scanOn") {
-            log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOn'); 
-            config::save('scanState', 'scanOn', 'tvremote');
-            event::add('tvremote::scanState', array(
-                'scanState' => 'scanOn')
-            );
-        } else {
-            log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOff'); 
-            config::save('scanState', 'scanOff', 'tvremote');
-            event::add('tvremote::scanState', array(
-                'scanState' => 'scanOff')
-            );
-            tvremote::sendOnStartCastToDaemon();
-
-        }
-    } elseif (isset($result['heartbeat'])) {
+    if (isset($result['heartbeat'])) {
         if ($result['heartbeat'] == 1) {
             log::add('tvremote','info','[CALLBACK] tvremote Daemon Heartbeat (600s)');
         }
     } elseif (isset($result['daemonStarted'])) {
         if ($result['daemonStarted'] == '1') {
             log::add('tvremote', 'info', '[CALLBACK] Daemon Started');
-            tvremote::sendOnStartCastToDaemon();
-        }
-    } elseif (isset($result['actionReturn'])) {
-        log::add('tvremote','debug','[CALLBACK] tvremote ActionReturn :: ' . json_encode($result));
-        if ($result['actionReturn'] == "setvolume" || $result['actionReturn'] == "volumeup" || $result['actionReturn'] == "volumedown") {
-            if (!isset($result['uuid']) || !isset($result['volumelevel'])) {
-                log::add('tvremote','debug','[CALLBACK] Action Return Volume :: UUID et/ou VolumeLevel non défini(s) !');
-            } else {
-                log::add('tvremote','debug','[CALLBACK] Action Return Volume :: Les paramètres sont bien définis...');
-                $tvremote = tvremote::byLogicalId($result['uuid'], 'tvremote');
-                if (is_object($tvremote)) { 
-                    log::add('tvremote','debug','[CALLBACK] Action Return Volume :: Le Cast a été trouvé...');
-                    $cmd = $tvremote->getCmd('info', 'volumelevel');
-                    if (is_object($cmd)) {
-                        log::add('tvremote','debug','[CALLBACK] Action Return Volume :: SetVolume in Config :: ' . $result['volumelevel']);
-                        $cmd->event($result['volumelevel']);
-                    }
-                }
-            }
-        } else {
-            log::add('tvremote','debug','[CALLBACK] Action Return :: ERROR SetVolume Return...');
-        }
-        
-            
-    } elseif (isset($result['devices'])) {
-        log::add('tvremote','debug','[CALLBACK] tvremote Devices Discovery');
-        foreach ($result['devices'] as $key => $data) {
-            if (!isset($data['uuid'])) {
-                log::add('tvremote','debug','[CALLBACK] tvremote Device :: UUID non défini !');
-                continue;
-            }
-            log::add('tvremote','debug','[CALLBACK] tvremote Device :: ' . $data['uuid']);
-            if ($data['scanmode'] != 1) {
-                log::add('tvremote','debug','[CALLBACK] tvremote Device :: NoScanMode');
-                continue;
-            }
-            $tvremote = tvremote::byLogicalId($data['uuid'], 'tvremote');
-            if (!is_object($tvremote)) {    
-                log::add('tvremote','debug','[CALLBACK] NEW tvremote détecté :: ' . $data['friendly_name'] . ' (' . $data['uuid'] . ')');
-                /* event::add('tvremote::newdevice', array(
-                    'friendly_name' => $data['friendly_name'],
-                    'newone' => '1'
-                )); */
-                $newtvremote = tvremote::createAndUpdCastFromScan($data);
-            }
-            else {
-                log::add('tvremote','debug','[CALLBACK] tvremote Update :: ' . $data['friendly_name'] . ' (' . $data['uuid'] . ')');
-                /* event::add('tvremote::newdevice', array(
-                    'friendly_name' => $data['friendly_name'],
-                    'newone' => '0'
-                )); */
-                $updtvremote = tvremote::createAndUpdCastFromScan($data);
-            }
-        }
-    } elseif (isset($result['casts'])) {
-        log::add('tvremote','debug','[CALLBACK] tvremote Schedule');
-        foreach ($result['casts'] as $key => $data) {
-            if (!isset($data['uuid'])) {
-                log::add('tvremote','debug','[CALLBACK] tvremote Schedule :: UUID non défini !');
-                continue;
-            }
-            log::add('tvremote','debug','[CALLBACK] tvremote Schedule :: ' . $data['uuid']);
-            if ($data['schedule'] != 1) {
-                # log::add('tvremote','debug','[CALLBACK] tvremote Schedule :: NoScheduleMode');
-                continue;
-            }
-            # log::add('tvremote','debug','[CALLBACK] tvremote Schedule Volume :: ' . $data['uuid'] . ' = ' . $data['volume_level']);
-
-            $tvremote = tvremote::byLogicalId($data['uuid'], 'tvremote');
-            if (!is_object($tvremote)) {    
-                # log::add('tvremote','debug','[CALLBACK] tvremote Schedule NON EXIST :: ' . $data['uuid']);
-                continue;
-            }
-            else {
-                $updtvremote = tvremote::scheduleUpdateCast($data);
-            }
-        }
-    } elseif (isset($result['castsRT'])) {
-        log::add('tvremote','debug','[CALLBACK] tvremote RealTime');
-        foreach ($result['castsRT'] as $key => $data) {
-            if (!isset($data['uuid'])) {
-                log::add('tvremote','debug','[CALLBACK] tvremote RealTime :: UUID non défini !');
-                continue;
-            }
-            log::add('tvremote','debug','[CALLBACK] tvremote RealTime :: ' . $data['uuid']);
-            if ($data['realtime'] != 1) {
-                # log::add('tvremote','debug','[CALLBACK] tvremote RealTime :: NoRealTimeMode');
-                continue;
-            }
-            $tvremote = tvremote::byLogicalId($data['uuid'], 'tvremote');
-            if (!is_object($tvremote)) {    
-                # log::add('tvremote','debug','[CALLBACK] tvremote RealTime NON EXIST :: ' . $data['uuid']);
-                continue;
-            }
-            else {
-                $rtcast = tvremote::realtimeUpdateCast($data);
-            }
+            # tvremote::sendOnStartCastToDaemon();
         }
     } else {
         log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon'); 

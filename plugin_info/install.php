@@ -24,7 +24,7 @@ function tvremote_install() {
     config::save('pluginVersion', $pluginVersion, 'tvremote');
 
     message::removeAll('tvremote');
-    message::add('tvremote', 'Installation du plugin TTS Cast (Version : ' . $pluginVersion . ')', null, null);
+    message::add('tvremote', 'Installation du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
 
     if (config::byKey('pythonVersion', 'tvremote') == '') {
         config::save('pythonVersion', '?.?.?', 'tvremote');
@@ -37,27 +37,6 @@ function tvremote_install() {
     }
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
-    }
-    if (config::byKey('ttsEngine', 'tvremote') == '') {
-        config::save('ttsEngine', 'jeedomtts', 'tvremote');
-    }
-    if (config::byKey('ttsLang', 'tvremote') == '') {
-        config::save('ttsLang', 'fr-FR', 'tvremote');
-    }
-    if (config::byKey('gCloudTTSSpeed', 'tvremote') == '') {
-        config::save('gCloudTTSSpeed', '1.0', 'tvremote');
-    }
-    if (config::byKey('gCloudTTSVoice', 'tvremote') == '') {
-        config::save('gCloudTTSVoice', 'fr-FR-Standard-A', 'tvremote');
-    }
-    if (config::byKey('ttsPurgeCacheDays', 'tvremote') == '') {
-        config::save('ttsPurgeCacheDays', '10', 'tvremote');
-    }
-    if (config::byKey('appDisableDing', 'tvremote') == '') {
-        config::save('appDisableDing', '0', 'tvremote');
-    }
-    if (config::byKey('remoteTV', 'tvremote') == '') {
-        config::save('remoteTV', '1', 'tvremote');
     }
 
     $dependencyInfo = tvremote::dependancy_info();
@@ -79,7 +58,7 @@ function tvremote_update() {
     config::save('pluginVersion', $pluginVersion, 'tvremote');
 
     message::removeAll('tvremote');
-    message::add('tvremote', 'Mise à jour du plugin TTS Cast (Version : ' . $pluginVersion . ')', null, null);
+    message::add('tvremote', 'Mise à jour du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
 
     if (config::byKey('pythonVersion', 'tvremote') == '') {
         config::save('pythonVersion', '?.?.?', 'tvremote');
@@ -92,27 +71,6 @@ function tvremote_update() {
     }
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
-    }
-    if (config::byKey('ttsEngine', 'tvremote') == '') {
-        config::save('ttsEngine', 'jeedomtts', 'tvremote');
-    }
-    if (config::byKey('ttsLang', 'tvremote') == '') {
-        config::save('ttsLang', 'fr-FR', 'tvremote');
-    }
-    if (config::byKey('gCloudTTSSpeed', 'tvremote') == '') {
-        config::save('gCloudTTSSpeed', '1.0', 'tvremote');
-    }
-    if (config::byKey('gCloudTTSVoice', 'tvremote') == '') {
-        config::save('gCloudTTSVoice', 'fr-FR-Standard-A', 'tvremote');
-    }
-    if (config::byKey('ttsPurgeCacheDays', 'tvremote') == '') {
-        config::save('ttsPurgeCacheDays', '10', 'tvremote');
-    }
-    if (config::byKey('appDisableDing', 'tvremote') == '') {
-        config::save('appDisableDing', '0', 'tvremote');
-    }
-    if (config::byKey('remoteTV', 'tvremote') == '') {
-        config::save('remoteTV', '1', 'tvremote');
     }
 
     $dependencyInfo = tvremote::dependancy_info();
