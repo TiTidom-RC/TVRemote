@@ -1,1 +1,1 @@
-# TVRemote
+# TVRemote Plugin for Jeedom
