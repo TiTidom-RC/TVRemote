@@ -114,7 +114,7 @@ class TVRemoted:
         self._logger.info("==> '%s' was an interesting information, thanks for the nap", message)
         await self._jeedom_publisher.send_to_jeedom({'alert':f"'{message}' was an interesting information, thanks for the nap"}) """
 
-    async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> str:
+    async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
         
         def _async_on_service_state_change(zeroconf: Zeroconf, service_type: str, name: str, state_change: ServiceStateChange) -> None:
@@ -141,14 +141,13 @@ class TVRemoted:
 
         zc = AsyncZeroconf()
         services = ["_androidtvremote2._tcp.local."]
-        self._logger.info("[TVHOSTS] Browsing Services for %s seconds...", timeout)
+        self._logger.info("[TVHOSTS] TV Browser (for %s seconds) :: START", timeout)
         browser = AsyncServiceBrowser(zc.zeroconf, services, handlers=[_async_on_service_state_change])
         await asyncio.sleep(timeout)
 
         await browser.async_cancel()
         await zc.async_close()
-
-        return "[TVHOSTS] Finished"
+        self._logger.info("[TVHOSTS] TV Browser :: STOP")
 
     async def _mainLoop(self, cycle=2.0):
         # Main Loop for Daemon
