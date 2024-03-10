@@ -139,7 +139,7 @@ class TVRemoted:
                         self._logger.info("[TVHOSTS] Properties :: %s:%s", key, value) """
                 if info.decoded_properties:
                     for key, value in info.decoded_properties.items():
-                        self._logger.info("[TVHOSTS] Properties :: %s:%s", key, value)
+                        self._logger.info("[TVHOSTS] Properties :: %s = %s", key, value)
                 else:
                     self._logger.warning("[TVHOSTS] Properties :: NO")
             else:
