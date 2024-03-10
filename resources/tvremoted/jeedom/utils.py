@@ -22,5 +22,5 @@ class Utils():
     @staticmethod
     def write_pid(path):
         pid = str(os.getpid())
-        logging.debug("Writing PID %s to %s", pid, path)
+        logging.debug("[PID] Writing PID %s to %s", pid, path)
         open(path, 'w').write("%s\n" % pid)
