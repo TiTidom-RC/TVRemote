@@ -126,6 +126,7 @@ class TVRemoted:
             info = AsyncServiceInfo(service_type, name)
             await info.async_request(zeroconf, 3000)
             if info:
+                self._logger.info("[TVHOSTS][%s] Name :: %s", info.get_name(), name)
                 self._logger.info("[TVHOSTS][%s] Type :: %s", info.get_name(), info.type)
                 for addr in info.parsed_scoped_addresses():
                     if (await self._is_ipv4(addr)):
@@ -135,11 +136,11 @@ class TVRemoted:
                 
                 if info.decoded_properties:
                     for key, value in info.decoded_properties.items():
-                        self._logger.info("[TVHOSTS] Properties :: %s = %s", key, value)
+                        self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", info.get_name(), key, value)
                 else:
-                    self._logger.warning("[TVHOSTS] Properties :: NO")
+                    self._logger.warning("[TVHOSTS][%s] Properties :: NO", info.get_name())
             else:
-                self._logger.warning("[TVHOSTS] Info :: NO")
+                self._logger.warning("[TVHOSTS][%s] Info :: NO", name)
 
         zc = AsyncZeroconf()
         services = ["_androidtvremote2._tcp.local."]
