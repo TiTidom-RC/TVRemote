@@ -105,7 +105,7 @@ class TVRemoted:
                 # Heartbeat du démon
                 if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                     self._logger.info('[DAEMON][MAINLOOP] Heartbeat = 1')
-                    self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
+                    await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
                     self._config.heartbeat_lasttime = currentTime
                     # TODO ajouter l'usage des ressources !
                 # Scan New TVRemote
