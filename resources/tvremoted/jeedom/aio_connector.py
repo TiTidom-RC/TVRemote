@@ -31,19 +31,19 @@ class Listener():
             server = await asyncio.start_server(self._handle_read, self._socket_host, port=self._socket_port)
 
             async with server:
-                self._logger.info('Listening on %s:%s', self._socket_host, self._socket_port)
+                self._logger.info('[LISTENER] Listening on %s:%s', self._socket_host, self._socket_port)
                 await server.serve_forever()
         except asyncio.CancelledError:
-            self._logger.info("Listening cancelled")
+            self._logger.info("[LISTENER] Listening cancelled")
 
     async def _handle_read(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         data = await reader.read()
         message = data.decode()
         addr = writer.get_extra_info('peername')
-        self._logger.debug("Received %s from %s", message, addr)
+        self._logger.debug("[LISTENER] Received %s from %s", message, addr)
 
         writer.close()
-        self._logger.debug("Close connection")
+        self._logger.debug("[LISTENER] Close connection")
         await writer.wait_closed()
         await self._on_message(json.loads(message))
 
@@ -67,15 +67,15 @@ class Publisher():
         try:
             async with self._jeedom_session.get(self._callback_url + '?test=1&apikey=' + self._api_key) as resp:
                 if resp.status != 200:
-                    self._logger.error("Please check your network configuration page: %s-%s", resp.status, resp.reason)
+                    self._logger.error("[PUBLISHER] Please check your network configuration page: %s-%s", resp.status, resp.reason)
                     return False
         except Exception as e:
-            self._logger.error('Callback error: %s. Please check your network configuration page', e)
+            self._logger.error('[PUBLISHER] Callback error: %s. Please check your network configuration page', e)
             return False
         return True
 
     async def _send_async(self):
-        self._logger.info("Send async started")
+        self._logger.info("[PUBLISHER] Send async started")
         try:
             last_send_on_error = False
             while True:
@@ -87,26 +87,26 @@ class Publisher():
                         await self.send_to_jeedom(changes)
                     except Exception as e:
                         if last_send_on_error:
-                            self._logger.error("error during send: %s", e)
+                            self._logger.error("[PUBLISHER] error during send: %s", e)
                         else:
-                            self._logger.debug("first time error during send: %s", e)
+                            self._logger.debug("[PUBLISHER] first time error during send: %s", e)
                             last_send_on_error = True
                         await self.__merge_dict(self.__changes, changes)
                     else:
                         last_send_on_error = False
                 await asyncio.sleep(self._cycle)
         except asyncio.CancelledError:
-            self._logger.info("Send async cancelled")
+            self._logger.info("[PUBLISHER] Send async cancelled")
 
     async def send_to_jeedom(self, payload):
         """
         Will immediately send the payload provided.
         return true or false if successful
         """
-        self._logger.debug('Send to jeedom :  %s', payload)
+        self._logger.debug('[PUBLISHER] Send to jeedom :  %s', payload)
         async with self._jeedom_session.post(self._callback_url + '?apikey=' + self._api_key, json=payload) as resp:
             if resp.status != 200:
-                self._logger.error('Error on send request to jeedom, return %s-%s', resp.status, resp.reason)
+                self._logger.error('[PUBLISHER] Error on send request to jeedom, return %s-%s', resp.status, resp.reason)
                 return False
         return True
 
