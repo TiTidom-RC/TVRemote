@@ -64,7 +64,7 @@ class TVRemoted:
         # create your own background tasks here.
         # self._search_task = asyncio.create_task(self._search_animals())
         self._main_task = asyncio.create_task(self._mainLoop(self._config.cycle_main))
-        self._tvhosts_task = asyncio.create_task(self._tvhosts_from_zeroconf(timeout=30))
+        self._tvhosts_task = asyncio.create_task(self._tvhosts_from_zeroconf(timeout=60))
         
         # register signal handler
         await self.__add_signal_handler()
@@ -114,7 +114,7 @@ class TVRemoted:
         self._logger.info("==> '%s' was an interesting information, thanks for the nap", message)
         await self._jeedom_publisher.send_to_jeedom({'alert':f"'{message}' was an interesting information, thanks for the nap"}) """
 
-    async def _tvhosts_from_zeroconf(self, timeout: float = 60.0) -> None:
+    async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
         
         def _async_on_service_state_change(zeroconf: Zeroconf, service_type: str, name: str, state_change: ServiceStateChange) -> None:
