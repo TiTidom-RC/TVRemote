@@ -125,7 +125,7 @@ class TVRemoted:
             info = AsyncServiceInfo(service_type, name)
             await info.async_request(zeroconf, 3000)
             if info:
-                for addr in info.parsed_scoped_addresses:
+                for addr in info.parsed_scoped_addresses():
                     self._logger.info("[TVHOSTS][%s] Addr :: %s (port=%s)", name, addr, str(info.port))
                 if info.properties:
                     for key, value in info.properties.items():
