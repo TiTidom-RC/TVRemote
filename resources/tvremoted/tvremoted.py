@@ -6,7 +6,6 @@ import signal
 import asyncio
 import functools
 import time
-import datetime
 import traceback
 
 from config import Config
