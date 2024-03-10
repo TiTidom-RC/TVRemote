@@ -199,7 +199,7 @@ try:
     Utils.write_pid(str(config.pid_filename))
 
     daemon = TVRemoted(config)
-    asyncio.run(daemon.main())
+    asyncio.run(daemon.main(config.cycle_main))
 except Exception as e:
     exception_type, exception_object, exception_traceback = sys.exc_info()
     filename = exception_traceback.tb_frame.f_code.co_filename
