@@ -125,13 +125,13 @@ class Publisher():
                 changes = tmp_changes
                 tmp_changes = {}
 
-            await self.__merge_dict(self.__changes,changes)
+            await self.__merge_dict(self.__changes, changes)
         else:
             self.__changes[key] = value
 
     async def __merge_dict(self, dic1: dict, dic2: dict):
-        for key,val2 in dic2.items():
-            val1 = dic1.get(key) # returns None if v1 has no value for this key
+        for key, val2 in dic2.items():
+            val1 = dic1.get(key)  # returns None if v1 has no value for this key
             if isinstance(val1, Mapping) and isinstance(val2, Mapping):
                 await self.__merge_dict(val1, val2)
             else:

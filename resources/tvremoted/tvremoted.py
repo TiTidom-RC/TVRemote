@@ -1,11 +1,12 @@
 import logging
 import argparse
-import random
 import sys
 import os
 import signal
 import asyncio
 import functools
+import time
+import datetime
 
 from config import Config
 from jeedom.utils import Utils
@@ -30,17 +31,18 @@ class TVRemoted:
         The is the entry point of your daemon.
         You should start the asyncio loop with this function like this: `asyncio.run(daemon.main())`
         """
-        self._jeedom_publisher = Publisher(self._config.callback_url, self._config.api_key, self._config.cyclefactor * 0.5)
+        self._jeedom_publisher = Publisher(self._config.callback_url, self._config.api_key, self._config.cycle_factor * self._config.cycle_comm)
         if not await self._jeedom_publisher.test_callback():
+            self._logger.info("[CallBack] Test :: OK")
             return
 
         # _listen_task & _send_task are 2 background tasks handling communication with the daemon
         self._listen_task = Listener.create_listen_task(self._config.socket_host, self._config.socket_port, self._on_socket_message)
         self._send_task = self._jeedom_publisher.create_send_task()  # Not needed if you don't need to send change to Jeedom in cycle but only immediately
 
-        # create your own background tasks if needed.
-        # `_search_task` is here to demo usage of background task in a daemon
+        # create your own background tasks here.
         # self._search_task = asyncio.create_task(self._search_animals())
+        self._main_task = asyncio.create_task(self._mainLoop(self._config.cycle_main))
 
         # register signal handler
         await self.__add_signal_handler()
@@ -49,7 +51,7 @@ class TVRemoted:
         self._logger.info("Ready")
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
-        await asyncio.gather(self._listen_task, self._send_task)
+        await asyncio.gather(self._main_task, self._listen_task, self._send_task)
 
     async def __add_signal_handler(self):
         """
@@ -88,9 +90,33 @@ class TVRemoted:
         await self._jeedom_publisher.send_to_jeedom({'alert':f"Let me think about '{message}' during {random_int}s"})
         await asyncio.sleep(random_int)
         self._logger.info("==> '%s' was an interesting information, thanks for the nap", message)
-        await self._jeedom_publisher.send_to_jeedom({'alert':f"'{message}' was an interesting information, thanks for the nap"})
+        await self._jeedom_publisher.send_to_jeedom({'alert':f"'{message}' was an interesting information, thanks for the nap"}) """
 
-    async def _search_animals(self):
+    async def _mainLoop(self, cycle=2.0):
+        # Main Loop for Daemon
+        self._logger.debug("[MainLoop] Start MainLoop")
+        try:
+            while True:
+                # *** Actions de la MainLoop ***
+                currentTime = int(time.time)
+                
+                # Arrêt du ScanMode au bout de 60 secondes
+                
+                # Heartbeat du démon
+                if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
+                    self._logger.info('[DAEMON][MAINLOOP] Heartbeat = 1')
+                    self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
+                    self._config.heartbeat_lasttime = currentTime
+                    # TODO ajouter l'usage des ressources !
+                # Scan New TVRemote
+                
+                # Pause Cycle
+                await asyncio.sleep(cycle)
+                
+        except asyncio.CancelledError:
+            self._logger.debug("[MainLoop] Stop MainLoop")
+            
+    """ async def _search_animals(self):
         # this is a demo implementation of a backgroudn task, you must have a try ... except asyncio.CancelledError: ... that will intercept the cancel request from the loop
         self._logger.info("Start searching animals")
 
