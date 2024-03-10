@@ -27,7 +27,7 @@ class Config(object):
 
     @property
     def socket_port(self):
-        return self._kwargs.get('socketport', 55112)
+        return int(self._kwargs.get('socketport', 55112))
 
     @property
     def log_level(self):
@@ -43,7 +43,7 @@ class Config(object):
 
     @property
     def cycle_factor(self):
-        return self._kwargs.get('cyclefactor', 1.0)
+        return float(self._kwargs.get('cyclefactor', 1.0))
     
     @property
     def cycle_event(self):
