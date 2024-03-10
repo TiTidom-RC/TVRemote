@@ -13,6 +13,23 @@ from config import Config
 from jeedom.utils import Utils
 from jeedom.aio_connector import Listener, Publisher
 
+from urllib.parse import urljoin, urlencode, urlparse
+
+# Import pour ZeroConf
+try:
+    from zeroconf import ServiceStateChange, Zeroconf
+    from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo, AsyncZeroconf
+except ImportError as e: 
+    print("[DAEMON][IMPORT] Exception Error: importing module ZeroConf ::", e)
+    sys.exit(1)
+
+# Import pour AndroidTVRemote2
+try:
+    from androidtvremote2 import AndroidTVRemote, CannotConnect, ConnectionClosed, InvalidAuth
+except ImportError as e: 
+    print("[DAEMON][IMPORT] Exception Error: importing module AndroidTVRemote2 ::", e)
+    sys.exit(1)
+    
 class TVRemoted:
     """This is the main class of you daemon"""
 
@@ -25,6 +42,8 @@ class TVRemoted:
         self._logger = logging.getLogger(__name__)
 
         # Below you can init your own variables if needed
+        self._main_task = None
+        self._tvhosts_task = None
         # self._search_task = None
 
     async def main(self):
@@ -44,7 +63,8 @@ class TVRemoted:
         # create your own background tasks here.
         # self._search_task = asyncio.create_task(self._search_animals())
         self._main_task = asyncio.create_task(self._mainLoop(self._config.cycle_main))
-
+        self._tvhosts_task = asyncio.create_task(self._tvhosts_from_zeroconf(timeout=30))
+        
         # register signal handler
         await self.__add_signal_handler()
         await asyncio.sleep(1)  # allow all tasks to start
@@ -52,7 +72,7 @@ class TVRemoted:
         self._logger.info("[MAIN] Ready")
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
-        await asyncio.gather(self._main_task, self._listen_task, self._send_task)
+        await asyncio.gather(self._tvhosts_task, self._main_task, self._listen_task, self._send_task)
 
     async def __add_signal_handler(self):
         """
@@ -92,6 +112,39 @@ class TVRemoted:
         await asyncio.sleep(random_int)
         self._logger.info("==> '%s' was an interesting information, thanks for the nap", message)
         await self._jeedom_publisher.send_to_jeedom({'alert':f"'{message}' was an interesting information, thanks for the nap"}) """
+
+    async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> str:
+        """ Function to detect TV hosts from ZeroConf Instance """
+        
+        def _async_on_service_state_change(zeroconf: Zeroconf, service_type: str, name: str, state_change: ServiceStateChange) -> None:
+            if state_change is not ServiceStateChange.Added:
+                return
+            _ = asyncio.ensure_future(async_display_service_info(zeroconf, service_type, name))
+
+        async def async_display_service_info(zeroconf: Zeroconf, service_type: str, name: str) -> None:
+            info = AsyncServiceInfo(service_type, name)
+            await info.async_request(zeroconf, 3000)
+            if info:
+                for addr in info.parsed_scoped_addresses:
+                    self._logger.info("[TVHOSTS][%s] Addr :: %s (port=%s)", name, addr, str(info.port))
+                if info.properties:
+                    for key, value in info.properties.items():
+                        self._logger.info("[TVHOSTS] Properties :: %s:%s", key, value)
+                else:
+                    self._logger.warning("[TVHOSTS] Properties :: NO")
+            else:
+                self._logger.warning("[TVHOSTS] Info :: NO")
+
+        zc = AsyncZeroconf()
+        services = ["_androidtvremote2._tcp.local."]
+        self._logger.info("[TVHOSTS] Browsing Services for %s seconds...", timeout)
+        browser = AsyncServiceBrowser(zc.zeroconf, services, handlers=[_async_on_service_state_change])
+        await asyncio.sleep(timeout)
+
+        await browser.async_cancel()
+        await zc.async_close()
+
+        return "[TVHOSTS] Finished"
 
     async def _mainLoop(self, cycle=2.0):
         # Main Loop for Daemon
