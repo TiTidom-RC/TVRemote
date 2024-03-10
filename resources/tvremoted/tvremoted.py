@@ -34,7 +34,7 @@ class TVRemoted:
         """
         self._jeedom_publisher = Publisher(self._config.callback_url, self._config.api_key, self._config.cycle_factor * self._config.cycle_comm)
         if not await self._jeedom_publisher.test_callback():
-            self._logger.info("[CallBack] Test :: OK")
+            self._logger.info("[CALLBACK] Test :: OK")
             return
 
         # _listen_task & _send_task are 2 background tasks handling communication with the daemon
@@ -49,7 +49,7 @@ class TVRemoted:
         await self.__add_signal_handler()
         await asyncio.sleep(1)  # allow all tasks to start
 
-        self._logger.info("Ready")
+        self._logger.info("[MAIN] Ready")
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
         await asyncio.gather(self._main_task, self._listen_task, self._send_task)
@@ -68,7 +68,7 @@ class TVRemoted:
         You must implement the different actions that your daemon can handle.
         """
         if message['apikey'] != self._config.api_key:
-            self._logger.error('Invalid apikey from socket : %s', message)
+            self._logger.error('[MAIN][SOCKET] Invalid apikey from socket : %s', message)
             return
         try:
             """ if message['action'] == 'think':
@@ -171,7 +171,7 @@ class TVRemoted:
         """
         This function will be called in case a signal is received, see `__add_signal_handler`. You don't need to change anything here
         """
-        self._logger.info("Signal %i caught, exiting...", sig)
+        self._logger.info("[ASKEXIT] Signal %i caught, exiting...", sig)
         self.close()
 
     def close(self):
@@ -179,7 +179,7 @@ class TVRemoted:
         This function can be called from outside to stop the daemon if needed`
         You need to close your remote connexions and cancel background tasks if any here.
         """
-        self._logger.debug('Cancel all tasks')
+        self._logger.debug('[ASKEXIT] Cancel all tasks')
         # self._search_task.cancel()  # don't forget to cancel your background task
         self._main_task.cancel()
         self._listen_task.cancel()
@@ -200,12 +200,12 @@ def get_args():
     return parser.parse_args()
 
 def shutdown():
-    _LOGGER.info("Shuting down")
+    _LOGGER.info("[SHUTDOWN] Shuting down")
 
-    _LOGGER.debug("Removing PID file %s", config.pid_filename)
+    _LOGGER.debug("[SHUTDOWN] Removing PID file %s", config.pid_filename)
     os.remove(config.pid_filename)
 
-    _LOGGER.debug("Exit 0")
+    _LOGGER.debug("[SHUTDOWN] Exit 0")
     sys.stdout.flush()
     os._exit(0)
 
@@ -219,8 +219,22 @@ _LOGGER = logging.getLogger(__name__)
 logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 try:
-    _LOGGER.info('Starting daemon')
-    _LOGGER.info('Log level: %s', config.log_level)
+    _LOGGER.info('[DAEMON] Starting Daemon')
+    _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
+    _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
+    _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
+    _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
+    _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)
+    # TODO protéger les valeurs de cyclefactor
+    
+    _LOGGER.info('[DAEMON] Cycle Main: %s', config.cycle_main)
+    _LOGGER.info('[DAEMON] Cycle Comm: %s', config.cycle_comm)
+    _LOGGER.info('[DAEMON] Cycle Event: %s', config.cycle_event)
+    _LOGGER.info('[DAEMON] PID File: %s', config.pid_filename)
+    _LOGGER.info('[DAEMON] Api Key: %s', "***")
+    _LOGGER.info('[DAEMON] CallBack: %s', config.callback_url)
+    _LOGGER.info('[DAEMON] Config Path: %s', config.config_fullpath)
+    
     Utils.write_pid(str(config.pid_filename))
 
     daemon = TVRemoted(config)
@@ -229,5 +243,5 @@ except Exception as e:
     exception_type, exception_object, exception_traceback = sys.exc_info()
     filename = exception_traceback.tb_frame.f_code.co_filename
     line_number = exception_traceback.tb_lineno
-    _LOGGER.error('Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+    _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
 shutdown()

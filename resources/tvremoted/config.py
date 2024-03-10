@@ -16,6 +16,10 @@ class Config(object):
         self.resources_lastused = 0
         self.resources_lasttime = int(time.time())
         self.resources_firsttime = int(time.time())
+    
+    @property
+    def plugin_version(self):
+        return self._kwargs.get('pluginversion', '0.0.0')
         
     @property
     def callback_url(self):
