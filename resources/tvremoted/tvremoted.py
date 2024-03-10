@@ -127,7 +127,7 @@ class TVRemoted:
             await info.async_request(zeroconf, 3000)
             if info:
                 for addr in info.parsed_scoped_addresses():
-                    if (self._is_ipv4(addr)):
+                    if (await self._is_ipv4(addr)):
                         self._logger.info("[TVHOSTS][%s] Addr (IPv4) :: %s (port=%s)", name, addr, str(info.port))
                     else:
                         self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
