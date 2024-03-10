@@ -97,22 +97,26 @@ class TVRemoted:
         self._logger.debug("[MainLoop] Start MainLoop")
         try:
             while True:
-                # *** Actions de la MainLoop ***
-                currentTime = int(time.time)
-                
-                # Arrêt du ScanMode au bout de 60 secondes
-                
-                # Heartbeat du démon
-                
-                if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
-                    self._logger.info('[DAEMON][MAINLOOP] Heartbeat = 1')
-                    await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
-                    self._config.heartbeat_lasttime = currentTime
-                    # TODO ajouter l'usage des ressources !
-                # Scan New TVRemote
-                
-                # Pause Cycle
-                await asyncio.sleep(cycle)
+                try:
+                    
+                    # *** Actions de la MainLoop ***
+                    currentTime = int(time.time)
+                    
+                    # Arrêt du ScanMode au bout de 60 secondes
+                    
+                    # Heartbeat du démon
+                    self._logger.debug("[MainLoop] Check Heartbeat")
+                    if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
+                        self._logger.info('[DAEMON][MAINLOOP] Heartbeat = 1')
+                        await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
+                        self._config.heartbeat_lasttime = currentTime
+                        # TODO ajouter l'usage des ressources !
+                    # Scan New TVRemote
+                    
+                    # Pause Cycle
+                    await asyncio.sleep(cycle)
+                except Exception as e:
+                    self._logger.error("[MainLoop] Exception :: %s", e)
                 
         except asyncio.CancelledError:
             self._logger.debug("[MainLoop] Stop MainLoop")
