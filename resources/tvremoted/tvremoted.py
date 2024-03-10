@@ -126,17 +126,14 @@ class TVRemoted:
             info = AsyncServiceInfo(service_type, name)
             await info.async_request(zeroconf, 3000)
             if info:
-                self._logger.info("[TVHOSTS][%s] Type :: %s", name, info.type)
-                self._logger.info("[TVHOSTS][%s] Name :: %s", name, info.get_name())
-                self._logger.info("[TVHOSTS][%s] Server :: %s", name, info.server)
+                self._logger.info("[TVHOSTS][%s] Type :: %s", info.name, info.type)
+                self._logger.info("[TVHOSTS][%s] Name :: %s", info.name, info.get_name())
                 for addr in info.parsed_scoped_addresses():
                     if (await self._is_ipv4(addr)):
                         self._logger.info("[TVHOSTS][%s] Addr (IPv4) :: %s (port=%s)", name, addr, str(info.port))
-                    else:
-                        self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
-                """ if info.properties:
-                    for key, value in info.properties.items():
-                        self._logger.info("[TVHOSTS] Properties :: %s:%s", key, value) """
+                    # else:
+                        # self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
+                
                 if info.decoded_properties:
                     for key, value in info.decoded_properties.items():
                         self._logger.info("[TVHOSTS] Properties :: %s = %s", key, value)
