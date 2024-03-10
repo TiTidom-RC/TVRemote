@@ -130,7 +130,7 @@ class TVRemoted:
                 self._logger.info("[TVHOSTS][%s] Type :: %s", info.get_name(), info.type)
                 for addr in info.parsed_scoped_addresses():
                     if (await self._is_ipv4(addr)):
-                        self._logger.info("[TVHOSTS][%s] Addr (IPv4) :: %s (port=%s)", info.get_name(), addr, str(info.port))
+                        self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", info.get_name(), addr, str(info.port))
                     # else:
                         # self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
                 
