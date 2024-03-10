@@ -103,6 +103,7 @@ class TVRemoted:
                 # Arrêt du ScanMode au bout de 60 secondes
                 
                 # Heartbeat du démon
+                
                 if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                     self._logger.info('[DAEMON][MAINLOOP] Heartbeat = 1')
                     await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
@@ -156,9 +157,9 @@ class TVRemoted:
         """
         self._logger.debug('Cancel all tasks')
         # self._search_task.cancel()  # don't forget to cancel your background task
+        self._main_task.cancel()
         self._listen_task.cancel()
         self._send_task.cancel()
-
 
 # ----------------------------------------------------------------------------
 
