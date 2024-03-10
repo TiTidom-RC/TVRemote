@@ -8,6 +8,7 @@ import asyncio
 import functools
 import time
 import traceback
+import ipaddress
 
 from config import Config
 from jeedom.utils import Utils
@@ -126,7 +127,10 @@ class TVRemoted:
             await info.async_request(zeroconf, 3000)
             if info:
                 for addr in info.parsed_scoped_addresses():
-                    self._logger.info("[TVHOSTS][%s] Addr :: %s (port=%s)", name, addr, str(info.port))
+                    if (self._is_ipv4(addr)):
+                        self._logger.info("[TVHOSTS][%s] Addr (IPv4) :: %s (port=%s)", name, addr, str(info.port))
+                    else:
+                        self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
                 if info.properties:
                     for key, value in info.properties.items():
                         self._logger.info("[TVHOSTS] Properties :: %s:%s", key, value)
@@ -193,6 +197,13 @@ class TVRemoted:
                 self._config.resources_lasttime = currentTime
             except Exception:
                 pass
+    
+    async def _is_ipv4(self, ip: str):
+        try:
+            ipaddress.IPv4Address(ip)
+            return True
+        except ValueError:
+            return False
     
     """ async def _search_animals(self):
         # this is a demo implementation of a backgroudn task, you must have a try ... except asyncio.CancelledError: ... that will intercept the cancel request from the loop
