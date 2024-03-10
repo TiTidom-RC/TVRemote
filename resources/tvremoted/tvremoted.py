@@ -7,6 +7,7 @@ import asyncio
 import functools
 import time
 import datetime
+import traceback
 
 from config import Config
 from jeedom.utils import Utils
@@ -115,6 +116,7 @@ class TVRemoted:
                         
                 except Exception as e:
                     self._logger.error("[MainLoop] Exception :: %s", e)
+                    self._logger.info(traceback.format_exc())
                 
                 # Pause Cycle
                 await asyncio.sleep(cycle)
