@@ -112,11 +112,12 @@ class TVRemoted:
                         self._config.heartbeat_lasttime = currentTime
                         # TODO ajouter l'usage des ressources !
                     # Scan New TVRemote
-                    
-                    # Pause Cycle
-                    await asyncio.sleep(cycle)
+                        
                 except Exception as e:
                     self._logger.error("[MainLoop] Exception :: %s", e)
+                
+                # Pause Cycle
+                await asyncio.sleep(cycle)
                 
         except asyncio.CancelledError:
             self._logger.debug("[MainLoop] Stop MainLoop")
