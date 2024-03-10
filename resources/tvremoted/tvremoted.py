@@ -1,5 +1,6 @@
 import logging
 import argparse
+import resource
 import sys
 import os
 import signal
@@ -94,7 +95,7 @@ class TVRemoted:
 
     async def _mainLoop(self, cycle=2.0):
         # Main Loop for Daemon
-        self._logger.debug("[MainLoop] Start MainLoop")
+        self._logger.debug("[MAINLOOP] Start MainLoop")
         try:
             while True:
                 try:
@@ -105,24 +106,41 @@ class TVRemoted:
                     # Arrêt du ScanMode au bout de 60 secondes
                     
                     # Heartbeat du démon
-                    self._logger.debug("[MainLoop] Check Heartbeat")
+                    self._logger.debug("[MAINLOOP] Check Heartbeat")
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
-                        self._logger.info('[DAEMON][MAINLOOP] Heartbeat = 1')
+                        self._logger.info('[MAINLOOP] Heartbeat = 1')
                         await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
                         self._config.heartbeat_lasttime = currentTime
-                        # TODO ajouter l'usage des ressources !
+                        await self._getResourcesUsage()
                     # Scan New TVRemote
                         
                 except Exception as e:
-                    self._logger.error("[MainLoop] Exception :: %s", e)
+                    self._logger.error("[MAINLOOP] Exception :: %s", e)
                     self._logger.info(traceback.format_exc())
                 
                 # Pause Cycle
                 await asyncio.sleep(cycle)
                 
         except asyncio.CancelledError:
-            self._logger.debug("[MainLoop] Stop MainLoop")
+            self._logger.debug("[MAINLOOP] Stop MainLoop")
             
+    async def _getResourcesUsage(self):
+        if (self._logger.isEnabledFor(logging.INFO)):
+            resourcesUse = resource.getrusage(resource.RUSAGE_SELF)
+            try:
+                uTime = getattr(resourcesUse, 'ru_utime')
+                sTime = getattr(resourcesUse, 'ru_stime')
+                maxRSS = getattr(resourcesUse, 'ru_maxrss')
+                totalTime = uTime + sTime
+                currentTime = int(time.time())
+                timeDiff = currentTime - self._config.resources_lasttime
+                timeDiffTotal = currentTime - self._config.resources_firsttime
+                self._logger.info('[RESOURCES] Total CPU Time used : %.3fs (%.2f%%) | Last %i sec : %.3fs (%.2f%%) | Memory : %s Mo', totalTime, totalTime / timeDiffTotal * 100, timeDiff, totalTime - self._config.resources_lastused, (totalTime - self._config.resources_lastused) / timeDiff * 100, int(round(maxRSS / 1024)))
+                self._config.resources_lastused = totalTime
+                self._config.resources_lasttime = currentTime
+            except Exception:
+                pass
+    
     """ async def _search_animals(self):
         # this is a demo implementation of a backgroudn task, you must have a try ... except asyncio.CancelledError: ... that will intercept the cancel request from the loop
         self._logger.info("Start searching animals")
