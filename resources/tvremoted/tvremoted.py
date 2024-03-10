@@ -101,7 +101,7 @@ class TVRemoted:
                 try:
                     
                     # *** Actions de la MainLoop ***
-                    currentTime = int(time.time)
+                    currentTime = int(time.time())
                     
                     # Arrêt du ScanMode au bout de 60 secondes
                     
