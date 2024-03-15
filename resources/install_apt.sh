@@ -57,7 +57,7 @@ log "****************************************"
 log "* Install apt-get packages for Python3 *"
 log "****************************************"
 apt-get install -y python3 python3-requests python3-pip python3-setuptools python3-dev python3-venv | log
-log "** Install packages for Python3 : Done **"
+log "** Install packages for Python3 :: Done **"
 echo 30 > ${PROGRESS_FILE}
 log "***************************"
 log "* Check Python3.x Version *"
