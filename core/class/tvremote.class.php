@@ -22,6 +22,7 @@ class tvremote extends eqLogic {
     /* ************************** Variables Globales ****************************** */
 
     const PYTHON3_PATH = __DIR__ . '/../../resources/venv/bin/python3';
+    const PYENV_ALTPATH = __DIR__ . '/../../../ttscast/resources/pyenv/bin/pyenv';
     const PYENV_PATH = __DIR__ . '/../../resources/pyenv/bin/pyenv';
 
     /*
@@ -203,7 +204,10 @@ class tvremote extends eqLogic {
     public static function getPyEnvVersion() {
         $pyenvVersion = '0.0.0';
         try {
-            if (file_exists(self::PYENV_PATH)) {
+            if (file_exists(self::PYENV_ALTPATH)) {
+               $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_ALTPATH . " --version | awk '{ print $2 }'");
+               config::save('pyenvVersion', $pyenvVersion, 'tvremote');
+            } elseif (file_exists(self::PYENV_PATH)) {
                $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
                config::save('pyenvVersion', $pyenvVersion, 'tvremote');
             }
