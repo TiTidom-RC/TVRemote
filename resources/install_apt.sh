@@ -29,10 +29,10 @@ log "* Check PyEnv Dir *"
 log "*******************"
 if [ -d ${PYENV_ALTDIR} ]; then
 	PYENV_DIR=${PYENV_ALTDIR}
-	log "** Use Alt Dir for PyEnv :: ${PYENV_DIR}**"
+	log "** Use Alt Dir for PyEnv :: ${PYENV_DIR} **"
 else
 	PYENV_DIR=${BASE_DIR}/pyenv
-	log "** Use Plugin Dir for PyEnv :: ${PYENV_DIR}**"
+	log "** Use Plugin Dir for PyEnv :: ${PYENV_DIR} **"
 fi
 
 echo 1 > ${PROGRESS_FILE}
