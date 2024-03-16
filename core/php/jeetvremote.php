@@ -49,7 +49,7 @@ try {
         }
     } elseif (isset($result['heartbeat'])) {
         if ($result['heartbeat'] == 1) {
-            log::add('tvremote','info','[CALLBACK] tvremote Daemon Heartbeat (30s)');
+            log::add('tvremote','info','[CALLBACK] tvremote Daemon Heartbeat (600s)');
         }
     } elseif (isset($result['daemonStarted'])) {
         if ($result['daemonStarted'] == '1') {

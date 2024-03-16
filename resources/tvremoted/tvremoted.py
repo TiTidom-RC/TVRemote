@@ -54,8 +54,10 @@ class TVRemoted:
         """
         self._jeedom_publisher = Publisher(self._config.callback_url, self._config.api_key, self._config.cycle_factor * self._config.cycle_comm)
         if not await self._jeedom_publisher.test_callback():
-            self._logger.info("[CALLBACK] Test :: OK")
+            self._logger.info("[CALLBACK] Test :: KO")
             return
+        else:
+            self._logger.info("[CALLBACK] Test :: OK")
 
         # _listen_task & _send_task are 2 background tasks handling communication with the daemon
         self._listen_task = Listener.create_listen_task(self._config.socket_host, self._config.socket_port, self._on_socket_message)
@@ -77,6 +79,7 @@ class TVRemoted:
         
         # Informer Jeedom que le démon est démarré
         await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
+        self._logger.info("[MAIN] DaemonStarted :: OK")
 
     async def __add_signal_handler(self):
         """
