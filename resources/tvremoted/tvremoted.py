@@ -198,6 +198,10 @@ class TVRemoted:
                             self._logger.debug('[SCANNER] Scan TVRemote :: ScanMode')
                         elif (self._config.scan_lasttime + self._config.scan_schedule <= currentTime):
                             self._logger.debug('[SCANNER] Scan TVRemote :: ScheduleMode')
+                            # Scan Schedule
+                            self._config.scan_pending = True
+                            self._config.scan_lasttime = int(time.time())
+                            self._config.scan_pending = False
                     else:
                         self._logger.debug('[MAINLOOP] ScanMode : SCAN PENDING !')                        
                         
