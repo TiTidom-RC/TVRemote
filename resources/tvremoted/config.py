@@ -6,6 +6,8 @@ class Config(object):
     def __init__(self, **kwargs):
         self._kwargs = kwargs
         
+        self.is_ending = False
+        
         self.heartbeat_lasttime = int(time.time())
         
         self.scanmode = False

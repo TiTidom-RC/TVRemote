@@ -31,7 +31,23 @@ try {
         die();
     }
 
-    if (isset($result['heartbeat'])) {
+    if (isset($result['scanState'])) {
+        if ($result['scanState'] == "scanOn") {
+            log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOn'); 
+            config::save('scanState', 'scanOn', 'tvremote');
+            event::add('tvremote::scanState', array(
+                'scanState' => 'scanOn')
+            );
+        } else {
+            log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOff'); 
+            config::save('scanState', 'scanOff', 'tvremote');
+            event::add('tvremote::scanState', array(
+                'scanState' => 'scanOff')
+            );
+            # tvremote::sendOnStartCastToDaemon();
+
+        }
+    } elseif (isset($result['heartbeat'])) {
         if ($result['heartbeat'] == 1) {
             log::add('tvremote','info','[CALLBACK] tvremote Daemon Heartbeat (30s)');
         }

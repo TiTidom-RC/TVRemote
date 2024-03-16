@@ -74,6 +74,9 @@ class TVRemoted:
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
         await asyncio.gather(self._tvhosts_task, self._main_task, self._listen_task, self._send_task)
+        
+        # Informer Jeedom que le démon est démarré
+        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
 
     async def __add_signal_handler(self):
         """
@@ -92,6 +95,20 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Invalid apikey from socket : %s', message)
             return
         try:
+            if message['cmd'] == "ScanOn":
+                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn')
+                
+                self._config.scanmode = True
+                self._config.scanmode_start = int(time.time())
+                await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
+            elif message['cmd'] == "scanOff":
+                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOff')
+                
+                self._config.scanmode = False
+                await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
+            else:
+                self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
+                
             """ if message['action'] == 'think':
                 await self._think(message['message'])
             elif message['action'] == 'ping':
@@ -156,14 +173,16 @@ class TVRemoted:
         # Main Loop for Daemon
         self._logger.debug("[MAINLOOP] Start MainLoop")
         try:
-            while True:
+            while not self._config.is_ending:
                 try:
-                    
                     # *** Actions de la MainLoop ***
                     currentTime = int(time.time())
                     
                     # Arrêt du ScanMode au bout de 60 secondes
-                    
+                    if (self._config.scanmode and (self._config.scanmode_start + self._config.scanmode_timeout) <= currentTime):
+                        self._config.scanmode = False
+                        self._logger.info('[MAINLOOP] ScanMode :: END')
+                        self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
                     # Heartbeat du démon
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                         self._logger.info('[MAINLOOP] Heartbeat = 1')
@@ -171,6 +190,13 @@ class TVRemoted:
                         self._config.heartbeat_lasttime = currentTime
                         await self._getResourcesUsage()
                     # Scan New TVRemote
+                    if not self._config.scan_pending:
+                        if self._config.scanmode and (self._config.scan_lasttime < self._config.scanmode_start):
+                            self._logger.debug('[SCANNER] Scan TVRemote :: ScanMode')
+                        elif (self._config.scan_lasttime + self._config.scan_schedule <= currentTime):
+                            self._logger.debug('[SCANNER] Scan TVRemote :: ScheduleMode')
+                    else:
+                        self._logger.debug('[MAINLOOP] ScanMode : SCAN PENDING !')                        
                         
                 except Exception as e:
                     self._logger.error("[MAINLOOP] Exception :: %s", e)
