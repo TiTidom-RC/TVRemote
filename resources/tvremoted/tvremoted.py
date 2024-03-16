@@ -94,7 +94,7 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Invalid apikey from socket : %s', message)
             return
         try:
-            if message['cmd'] == "ScanOn":
+            if message['cmd'] == "scanOn":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn')
                 
                 self._config.scanmode = True
@@ -299,6 +299,7 @@ def get_args():
 
 def shutdown():
     _LOGGER.info("[SHUTDOWN] Shuting down")
+    config.is_ending = True
 
     _LOGGER.debug("[SHUTDOWN] Removing PID file %s", config.pid_filename)
     os.remove(config.pid_filename)
