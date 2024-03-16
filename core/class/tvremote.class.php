@@ -222,6 +222,73 @@ class tvremote extends eqLogic {
         return $pyenvVersion;
     }
 
+    public static function changeScanState($_scanState)
+    {
+        if ($_scanState == "scanOn") {
+            $value = array('cmd' => 'scanOn');
+            self::sendToDaemon($value);
+        } else {
+            $value = array('cmd' => 'scanOff');
+            self::sendToDaemon($value);
+        }
+    }
+
+    public static function createAndUpdCastFromScan($_data)
+    {
+        if (!isset($_data['uuid'])) {
+            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (UUID) pour créer l\'équipement');
+            event::add('jeedom::alert', array(
+                'level' => 'danger',
+                'page' => 'tvremote',
+                'message' => __('[KO] Information manquante (UUID) pour créer l\'équipement', __FILE__),
+            ));
+            return false;
+        }
+        
+        $newtvremote = tvremote::byLogicalId($_data['uuid'], 'tvremote');
+        if (!is_object($newtvremote)) {
+            $eqLogic = new tvremote();
+            $eqLogic->setLogicalId($_data['uuid']);
+            $eqLogic->setIsEnable(1);
+            $eqLogic->setIsVisible(1);
+            $eqLogic->setName($_data['friendly_name']);
+            $eqLogic->setEqType_name('tvremote');
+            $eqLogic->setCategory('multimedia','1');
+            $eqLogic->setConfiguration('friendly_name', $_data['friendly_name']);
+            $eqLogic->setConfiguration('model_name', $_data['model_name']);
+            $eqLogic->setConfiguration('manufacturer', $_data['manufacturer']);
+            $eqLogic->setConfiguration('cast_type', $_data['cast_type']);
+            $eqLogic->setConfiguration('host', $_data['host']);
+            $eqLogic->setConfiguration('port', $_data['port']);
+            $eqLogic->setConfiguration('lastscan', $_data['lastscan']);
+            $eqLogic->save();
+
+            event::add('jeedom::alert', array(
+                'level' => 'success',
+                'page' => 'tvremote',
+                'message' => __('[SCAN] TVRemote AJOUTE :: ' .$_data['friendly_name'], __FILE__),
+            ));
+            return $eqLogic;
+        }
+        else {
+            $newtvremote->setConfiguration('friendly_name', $_data['friendly_name']);
+            $newtvremote->setConfiguration('model_name', $_data['model_name']);
+            $newtvremote->setConfiguration('manufacturer', $_data['manufacturer']);
+            $newtvremote->setConfiguration('cast_type', $_data['cast_type']);
+            $newtvremote->setConfiguration('host', $_data['host']);
+            $newtvremote->setConfiguration('port', $_data['port']);
+            $newtvremote->setConfiguration('lastscan', $_data['lastscan']);
+            $newtvremote->save();
+
+            event::add('jeedom::alert', array(
+                'level' => 'success',
+                'page' => 'tvremote',
+                'message' => __('[SCAN] TVRemote MAJ :: ' .$_data['friendly_name'], __FILE__),
+            ));
+            return $newtvremote;
+        }
+    }
+
     /* ************************ Methodes static : JEEDOM *************************** */
 
     /*

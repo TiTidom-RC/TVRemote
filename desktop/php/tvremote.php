@@ -16,23 +16,47 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<legend><i class="fas fa-cog"></i> {{Gestion}}</legend>
 				<!-- Boutons de gestion du plugin -->
 				<div class="eqLogicThumbnailContainer">
-					<div class="cursor eqLogicAction logoPrimary" data-action="add">
-						<i class="fas fa-plus-circle"></i>
-						<br>
-						<span>{{Ajouter}}</span>
-					</div>
-					<div class="cursor eqLogicAction logoSecondary" data-action="gotoPluginConf">
-						<i class="fas fa-wrench"></i>
-						<br>
-						<span>{{Configuration}}</span>
-					</div>
-				</div>
+                    <?php
+                    if (config::byKey('scanState', 'tvremote', '0') == "scanOn") {
+                    ?>
+                        <div class="cursor eqLogicAction logoSecondary customclass-scanState" data-scanState="scanOff" data-action="scan">
+                            <i class="fas fa-search-plus icon_red customicon-scanState"></i>
+                            <br>
+                            <span class="customtext-scanState" style="color:var(--txt-color)">{{Stop Scan}}</span>
+                        </div>                
+                    <?php
+                    } else {
+                    ?>
+                        <div class="cursor eqLogicAction logoPrimary customclass-scanState" data-scanState="scanOn" data-action="scan">
+                            <i class="fas fa-search-plus customicon-scanState"></i>
+                            <br>
+                            <span class="customtext-scanState" style="color:var(--txt-color)">{{Scan}}</span>
+                        </div>
+                    <?php
+                    }
+                    ?>
+                    <div class="cursor eqLogicAction logoSecondary" data-action="gotoPluginConf">
+                        <i class="fas fa-wrench"></i>
+                        <br>
+                        <span style="color:var(--txt-color)">{{Configuration}}</span>
+                    </div>
+                    <div class="cursor pluginAction logoSecondary" data-action="openLocation" data-location="<?= $plugin->getDocumentation() ?>">
+				        <i class="fas fa-book icon_blue"></i>
+				        <br>
+				        <span style="color:var(--txt-color)">{{Documentation}}</span>
+			        </div>
+        			<div class="cursor pluginAction logoPrimary" data-action="openLocation" data-location="https://community.jeedom.com/tag/plugin-<?= $plugin->getId() ?>">
+				        <i class="fas fa-thumbs-up"></i>
+				        <br>
+				        <span style="color:var(--txt-color)">{{Community}}</span>
+			        </div>
+                </div>
 			</div>
 		</div>
 		<legend><i class="fas fa-table"></i> {{Mes TVRemotes}}</legend>
 		<?php
 		if (count($eqLogics) == 0) {
-			echo '<br><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement TVRemote trouvé, cliquer sur "Ajouter" pour commencer}}</div>';
+			echo '<br><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement TVRemote trouvé, cliquer sur Ajouter pour commencer}}</div>';
 		} else {
 			// Champ de recherche
 			echo '<div class="input-group" style="margin:5px;">';
@@ -76,7 +100,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<!-- Onglets -->
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
-			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
+			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{TV Remote}}</a></li>
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
 		</ul>
 		<div class="tab-content">
@@ -129,6 +153,56 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
 								</div>
 							</div>
+
+							<legend><i class="fas fa-cogs"></i> {{Paramètres du TVRemote}}</legend>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{UUID}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Nom}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Modèle}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="model_name" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Type}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cast_type" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Fabricant}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="manufacturer" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Host}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="host" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Port}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Dernier Scan}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="lastscan" readonly>
+                                </div>
+                            </div>
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->
@@ -153,11 +227,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<thead>
 							<tr>
 								<th class="hidden-xs" style="min-width:50px;width:70px;">ID</th>
-								<th style="min-width:200px;width:350px;">{{Nom}}</th>
-								<th>{{Type}}</th>
-								<th style="min-width:260px;">{{Options}}</th>
-								<th>{{Etat}}</th>
-								<th style="min-width:80px;width:200px;">{{Actions}}</th>
+                                <th style="min-width:200px;width:350px;">{{Nom}}</th>
+                                <th style="min-width:100px;width:150px;">{{Type}}</th>
+                                <th style="min-width:100px;">{{Options}}</th>
+                                <th style="min-width:150px;">{{Etat}}</th>
+                                <th style="min-width:130px;width:150px;">{{Actions}}</th>
 							</tr>
 						</thead>
 						<tbody>

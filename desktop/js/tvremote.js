@@ -120,9 +120,9 @@ function changeScanState(_scanState) {
 
 $('body').on('tvremote::newdevice', function (_event, _option) {
   if (_option && _option['friendly_name'] && _option['newone'] == '1') {
-    $('#div_alert').showAlert({message: "[SCAN] NEW tvremote détecté :: " + _option['friendly_name'], level: 'warning'});
+    $('#div_alert').showAlert({message: "[SCAN] NEW TVRemote détecté :: " + _option['friendly_name'], level: 'warning'});
   } else if (_option && _option['friendly_name'] && _option['newone'] == '0') {
-    $('#div_alert').showAlert({message: "[SCAN] tvremote MAJ :: " + _option['friendly_name'], level: 'warning'});
+    $('#div_alert').showAlert({message: "[SCAN] TVRemote MAJ :: " + _option['friendly_name'], level: 'warning'});
   }
 });
 

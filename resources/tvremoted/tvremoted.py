@@ -165,7 +165,6 @@ class TVRemoted:
                     # Arrêt du ScanMode au bout de 60 secondes
                     
                     # Heartbeat du démon
-                    # self._logger.debug("[MAINLOOP] Check Heartbeat")
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                         self._logger.info('[MAINLOOP] Heartbeat = 1')
                         await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})

@@ -63,7 +63,7 @@ class Config(object):
     
     @property
     def heartbeat_frequency(self):
-        return 30
+        return 600
     
     @property
     def scanmode_timeout(self):
