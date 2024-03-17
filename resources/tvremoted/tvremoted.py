@@ -177,7 +177,7 @@ class TVRemoted:
                     'scanmode': 1
                 }
                 # Envoi vers Jeedom
-                self._jeedom_publisher.add_change('devices::' + data['name'], data)
+                await self._jeedom_publisher.add_change('devices::' + data['name'], data)
                 
             else:
                 self._logger.warning("[TVHOSTS][%s] Info :: NO", name)
