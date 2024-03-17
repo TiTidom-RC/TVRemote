@@ -44,7 +44,7 @@ class TVRemoted:
 
         # Below you can init your own variables if needed
         self._main_task = None
-        self._tvhosts_task = None
+        # self._tvhosts_task = None
         # self._search_task = None
 
     async def main(self):
@@ -66,7 +66,7 @@ class TVRemoted:
         # create your own background tasks here.
         # self._search_task = asyncio.create_task(self._search_animals())
         self._main_task = asyncio.create_task(self._mainLoop(self._config.cycle_main))
-        self._tvhosts_task = asyncio.create_task(self._tvhosts_from_zeroconf(timeout=60))
+        # self._tvhosts_task = asyncio.create_task(self._tvhosts_from_zeroconf(timeout=60))
         
         # register signal handler
         await self.__add_signal_handler()
@@ -75,8 +75,9 @@ class TVRemoted:
         self._logger.info("[MAIN] Ready")
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
-        await asyncio.gather(self._tvhosts_task, self._main_task, self._listen_task, self._send_task)
-
+        #  await asyncio.gather(self._tvhosts_task, self._main_task, self._listen_task, self._send_task)
+        await asyncio.gather(self._main_task, self._listen_task, self._send_task)
+        
     async def __add_signal_handler(self):
         """
         This function register signal handler to interupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
@@ -196,6 +197,7 @@ class TVRemoted:
                     if not self._config.scan_pending:
                         if self._config.scanmode and (self._config.scan_lasttime < self._config.scanmode_start):
                             self._logger.debug('[SCANNER] Scan TVRemote :: ScanMode')
+                            await self._tvhosts_from_zeroconf(timeout=60)
                         elif (self._config.scan_lasttime + self._config.scan_schedule <= currentTime):
                             self._logger.debug('[SCANNER] Scan TVRemote :: ScheduleMode')
                             # Scan Schedule
