@@ -1,3 +1,4 @@
+import datetime
 import logging
 import argparse
 import resource
@@ -143,19 +144,41 @@ class TVRemoted:
             info = AsyncServiceInfo(service_type, name)
             await info.async_request(zeroconf, 3000)
             if info:
-                self._logger.info("[TVHOSTS][%s] Name :: %s", info.get_name(), name)
-                self._logger.info("[TVHOSTS][%s] Type :: %s", info.get_name(), info.type)
+                currentTime = int(time.time())
+                currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                
+                _friendly_name = info.get_name()
+                
+                self._logger.info("[TVHOSTS][%s] Name :: %s", _friendly_name, name)
+                self._logger.info("[TVHOSTS][%s] Type :: %s", _friendly_name, info.type)
+                
+                _ip_addr_v4 = "0.0.0.0"
                 for addr in info.parsed_scoped_addresses():
                     if (await self._is_ipv4(addr)):
-                        self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", info.get_name(), addr, str(info.port))
+                        _ip_addr_v4 = addr
+                        self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", _friendly_name, addr, str(info.port))
+                        break
                     # else:
                         # self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
                 
                 if info.decoded_properties:
                     for key, value in info.decoded_properties.items():
-                        self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", info.get_name(), key, value)
+                        self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", _friendly_name, key, value)
                 else:
-                    self._logger.warning("[TVHOSTS][%s] Properties :: NO", info.get_name())
+                    self._logger.warning("[TVHOSTS][%s] Properties :: NO", _friendly_name)
+                          
+                data = {
+                    'name': name,
+                    'friendly_name': info.get_name(),
+                    'lastscan': currentTimeStr,
+                    'type': info.type,
+                    'host': _ip_addr_v4,
+                    'port': info.port,
+                    'scanmode': 1
+                }
+                # Envoi vers Jeedom
+                self._jeedom_publisher.add_change('devices::' + data['name'], data)
+                
             else:
                 self._logger.warning("[TVHOSTS][%s] Info :: NO", name)
 

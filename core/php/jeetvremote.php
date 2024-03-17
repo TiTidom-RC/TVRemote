@@ -56,6 +56,28 @@ try {
             log::add('tvremote', 'info', '[CALLBACK] Daemon Started');
             # tvremote::sendOnStartCastToDaemon();
         }
+    } elseif (isset($result['devices'])) {
+        log::add('tvremote','debug','[CALLBACK] TVRemote Devices Discovery');
+        foreach ($result['devices'] as $key => $data) {
+            if (!isset($data['name'])) {
+                log::add('tvremote','debug','[CALLBACK] TVRemote Device :: [Name] non défini !');
+                continue;
+            }
+            log::add('tvremote','debug','[CALLBACK] TVRemote Device :: ' . $data['name']);
+            if ($data['scanmode'] != 1) {
+                log::add('tvremote','debug','[CALLBACK] TVRemote Device :: NoScanMode');
+                continue;
+            }
+            $tv_remote = tvremote::byLogicalId($data['name'], 'tvremote');
+            if (!is_object($tv_remote)) {    
+                log::add('tvremote','debug','[CALLBACK] NEW TVRemote détecté :: ' . $data['friendly_name'] . ' (' . $data['name'] . ')');
+                $newtvremote = tvremote::createAndUpdCastFromScan($data);
+            }
+            else {
+                log::add('tvremote','debug','[CALLBACK] TVRemote Update :: ' . $data['friendly_name'] . ' (' . $data['name'] . ')');
+                $updtvremote = tvremote::createAndUpdCastFromScan($data);
+            }
+        }
     } else {
         log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon'); 
     }

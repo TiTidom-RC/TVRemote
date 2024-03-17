@@ -235,29 +235,27 @@ class tvremote extends eqLogic {
 
     public static function createAndUpdCastFromScan($_data)
     {
-        if (!isset($_data['uuid'])) {
-            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (UUID) pour créer l\'équipement');
+        if (!isset($_data['name'])) {
+            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (Name) pour créer l\'équipement');
             event::add('jeedom::alert', array(
                 'level' => 'danger',
                 'page' => 'tvremote',
-                'message' => __('[KO] Information manquante (UUID) pour créer l\'équipement', __FILE__),
+                'message' => __('[KO] Information manquante (Name) pour créer l\'équipement', __FILE__),
             ));
             return false;
         }
         
-        $newtvremote = tvremote::byLogicalId($_data['uuid'], 'tvremote');
+        $newtvremote = tvremote::byLogicalId($_data['name'], 'tvremote');
         if (!is_object($newtvremote)) {
             $eqLogic = new tvremote();
-            $eqLogic->setLogicalId($_data['uuid']);
+            $eqLogic->setLogicalId($_data['name']);
             $eqLogic->setIsEnable(1);
             $eqLogic->setIsVisible(1);
             $eqLogic->setName($_data['friendly_name']);
             $eqLogic->setEqType_name('tvremote');
             $eqLogic->setCategory('multimedia','1');
             $eqLogic->setConfiguration('friendly_name', $_data['friendly_name']);
-            $eqLogic->setConfiguration('model_name', $_data['model_name']);
-            $eqLogic->setConfiguration('manufacturer', $_data['manufacturer']);
-            $eqLogic->setConfiguration('cast_type', $_data['cast_type']);
+            $eqLogic->setConfiguration('type', $_data['type']);
             $eqLogic->setConfiguration('host', $_data['host']);
             $eqLogic->setConfiguration('port', $_data['port']);
             $eqLogic->setConfiguration('lastscan', $_data['lastscan']);
@@ -272,9 +270,7 @@ class tvremote extends eqLogic {
         }
         else {
             $newtvremote->setConfiguration('friendly_name', $_data['friendly_name']);
-            $newtvremote->setConfiguration('model_name', $_data['model_name']);
-            $newtvremote->setConfiguration('manufacturer', $_data['manufacturer']);
-            $newtvremote->setConfiguration('cast_type', $_data['cast_type']);
+            $newtvremote->setConfiguration('type', $_data['type']);
             $newtvremote->setConfiguration('host', $_data['host']);
             $newtvremote->setConfiguration('port', $_data['port']);
             $newtvremote->setConfiguration('lastscan', $_data['lastscan']);

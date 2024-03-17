@@ -156,13 +156,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Paramètres du TVRemote}}</legend>
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">{{UUID}}</label>
+                                <label class="col-sm-4 control-label">{{Name}}</label>
                                 <div class="col-sm-6">
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Nom}}</label>
+                                <label class="col-sm-4 control-label">{{Friendly Name}}</label>
                                 <div class="col-sm-6">
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" readonly>
                                 </div>
@@ -176,7 +176,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Type}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cast_type" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
