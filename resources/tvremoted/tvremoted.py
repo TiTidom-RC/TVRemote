@@ -163,7 +163,10 @@ class TVRemoted:
         services = ["_androidtvremote2._tcp.local."]
         self._logger.info("[TVHOSTS] TV Browser (for %s seconds) :: START", timeout)
         browser = AsyncServiceBrowser(zc.zeroconf, services, handlers=[_async_on_service_state_change])
-        await asyncio.sleep(timeout)
+        t = 0
+        while (not self._config.is_ending) & (t < timeout) & (self._config.scanmode == True):
+            t += 0.5
+            await asyncio.sleep(0.5)
 
         await browser.async_cancel()
         await zc.async_close()
