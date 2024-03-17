@@ -187,7 +187,7 @@ class TVRemoted:
         self._logger.info("[TVHOSTS] TV Browser (for %s seconds) :: START", timeout)
         browser = AsyncServiceBrowser(zc.zeroconf, services, handlers=[_async_on_service_state_change])
         t = 0
-        while (not self._config.is_ending) & (t < timeout) & (self._config.scanmode == True):
+        while not self._config.is_ending and (t < timeout) and self._config.scanmode:
             t += 0.5
             await asyncio.sleep(0.5)
 
