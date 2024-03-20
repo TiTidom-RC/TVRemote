@@ -105,6 +105,7 @@ if [ "$versionPython" -lt 11 ]; then
 	log "* être longue et durer de 2 minutes (Config ++)  *"
 	log "* à plus de 40 minutes sur des petites config !  *" 
 	log "**************************************************"
+	# PYENV_ROOT="${PYENV_DIR}" ${PYENV_DIR}/bin/pyenv install -s 3.11 | log
 	PYENV_ROOT="${PYENV_DIR}" ${PYENV_DIR}/bin/pyenv install -s 3.11.8 | log
 	log "** Python 3.11.8 Installation :: Done **"
 else
@@ -129,11 +130,11 @@ else
 	fi
 	if [ "$vPythonVenv" -ge 11 ]; then
 		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
-		# $(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
+		# ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
 		${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
 	else
 		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
-		# $(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
+		# # ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 		${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 	fi
 fi
