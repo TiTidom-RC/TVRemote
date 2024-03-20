@@ -22,7 +22,7 @@ class tvremote extends eqLogic {
     /* ************************** Variables Globales ****************************** */
 
     const PYTHON3_PATH = __DIR__ . '/../../resources/venv/bin/python3';
-    const PYENV_PATH = '/root/.pyenv/bin/pyenv';
+    const PYENV_PATH = '/opt/pyenv/bin/pyenv';
 
     /*
      * Permet de définir les possibilités de personnalisation du widget (en cas d'utilisation de la fonction 'toHtml' par exemple)
@@ -204,8 +204,20 @@ class tvremote extends eqLogic {
     public static function getPyEnvVersion() {
         $pyenvVersion = '0.0.0';
         try {
-            $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
-            config::save('pyenvVersion', $pyenvVersion, 'tvremote');
+            if (file_exists(self::PYENV_PATH)) {
+                $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
+                config::save('pyenvVersion', $pyenvVersion, 'tvremote');
+            } 
+            elseif (file_exists(self::PYTHON3_PATH)) {
+                $pythonPyEnvInUse = (exec(system::getCmdSudo() . 'dirname $(readlink ' . self::PYTHON3_PATH . ') | grep -Ewc "opt/pyenv"') == 1) ? true : false;
+                if (!$pythonPyEnvInUse) {
+                    $pyenvVersion = "-";
+                    config::save('pyenvVersion', $pyenvVersion, 'tvremote');
+                }
+            } 
+            else {
+                log::add('tvremote', 'error', '[PyEnv-Version] PyEnv File :: KO');
+            }
         }
         catch (\Exception $e) {
             log::add('tvremote', 'error', '[PyEnv-Version] Exception :: ' . $e->getMessage());

@@ -6,7 +6,7 @@ fi
 
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 VENV_DIR=${BASE_DIR}/venv
-PYENV_DIR=~/.pyenv
+PYENV_DIR=/opt/pyenv
 
 function log(){
 	if [ -n "$1" ]
