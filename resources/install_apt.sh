@@ -6,7 +6,7 @@ fi
 
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 VENV_DIR=${BASE_DIR}/venv
-PYENV_ALTDIR=${BASE_DIR}/../../ttscast/resources/pyenv
+PYENV_DIR=~/.pyenv
 
 function log(){
 	if [ -n "$1" ]
@@ -27,12 +27,10 @@ echo 0 > ${PROGRESS_FILE}
 log "*******************"
 log "* Check PyEnv Dir *"
 log "*******************"
-if [ -d ${PYENV_ALTDIR} ]; then
-	PYENV_DIR=${PYENV_ALTDIR}
-	log "** Use Alt Dir for PyEnv :: ${PYENV_DIR} **"
+if [ -d ${PYENV_DIR} ]; then
+	log "** PyEnv Directory (Already there) :: ${PYENV_DIR} **"
 else
-	PYENV_DIR=${BASE_DIR}/pyenv
-	log "** Use Plugin Dir for PyEnv :: ${PYENV_DIR} **"
+	log "** PyEnv Directory (Not there) :: ${PYENV_DIR} **"
 fi
 
 echo 1 > ${PROGRESS_FILE}
@@ -87,7 +85,7 @@ if [ "$versionPython" -lt 11 ]; then
 		log "** PYENV_ROOT (not set) :: OK **"
 	fi
 	if [ -d ${PYENV_DIR} ]; then
-		chown -Rh root:root ${PYENV_DIR} | log
+		# chown -Rh root:root ${PYENV_DIR} | log
 		cd ${PYENV_DIR} && git reset --hard | log
 		cd ${PYENV_DIR}/plugins/pyenv-doctor && git reset --hard | log
 		cd ${PYENV_DIR}/plugins/pyenv-update && git reset --hard | log
@@ -130,8 +128,12 @@ else
 		log "Python3 (Venv) Version :: 3.${vPythonVenv}"
 	fi
 	if [ "$vPythonVenv" -ge 11 ]; then
+		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
+		# $(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
 		${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
 	else
+		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
+		# $(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 		${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 	fi
 fi
@@ -149,10 +151,6 @@ echo 95 > ${PROGRESS_FILE}
 log "****************************"
 log "* Set Owner on Directories *"
 log "****************************"
-if [ -d ${PYENV_DIR} ]; then
-		chown -Rh www-data:www-data ${PYENV_DIR} | log
-		log "** Set Owner for PyEnv Dir :: Done **"
-fi
 if [ -d ${VENV_DIR} ]; then
 		chown -Rh www-data:www-data ${VENV_DIR} | log
 		log "** Set Owner for Venv Dir :: Done **"
