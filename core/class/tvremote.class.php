@@ -203,13 +203,8 @@ class tvremote extends eqLogic {
     public static function getPyEnvVersion() {
         $pyenvVersion = '0.0.0';
         try {
-            if (file_exists(self::PYENV_PATH)) {
-               $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
-               config::save('pyenvVersion', $pyenvVersion, 'tvremote');
-            }
-            else {
-                log::add('tvremote', 'error', '[PyEnv-Version] PyEnv File :: KO');
-            }
+            $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
+            config::save('pyenvVersion', $pyenvVersion, 'tvremote');
         }
         catch (\Exception $e) {
             log::add('tvremote', 'error', '[PyEnv-Version] Exception :: ' . $e->getMessage());
