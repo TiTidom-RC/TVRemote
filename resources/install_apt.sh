@@ -6,6 +6,7 @@ fi
 
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 VENV_DIR=${BASE_DIR}/venv
+PYENV_OLDDIR=${BASE_DIR}/pyenv
 PYENV_DIR=/opt/pyenv
 
 function log(){
@@ -32,8 +33,19 @@ if [ -d ${PYENV_DIR} ]; then
 else
 	log "** PyEnv Directory (Not there) :: ${PYENV_DIR} **"
 fi
-
 echo 1 > ${PROGRESS_FILE}
+log "***********************"
+log "* Check PyEnv Old Dir *"
+log "***********************"
+if [ -d ${PYENV_OLDDIR} ]; then
+	log "** PyEnv Old Directory (Exists) :: ${PYENV_OLDDIR} **"
+	rm -rf ${PYENV_OLDDIR}
+	$OldVenvToUpdate = 1
+else
+	log "** PyEnv Directory (Not there) :: ${PYENV_OLDDIR} **"
+	$OldVenvToUpdate = 0
+fi
+
 log "******************"
 log "* Update apt-get *"
 log "******************"
