@@ -85,12 +85,6 @@ if [ "$versionPython" -lt 11 ]; then
 		log "** PYENV_ROOT (not set) :: OK **"
 	fi
 	if [ -d ${PYENV_DIR} ]; then
-		# chown -Rh root:root ${PYENV_DIR} | log
-		cd ${PYENV_DIR} && git reset --hard | log
-		cd ${PYENV_DIR}/plugins/pyenv-doctor && git reset --hard | log
-		cd ${PYENV_DIR}/plugins/pyenv-update && git reset --hard | log
-		cd ${PYENV_DIR}/plugins/pyenv-virtualenv && git reset --hard | log
-		cd ${BASE_DIR} | log
 		PYENV_ROOT="${PYENV_DIR}" ${PYENV_DIR}/bin/pyenv update | log
 	else
 		curl https://pyenv.run | PYENV_ROOT="${PYENV_DIR}" bash | log
