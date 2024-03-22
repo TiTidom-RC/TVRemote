@@ -153,7 +153,7 @@ else
 		fi
 	else
 		log "Latest Python version installed with PyEnv :: $(PYENV_ROOT="${PYENV_DIR}" ${PYENV_DIR}/bin/pyenv latest -q 3.11)"
-		# # ${PYENV_DIR}/versions/$(PYENV_ROOT="${PYENV_DIR}" ${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
+		# ${PYENV_DIR}/versions/$(PYENV_ROOT="${PYENV_DIR}" ${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 		${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 	fi
 fi
