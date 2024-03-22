@@ -54,6 +54,7 @@ echo 3 > ${PROGRESS_FILE}
 export DEBIAN_FRONTEND=noninteractive
 echo 4 > ${PROGRESS_FILE}
 apt-get clean | log
+log "** Clean apt-get :: Done **"
 echo 5 > ${PROGRESS_FILE}
 apt-get update | log
 log "** Update apt-get :: Done **"
