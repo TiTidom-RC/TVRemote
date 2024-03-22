@@ -42,9 +42,11 @@ if [ -d ${PYENV_OLDDIR} ]; then
 	log "** PyEnv Old Directory (Exists) :: ${PYENV_OLDDIR} **"
 	rm -rf ${PYENV_OLDDIR}
 	VenvToUpdate=1
+	log "** Venv Update :: Needed **"
 else
 	log "** PyEnv Old Directory (Not exists) :: ${PYENV_OLDDIR} **"
 	VenvToUpdate=0
+	log "** Venv Update :: Not Needed **"
 fi
 log "** Check Old PyEnv :: Done **"
 log "******************"
@@ -127,7 +129,7 @@ log "**************************"
 log "* Create Python3.11 venv *"
 log "**************************"
 if [ "$versionPython" -ge 11 ]; then
-	if ["$VenvToUpdate" -eq 1 ]; then
+	if [ "$VenvToUpdate" -eq 1 ]; then
 		python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log 
 	else
 		python3 -m venv --upgrade-deps ${VENV_DIR} | log 
@@ -142,7 +144,7 @@ else
 	fi
 	if [ "$vPythonVenv" -ge 11 ]; then
 		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
-		if ["$VenvToUpdate" -eq 1 ]; then
+		if [ "$VenvToUpdate" -eq 1 ]; then
 			# ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 			${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
 		else
