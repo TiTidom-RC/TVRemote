@@ -29,29 +29,30 @@ log "*******************"
 log "* Check PyEnv Dir *"
 log "*******************"
 if [ -d ${PYENV_DIR} ]; then
-	log "** PyEnv Directory (Already there) :: ${PYENV_DIR} **"
+	log "** PyEnv Directory (Exists) :: ${PYENV_DIR} **"
 else
-	log "** PyEnv Directory (Not there) :: ${PYENV_DIR} **"
+	log "** PyEnv Directory (Not exists) :: ${PYENV_DIR} **"
 fi
+log "** Check PyEnv :: Done **"
 echo 1 > ${PROGRESS_FILE}
 log "***********************"
-log "* Check PyEnv Old Dir *"
+log "* Check Old PyEnv Dir *"
 log "***********************"
 if [ -d ${PYENV_OLDDIR} ]; then
 	log "** PyEnv Old Directory (Exists) :: ${PYENV_OLDDIR} **"
 	rm -rf ${PYENV_OLDDIR}
-	$OldVenvToUpdate = 1
+	$VenvToUpdate = 1
 else
-	log "** PyEnv Directory (Not there) :: ${PYENV_OLDDIR} **"
-	$OldVenvToUpdate = 0
+	log "** PyEnv Old Directory (Not exists) :: ${PYENV_OLDDIR} **"
+	$VenvToUpdate = 0
 fi
-
+log "** Check Old PyEnv :: Done **"
 log "******************"
 log "* Update apt-get *"
 log "******************"
-echo 2 > ${PROGRESS_FILE}
-export DEBIAN_FRONTEND=noninteractive
 echo 3 > ${PROGRESS_FILE}
+export DEBIAN_FRONTEND=noninteractive
+echo 4 > ${PROGRESS_FILE}
 apt-get clean | log
 echo 5 > ${PROGRESS_FILE}
 apt-get update | log
@@ -125,7 +126,11 @@ log "**************************"
 log "* Create Python3.11 venv *"
 log "**************************"
 if [ "$versionPython" -ge 11 ]; then
-	python3 -m venv --upgrade-deps ${VENV_DIR} | log 
+	if ["$VenvToUpdate" -eq 1 ]; then
+		python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log 
+	else
+		python3 -m venv --upgrade-deps ${VENV_DIR} | log 
+	fi
 else
 	vPythonVenv=$(${VENV_DIR}/bin/python3 --version 2>/dev/null | awk -F'[ ,.]' '{print $3}')
 	[[ -z "$vPythonVenv" ]] && vPythonVenv=0
@@ -136,8 +141,13 @@ else
 	fi
 	if [ "$vPythonVenv" -ge 11 ]; then
 		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
-		# ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
-		${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
+		if ["$VenvToUpdate" -eq 1 ]; then
+			# ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
+			${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
+		else
+			# ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
+			${PYENV_DIR}/versions/3.11.8/bin/python3 -m venv --upgrade-deps ${VENV_DIR} | log
+		fi
 	else
 		log "Latest Python version installed with PyEnv :: $(${PYENV_DIR}/bin/pyenv latest -q 3.11)"
 		# # ${PYENV_DIR}/versions/$(${PYENV_DIR}/bin/pyenv latest -q 3.11)/bin/python3 -m venv --clear --upgrade-deps ${VENV_DIR} | log
