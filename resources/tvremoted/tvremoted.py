@@ -362,7 +362,7 @@ try:
     _LOGGER.info('[DAEMON] PID File: %s', config.pid_filename)
     _LOGGER.info('[DAEMON] Api Key: %s', "***")
     _LOGGER.info('[DAEMON] CallBack: %s', config.callback_url)
-    _LOGGER.info('[DAEMON] Config Path: %s', config.config_fullpath)
+    _LOGGER.info('[DAEMON] Cert/Key Files: %s :: %s', config.cert_file, config.key_file)
     
     Utils.write_pid(str(config.pid_filename))
 

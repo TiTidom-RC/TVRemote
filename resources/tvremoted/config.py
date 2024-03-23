@@ -97,7 +97,7 @@ class Config(object):
         return 'data/config/tvremote_cert.pem'
     
     @property
-    def cerf_file(self):
+    def cert_file(self):
         return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.cert_filepath))
     
     @property
