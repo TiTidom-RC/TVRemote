@@ -30,6 +30,8 @@ class Config(object):
         self.remote_zconf = None
         self.remote_listener = {}
         
+        self.pairing_code = None
+        
     @property
     def plugin_version(self):
         return self._kwargs.get('pluginversion', '0.0.0')
@@ -88,6 +90,10 @@ class Config(object):
     
     @property
     def scan_schedule(self):
+        return 60
+    
+    @property
+    def pairing_timeout(self):
         return 60
     
     @property

@@ -108,13 +108,46 @@ class TVRemoted:
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
                 self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                await self._pairing(message['mac'], message['host'], message['port'])
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Sending Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
+                self._config.pairing_code = message['paircode']
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
         except Exception as message_e:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
+
+    async def _pairing(self, _mac=None, _host=None, _port=None) -> None:
+        """ Function to pair Plugin with TV """
+        
+        self._config.pairing_code = None
+        
+        remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _host)
+        if await remote.async_generate_cert_if_missing():
+            self._logger.info("[PAIRING][%s] Generated New Cert/Key Files :: %s | %s", _mac, self._config.cert_file, self._config.key_file)
+        
+        pairing_starttime = int(time.time())
+        currentTime = int(time.time())
+        await remote.async_start_pairing()
+        while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) <= currentTime :
+            currentTime = int(time.time())
+            while not self._config.is_ending and self._config.pairing_code is None :
+                asyncio.sleep(1)
+                currentTime = int(time.time())
+                if (pairing_starttime + self._config.pairing_timeout) > currentTime:
+                    self._logger.error("[PAIRING][%s] Pairing Code not received in last 60sec :: KO", _mac)
+                    return
+            try:
+                return await remote.async_finish_pairing(self._config.pairing_code)
+            except InvalidAuth as exc:
+                self._logger.error("[PAIRING][%s] Invalid Pairing Code. Error :: %s", _mac, exc)
+                asyncio.sleep(1)
+                continue
+            except ConnectionClosed as exc:
+                self._logger.error("[PAIRING][%s] Initialize Pair Again. Error :: %s", _mac, exc)
+                asyncio.sleep(1)
+                return await self._pairing(_mac, _host, _port)
 
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
