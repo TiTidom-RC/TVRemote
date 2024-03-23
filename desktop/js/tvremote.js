@@ -113,7 +113,7 @@ $('.customclass-beginpairing').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Envoyé) :: ' + data.result, level: 'success' });
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage}} :: ' + data.result, level: 'success' });
       }
   });
 });
@@ -143,7 +143,7 @@ $('.customclass-sendpaircode').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Envoi Code Appairage (OK) :: ' + data.result, level: 'success' });
+          $('#div_alert').showAlert({ message: '{{Envoi Code Appairage}} :: ' + data.result, level: 'success' });
       }
   });
 });
