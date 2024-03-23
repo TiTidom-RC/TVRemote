@@ -159,6 +159,9 @@ class TVRemoted:
                 
                 # Connect to Remote and get name and mac address
                 remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _ip_addr_v4)
+                if await remote.async_generate_cert_if_missing():
+                    self._logger.info("[TVHOSTS][%s] Generated New Cert/Key Files :: %s | %s", _friendly_name, self._config.cert_file, self._config.key_file)
+                
                 remote_name, remote_mac = await remote.async_get_name_and_mac()
                 
                 self._logger.info("[TVHOSTS][%s] Name:Mac :: %s:%s", _friendly_name, remote_name, remote_mac)
