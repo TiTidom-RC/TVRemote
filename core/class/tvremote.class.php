@@ -360,6 +360,7 @@ class tvremote extends eqLogic {
                 'cmd' => 'addtvremote',
                 'mac' => $this->getLogicalId(),
                 'host' => $this->getConfiguration('host'),
+                'port' => $this->getConfiguration('port'),
                 'friendly_name' => $this->getConfiguration('friendly_name')
             );
             self::sendToDaemon($value);
@@ -374,6 +375,7 @@ class tvremote extends eqLogic {
                 'cmd' => 'removetvremote',
                 'mac' => $this->getLogicalId(),
                 'host' => $this->getConfiguration('host'),
+                'port' => $this->getConfiguration('port'),
                 'friendly_name' => $this->getConfiguration('friendly_name')
             );
             self::sendToDaemon($value);
