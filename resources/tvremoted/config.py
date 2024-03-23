@@ -19,7 +19,18 @@ class Config(object):
         self.resources_lasttime = int(time.time())
         self.resources_firsttime = int(time.time())
         
-        self.client_name = "Plugin TV Remote (Jeedom)"
+        self.client_name = "Plugin TVRemote (Jeedom)"
+        
+        self.tasks = []
+        self.known_hosts = []
+        self.remote_mac = []
+        self.remote_names = []
+        
+        self.remote_devices = {}
+        self.remote_zconf = None
+        self.remote_listener = {}
+        
+        
     
     @property
     def plugin_version(self):

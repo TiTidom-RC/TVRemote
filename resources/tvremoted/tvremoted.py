@@ -75,9 +75,8 @@ class TVRemoted:
 
         self._logger.info("[MAIN] Ready")
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
-        #  await asyncio.gather(self._search_task, self._listen_task, self._send_task)
-        #  await asyncio.gather(self._tvhosts_task, self._main_task, self._listen_task, self._send_task)
-        await asyncio.gather(self._main_task, self._listen_task, self._send_task)
+        self._config.tasks = [self._listen_task, self._send_task, self._main_task]
+        await asyncio.gather(*self._config.tasks)
         
     async def __add_signal_handler(self):
         """
@@ -123,24 +122,15 @@ class TVRemoted:
         except Exception as message_e:
             self._logger.error('Send command to daemon error: %s', message_e)
 
-    """ async def _think(self, message):
-        # this is a demo implementation of a single function, this function will be invoked once the corresponding call is received from Jeedom
-        random_int = random.randint(3, 15)
-        self._logger.info("==> think on received '%s' during %is", message, random_int)
-        await self._jeedom_publisher.send_to_jeedom({'alert':f"Let me think about '{message}' during {random_int}s"})
-        await asyncio.sleep(random_int)
-        self._logger.info("==> '%s' was an interesting information, thanks for the nap", message)
-        await self._jeedom_publisher.send_to_jeedom({'alert':f"'{message}' was an interesting information, thanks for the nap"}) """
-
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
         
         def _async_on_service_state_change(zeroconf: Zeroconf, service_type: str, name: str, state_change: ServiceStateChange) -> None:
             if state_change is not ServiceStateChange.Added:
                 return
-            _ = asyncio.ensure_future(async_display_service_info(zeroconf, service_type, name))
+            _ = asyncio.ensure_future(async_get_service_info(zeroconf, service_type, name))
 
-        async def async_display_service_info(zeroconf: Zeroconf, service_type: str, name: str) -> None:
+        async def async_get_service_info(zeroconf: Zeroconf, service_type: str, name: str) -> None:
             info = AsyncServiceInfo(service_type, name)
             await info.async_request(zeroconf, 3000)
             if info:
@@ -166,9 +156,16 @@ class TVRemoted:
                         self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", _friendly_name, key, value)
                 else:
                     self._logger.warning("[TVHOSTS][%s] Properties :: NO", _friendly_name)
-                          
+                
+                # Connect to Remote and get name and mac address
+                remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _ip_addr_v4)
+                remote_name, remote_mac = remote.async_get_name_and_mac()
+                
+                self._logger.info("[TVHOSTS][%s] Name:Mac :: %s:%s", _friendly_name, remote_name, remote_mac)
+                
                 data = {
                     'name': name,
+                    'mac': remote_mac,
                     'friendly_name': info.get_name(),
                     'lastscan': currentTimeStr,
                     'type': info.type,
@@ -178,6 +175,11 @@ class TVRemoted:
                 }
                 # Envoi vers Jeedom
                 await self._jeedom_publisher.add_change('devices::' + data['name'], data)
+                
+                # Libération de la mémoire
+                remote = None
+                remote_name = None
+                remote_mac = None
                 
             else:
                 self._logger.warning("[TVHOSTS][%s] Info :: NO", name)

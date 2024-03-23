@@ -39,8 +39,7 @@ class tvremote extends eqLogic {
 
     public static function backupExclude() {
 		return [
-			'resources/venv', 
-            'resources/pyenv'
+			'resources/venv'
 		];
 	}
 
