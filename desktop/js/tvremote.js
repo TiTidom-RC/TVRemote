@@ -91,6 +91,51 @@ $('.pluginAction[data-action=openLocation]').on('click', function () {
 	window.open($(this).attr("data-location"), "_blank", null);
 });
 
+$('.customclass-beginpairing').on('click', function () {
+  $.ajax({
+      type: "POST",
+      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+      data: {
+          action: "beginPairing"
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
+              return;
+          }
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Envoyé) :: ' + data.result, level: 'success' });
+      }
+  });
+});
+
+$('.customclass-sendpaircode').on('click', function () {
+  var _pairCode = $('#pairCode').value
+  $('#div_alert').showAlert({message: 'PairCode Value :: ' + _pairCode, level: 'warning'});
+  $.ajax({
+      type: "POST",
+      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+      data: {
+          action: "sendPairCode",
+          paircode: _pairCode
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
+              return;
+          }
+          $('#div_alert').showAlert({ message: '{{Envoi Code Appairage (OK) :: ' + data.result, level: 'success' });
+      }
+  });
+});
+
 $('.customclass-scanState').on('click', function () {
 	var scanState = $(this).attr('data-scanState');
   // $('#div_alert').showAlert({message: 'scanState Click :: ' + scanState, level: 'warning'});
