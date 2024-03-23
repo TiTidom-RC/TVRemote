@@ -40,10 +40,15 @@ try {
         unlink($keyfilepath);
         ajax::success("{$certfilepath}<br />{$keyfilepath}");
     }
-
-    if (init('action') == 'changeScanState') {
+    elseif (init('action') == 'changeScanState') {
         tvremote::changeScanState(init('scanState'));
         ajax::success();
+    }
+    elseif (init('action') == 'beginPairing') {
+        ajax::success(tvremote::sendBeginPairing(init('mac'), init('host'), init('port')));
+    }
+    elseif (init('action') == 'sendPairCode') {
+        ajax::success(tvremote::sendPairCode(init('mac'), init('host'), init('port'), init('paircode')));
     }
 
     throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));

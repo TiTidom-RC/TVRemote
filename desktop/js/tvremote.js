@@ -92,11 +92,17 @@ $('.pluginAction[data-action=openLocation]').on('click', function () {
 });
 
 $('.customclass-beginpairing').on('click', function () {
+  var _hostAddr = $('#hostAddr').val()
+  var _macAddr = $('#macAddr').val()
+  var _portNum = $('#portNum').val()
   $.ajax({
       type: "POST",
       url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
       data: {
-          action: "beginPairing"
+          action: "beginPairing",
+          mac: _macAddr,
+          host: _hostAddr,
+          port: _portNum,
       },
       dataType: 'json',
       error: function (request, status, error) {
@@ -114,12 +120,18 @@ $('.customclass-beginpairing').on('click', function () {
 
 $('.customclass-sendpaircode').on('click', function () {
   var _pairCode = $('#pairCode').val()
+  var _hostAddr = $('#hostAddr').val()
+  var _macAddr = $('#macAddr').val()
+  var _portNum = $('#portNum').val()
   $('#div_alert').showAlert({message: 'PairCode Value :: ' + _pairCode, level: 'warning'});
   $.ajax({
       type: "POST",
       url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
       data: {
           action: "sendPairCode",
+          mac: _macAddr,
+          host: _hostAddr,
+          port: _portNum,
           paircode: _pairCode
       },
       dataType: 'json',

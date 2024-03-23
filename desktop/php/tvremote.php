@@ -158,7 +158,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Adresse MAC}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly />
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" id="macAddr" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
@@ -188,13 +188,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Adresse IP}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="host" readonly />
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="host" id="hostAddr" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Port}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" readonly />
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" id="portNum" readonly />
                                 </div>
                             </div>
                             <div class="form-group">

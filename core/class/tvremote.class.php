@@ -236,6 +236,37 @@ class tvremote extends eqLogic {
         }
     }
 
+    public static function sendBeginPairing($_mac=null, $_host=null, $_port=null)
+    {
+        if (!is_null($_mac)) {
+            $value = array(
+                'cmd' => 'sendBeginPairing',
+                'mac' => $_mac,
+                'host' => $_host,
+                'port' => $_port
+            );
+            self::sendToDaemon($value);
+        } else {
+            log::add('tvremote', 'debug', '[sendBeginPairing] MAC is missing :: KO');
+        }
+    }
+
+    public static function sendPairCode($_mac=null, $_host=null, $_port=null, $_paircode=null)
+    {
+        if (!is_null($_mac)) {
+            $value = array(
+                'cmd' => 'sendPairCode',
+                'mac' => $_mac,
+                'host' => $_host,
+                'port' => $_port,
+                'paircode' => $_paircode
+            );
+            self::sendToDaemon($value);
+        } else {
+            log::add('tvremote', 'debug', '[sendPairCode] MAC is missing :: KO');
+        }
+    }
+
     public static function createAndUpdCastFromScan($_data)
     {
         if (!isset($_data['mac'])) {
