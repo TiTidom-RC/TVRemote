@@ -107,7 +107,7 @@ class TVRemoted:
                 self._config.scanmode = False
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
-                self._logger.debug('[DAEMON][SOCKET] Begin Pairing from :: %s', message['mac'])
+                self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Sending Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
             else:

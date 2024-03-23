@@ -246,8 +246,10 @@ class tvremote extends eqLogic {
                 'port' => $_port
             );
             self::sendToDaemon($value);
+            return 'OK';
         } else {
             log::add('tvremote', 'debug', '[sendBeginPairing] MAC is missing :: KO');
+            return 'MAC is missing (KO)';
         }
     }
 
@@ -262,8 +264,10 @@ class tvremote extends eqLogic {
                 'paircode' => $_paircode
             );
             self::sendToDaemon($value);
+            return 'OK';
         } else {
             log::add('tvremote', 'debug', '[sendPairCode] MAC is missing :: KO');
+            return 'MAC is missing (KO)';
         }
     }
 
