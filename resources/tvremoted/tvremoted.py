@@ -109,18 +109,8 @@ class TVRemoted:
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
-            """ if message['action'] == 'think':
-                await self._think(message['message'])
-            elif message['action'] == 'ping':
-                for i in range(1, 4):
-                    await self._jeedom_publisher.send_to_jeedom({'pingpong' : f'ping {i}'})
-                    await asyncio.sleep(2)
-                    await self._jeedom_publisher.send_to_jeedom({'pingpong' : f'pong {i}'})
-                    await asyncio.sleep(2)
-            else:
-                self._logger.warning('Unknown action: %s', message['action']) """
         except Exception as message_e:
-            self._logger.error('Send command to daemon error: %s', message_e)
+            self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
 
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """

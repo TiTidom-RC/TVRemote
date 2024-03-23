@@ -156,7 +156,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Paramètres du TVRemote}}</legend>
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Addresse MAC}}</label>
+                                <label class="col-sm-4 control-label">{{Adresse MAC}}</label>
                                 <div class="col-sm-6">
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly>
                                 </div>
