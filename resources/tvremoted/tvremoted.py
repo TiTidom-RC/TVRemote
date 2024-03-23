@@ -32,7 +32,7 @@ except ImportError as e:
     print("[DAEMON][IMPORT] Exception Error: importing module AndroidTVRemote2 ::", e)
     sys.exit(1)
           
-class EQRemote:
+class EQRemote(object):
     """This is the Remote Device class"""
 
     def __init(self, _mac, _host, config_: Config) -> None:
@@ -95,7 +95,7 @@ class EQRemote:
         """Call it to disconnect from a EQRemote"""
         self.remote.disconnect()
         await asyncio.sleep(1)
-        remote = None
+        self._remote = None
         
 class TVRemoted:
     """This is the main class of you daemon"""
@@ -184,7 +184,7 @@ class TVRemoted:
                         self._config.known_hosts.append(message['host'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote to KNOWN Devices :: %s', str(self._config.known_hosts))
                     if message['friendly_name'] not in self._config.remote_names:
-                        self._config.known_hosts.append(message['friendly_name'])
+                        self._config.remote_names.append(message['friendly_name'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote Names :: %s', str(self._config.remote_names))
                     if message['mac'] not in self._config.remote_mac:
                         self._config.remote_mac.append(message['mac'])
