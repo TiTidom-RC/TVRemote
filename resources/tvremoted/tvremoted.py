@@ -41,6 +41,7 @@ class EQRemote:
         self._macAddr = _mac
         self._host = _host
         self._logger = logging.getLogger(__name__)
+        self._remote = None
 
     async def main(self):
         """
@@ -48,14 +49,14 @@ class EQRemote:
         You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
         """
         try:
-            remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._host)
+            self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._host)
             
-            if await remote.async_generate_cert_if_missing():
+            if await self._remote.async_generate_cert_if_missing():
                 self._logger.info("[EQRRemote][MAIN][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
             
             while not self._config.is_ending:
                 try:
-                    await remote.async_connect()
+                    await self._remote.async_connect()
                     break
                 except InvalidAuth as exc:
                     self._logger.error("[EQRRemote][MAIN][%s] Need to pair again. Exception :: %s", self._macAddr, exc)
@@ -63,12 +64,12 @@ class EQRemote:
                 except (CannotConnect, ConnectionClosed) as exc:
                     self._logger.error("[EQRRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
                     return
-            remote.keep_reconnecting()
+            self._remote.keep_reconnecting()
             
-            self._logger.info("[EQRRemote][MAIN][%s] Device_Info :: %s", self._macAddr, remote.device_info)
-            self._logger.info("[EQRRemote][MAIN][%s] Is_On :: %s", self._macAddr, remote.is_on)
-            self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, remote.current_app)
-            self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, remote.volume_info)
+            self._logger.info("[EQRRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
+            self._logger.info("[EQRRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
+            self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
+            self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
             
             def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
@@ -82,17 +83,17 @@ class EQRemote:
             def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
 
-            remote.add_is_on_updated_callback(is_on_updated)
-            remote.add_current_app_updated_callback(current_app_updated)
-            remote.add_volume_info_updated_callback(volume_info_updated)
-            remote.add_is_available_updated_callback(is_available_updated)
+            self._remote.add_is_on_updated_callback(is_on_updated)
+            self._remote.add_current_app_updated_callback(current_app_updated)
+            self._remote.add_volume_info_updated_callback(volume_info_updated)
+            self._remote.add_is_available_updated_callback(is_available_updated)
         
         except asyncio.CancelledError:
             self._logger.debug("[EQRRemote] Stop Main")
         
-    async def remove(self, remote: AndroidTVRemote):
+    async def remove(self):
         """Call it to disconnect from a EQRemote"""
-        remote.disconnect()
+        self.remote.disconnect()
         await asyncio.sleep(1)
         remote = None
         
@@ -177,9 +178,33 @@ class TVRemoted:
                 self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
             elif message['cmd'] == "addtvremote":
-                self._logger.debug('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
+                    self._logger.debug('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    if message['host'] not in self._config.known_hosts:
+                        self._config.known_hosts.append(message['host'])
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to KNOWN Devices :: %s', str(self._config.known_hosts))
+                    if message['friendly_name'] not in self._config.remote_names:
+                        self._config.known_hosts.append(message['friendly_name'])
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote Names :: %s', str(self._config.remote_names))
+                    if message['mac'] not in self._config.remote_mac:
+                        self._config.remote_mac.append(message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote MAC :: %s', str(self._config.remote_mac))
+                        self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config)  
+                        await self._config.remote_devices[message['mac']].main()                      
+
             elif message['cmd'] == "removetvremote":
-                self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
+                    self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    if message['host'] in self._config.known_hosts:
+                        self._config.known_hosts.remove(message['host'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.known_hosts))
+                    if message['friendly_name'] in self._config.remote_names:
+                        self._config.remote_names.remove(message['friendly_name'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from Remote Names :: %s', str(self._config.remote_names))
+                    if message['mac'] in self._config.remote_mac:
+                        self._config.remote_mac.remove(message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.remote_mac))
+                        await self._config.remote_devices[message['mac']].remove()
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
