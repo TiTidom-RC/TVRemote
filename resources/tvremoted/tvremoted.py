@@ -31,7 +31,71 @@ try:
 except ImportError as e: 
     print("[DAEMON][IMPORT] Exception Error: importing module AndroidTVRemote2 ::", e)
     sys.exit(1)
-    
+          
+class EQRemote:
+    """This is the Remote Device class"""
+
+    def __init(self, _mac, _host, config_: Config) -> None:
+        # Standard Init of class
+        self._config = config_
+        self._macAddr = _mac
+        self._host = _host
+        self._logger = logging.getLogger(__name__)
+
+    async def main(self):
+        """
+        The is the entry point of your class EQRemote.
+        You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
+        """
+        try:
+            remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._host)
+            
+            if await remote.async_generate_cert_if_missing():
+                self._logger.info("[EQRRemote][MAIN][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
+            
+            while not self._config.is_ending:
+                try:
+                    await remote.async_connect()
+                    break
+                except InvalidAuth as exc:
+                    self._logger.error("[EQRRemote][MAIN][%s] Need to pair again. Exception :: %s", self._macAddr, exc)
+                    return
+                except (CannotConnect, ConnectionClosed) as exc:
+                    self._logger.error("[EQRRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
+                    return
+            remote.keep_reconnecting()
+            
+            self._logger.info("[EQRRemote][MAIN][%s] Device_Info :: %s", self._macAddr, remote.device_info)
+            self._logger.info("[EQRRemote][MAIN][%s] Is_On :: %s", self._macAddr, remote.is_on)
+            self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, remote.current_app)
+            self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, remote.volume_info)
+            
+            def is_on_updated(is_on: bool) -> None:
+                self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
+            
+            def current_app_updated(current_app: str) -> None:
+                self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
+
+            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+                self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
+
+            def is_available_updated(is_available: bool) -> None:
+                self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+
+            remote.add_is_on_updated_callback(is_on_updated)
+            remote.add_current_app_updated_callback(current_app_updated)
+            remote.add_volume_info_updated_callback(volume_info_updated)
+            remote.add_is_available_updated_callback(is_available_updated)
+        
+        except asyncio.CancelledError:
+            self._logger.debug("[EQRRemote] Stop Main")
+        
+    async def remove(self, remote: AndroidTVRemote):
+        """Call it to disconnect from a EQRemote"""
+        remote.disconnect()
+        await asyncio.sleep(1)
+        remote = None
+        
 class TVRemoted:
     """This is the main class of you daemon"""
 
@@ -112,6 +176,10 @@ class TVRemoted:
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
+            elif message['cmd'] == "addtvremote":
+                self._logger.debug('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+            elif message['cmd'] == "removetvremote":
+                self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
@@ -277,7 +345,7 @@ class TVRemoted:
                         
                 except Exception as e:
                     self._logger.error("[MAINLOOP] Exception :: %s", e)
-                    self._logger.info(traceback.format_exc())
+                    self._logger.debug(traceback.format_exc())
                 
                 # Pause Cycle
                 await asyncio.sleep(cycle)
