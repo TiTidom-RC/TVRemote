@@ -135,8 +135,9 @@ class TVRemoted:
             self._logger.debug("[PAIRING][%s] Entering While... Pairing Code :: %s", _mac, str(self._config.pairing_code))
             currentTime = int(time.time())
             while not self._config.is_ending and self._config.pairing_code is None :
-                time.sleep(1)
-                self._logger.debug("[PAIRING][%s] Waiting for Pairing Code :: %s", _mac, str(self._config.pairing_code))
+                asyncio.sleep(1)
+                # time.sleep(1)
+                # self._logger.debug("[PAIRING][%s] Waiting for Pairing Code :: %s", _mac, str(self._config.pairing_code))
                 currentTime = int(time.time())
                 if (pairing_starttime + self._config.pairing_timeout) <= currentTime:
                     self._logger.error("[PAIRING][%s] Pairing Code not received in last 60sec :: KO", _mac)
