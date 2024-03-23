@@ -35,7 +35,7 @@ except ImportError as e:
 class EQRemote(object):
     """This is the Remote Device class"""
 
-    def __init(self, _mac, _host, config_: Config) -> None:
+    def __init__(self, _mac, _host, config_: Config) -> None:
         # Standard Init of class
         self._config = config_
         self._macAddr = _mac
