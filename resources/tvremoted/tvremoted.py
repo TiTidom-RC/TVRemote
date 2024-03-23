@@ -130,9 +130,9 @@ class TVRemoted:
         pairing_starttime = int(time.time())
         currentTime = int(time.time())
         await remote.async_start_pairing()
-        self._logger.debug("[PAIRING][%s] Start Pairing... :: %s", _mac, str((pairing_starttime + self._config.pairing_timeout) <= currentTime))
+        self._logger.debug("[PAIRING][%s] Start Pairing... :: %s", _mac, str((pairing_starttime + self._config.pairing_timeout) > currentTime))
         while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) > currentTime :
-            self._logger.debug("[PAIRING][%s] Entering While... Pairing Code :: ", _mac, str(self._config.pairing_code))
+            self._logger.debug("[PAIRING][%s] Entering While... Pairing Code :: %s", _mac, str(self._config.pairing_code))
             currentTime = int(time.time())
             while not self._config.is_ending and self._config.pairing_code is None :
                 time.sleep(1)
