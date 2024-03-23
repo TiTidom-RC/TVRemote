@@ -130,19 +130,18 @@ class TVRemoted:
         pairing_starttime = int(time.time())
         currentTime = int(time.time())
         await remote.async_start_pairing()
-        self._logger.debug("[PAIRING][%s] Start Pairing... :: %s", _mac, str((pairing_starttime + self._config.pairing_timeout) > currentTime))
+        self._logger.debug("[PAIRING][%s] Start Pairing...", _mac)
         while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) > currentTime :
-            self._logger.debug("[PAIRING][%s] Entering While... Pairing Code :: %s", _mac, str(self._config.pairing_code))
             currentTime = int(time.time())
             while not self._config.is_ending and self._config.pairing_code is None :
                 await asyncio.sleep(1)
-                # time.sleep(1)
-                # self._logger.debug("[PAIRING][%s] Waiting for Pairing Code :: %s", _mac, str(self._config.pairing_code))
                 currentTime = int(time.time())
                 if (pairing_starttime + self._config.pairing_timeout) <= currentTime:
                     self._logger.error("[PAIRING][%s] Pairing Code not received in last 60sec :: KO", _mac)
+                    remote = None
                     return
             try:
+                self._logger.debug("[PAIRING][%s] Try with Pairing Code :: %s", _mac, str(self._config.pairing_code))
                 return await remote.async_finish_pairing(self._config.pairing_code)
             except InvalidAuth as exc:
                 self._logger.error("[PAIRING][%s] Invalid Pairing Code. Error :: %s", _mac, exc)
@@ -152,8 +151,8 @@ class TVRemoted:
                 self._logger.error("[PAIRING][%s] Initialize Pair Again. Error :: %s", _mac, exc)
                 await asyncio.sleep(1)
                 return await self._pairing(_mac, _host, _port)
-        self._logger.debug("[PAIRING][%s] End While...", _mac)
         
+        self._logger.debug("[PAIRING][%s] End Function...", _mac)
         # Libération de la mémoire
         remote = None
 
