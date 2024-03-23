@@ -35,9 +35,9 @@ except ImportError as e:
 class EQRemote(object):
     """This is the Remote Device class"""
 
-    def __init__(self, _mac, _host, config_: Config) -> None:
+    def __init__(self, _mac, _host, _config: Config) -> None:
         # Standard Init of class
-        self._config = config_
+        self._config = _config
         self._macAddr = _mac
         self._host = _host
         self._logger = logging.getLogger(__name__)
@@ -189,8 +189,8 @@ class TVRemoted:
                     if message['mac'] not in self._config.remote_mac:
                         self._config.remote_mac.append(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote MAC :: %s', str(self._config.remote_mac))
-                        self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config)  
-                        await self._config.remote_devices[message['mac']].main()                      
+                        self._config.remote_devices[message['mac']] = EQRemote(_mac=message['mac'], _host=message['host'], _config=self._config)  
+                        await self._config.remote_devices[message['mac']].main()
 
             elif message['cmd'] == "removetvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
