@@ -159,7 +159,7 @@ class TVRemoted:
                 
                 # Connect to Remote and get name and mac address
                 remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _ip_addr_v4)
-                remote_name, remote_mac = remote.async_get_name_and_mac()
+                remote_name, remote_mac = await remote.async_get_name_and_mac()
                 
                 self._logger.info("[TVHOSTS][%s] Name:Mac :: %s:%s", _friendly_name, remote_name, remote_mac)
                 
@@ -268,32 +268,6 @@ class TVRemoted:
             return True
         except ValueError:
             return False
-    
-    """ async def _search_animals(self):
-        # this is a demo implementation of a backgroudn task, you must have a try ... except asyncio.CancelledError: ... that will intercept the cancel request from the loop
-        self._logger.info("Start searching animals")
-
-        animals = {
-            0: 'Cat',
-            1: 'Dog',
-            2: 'Duck',
-            3: 'Sheep',
-            4: 'Horse',
-            5: 'Cow',
-            6: 'Goat',
-            7: 'Rabbit'
-        }
-
-        try:
-            max_int = len(animals) - 1
-            while True:
-                animal = animals[random.randint(0, max_int)]
-                nbr = random.randint(0, 97)
-                self._logger.info("I found %i %s(s)", nbr, animal.lower())
-                await self._jeedom_publisher.add_change(animal, nbr)
-                await asyncio.sleep(random.randint(0, 2))
-        except asyncio.CancelledError:
-            self._logger.info("Stop searching animals") """
             
     def _ask_exit(self, sig):
         """
@@ -307,7 +281,7 @@ class TVRemoted:
         This function can be called from outside to stop the daemon if needed`
         You need to close your remote connexions and cancel background tasks if any here.
         """
-        self._logger.debug('[ASKEXIT] Cancel all tasks')
+        self._logger.debug('[CLOSE] Cancel all tasks')
         # self._search_task.cancel()  # don't forget to cancel your background task
         self._main_task.cancel()
         self._listen_task.cancel()

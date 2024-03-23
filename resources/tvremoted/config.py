@@ -30,8 +30,6 @@ class Config(object):
         self.remote_zconf = None
         self.remote_listener = {}
         
-        
-    
     @property
     def plugin_version(self):
         return self._kwargs.get('pluginversion', '0.0.0')
