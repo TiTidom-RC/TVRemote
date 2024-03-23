@@ -135,7 +135,7 @@ class TVRemoted:
             self._logger.debug("[PAIRING][%s] Entering While... Pairing Code :: %s", _mac, str(self._config.pairing_code))
             currentTime = int(time.time())
             while not self._config.is_ending and self._config.pairing_code is None :
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
                 # time.sleep(1)
                 # self._logger.debug("[PAIRING][%s] Waiting for Pairing Code :: %s", _mac, str(self._config.pairing_code))
                 currentTime = int(time.time())
@@ -146,11 +146,11 @@ class TVRemoted:
                 return await remote.async_finish_pairing(self._config.pairing_code)
             except InvalidAuth as exc:
                 self._logger.error("[PAIRING][%s] Invalid Pairing Code. Error :: %s", _mac, exc)
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
                 continue
             except ConnectionClosed as exc:
                 self._logger.error("[PAIRING][%s] Initialize Pair Again. Error :: %s", _mac, exc)
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
                 return await self._pairing(_mac, _host, _port)
         self._logger.debug("[PAIRING][%s] End While...", _mac)
         
