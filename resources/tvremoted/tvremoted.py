@@ -110,7 +110,7 @@ class TVRemoted:
                 self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
                 await self._pairing(message['mac'], message['host'], message['port'])
             elif message['cmd'] == "sendPairCode":
-                self._logger.debug('[DAEMON][SOCKET] Sending Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
+                self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
@@ -130,7 +130,9 @@ class TVRemoted:
         pairing_starttime = int(time.time())
         currentTime = int(time.time())
         await remote.async_start_pairing()
+        self._logger.debug("[PAIRING][%s] Start Pairing...", _mac)
         while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) <= currentTime :
+            self._logger.debug("[PAIRING][%s] Entering While... Pairing Code :: ", _mac, self._config.pairing_code)
             currentTime = int(time.time())
             while not self._config.is_ending and self._config.pairing_code is None :
                 asyncio.sleep(1)
@@ -149,6 +151,7 @@ class TVRemoted:
                 self._logger.error("[PAIRING][%s] Initialize Pair Again. Error :: %s", _mac, exc)
                 asyncio.sleep(1)
                 return await self._pairing(_mac, _host, _port)
+        self._logger.debug("[PAIRING][%s] End While...", _mac)
 
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
