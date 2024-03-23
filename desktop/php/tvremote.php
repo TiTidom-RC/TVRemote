@@ -158,49 +158,49 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Adresse MAC}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly />
                                 </div>
                             </div>
 							<div class="form-group">
                                 <label class="col-sm-4 control-label">{{Nom}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="name" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="name" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Friendly Name}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" readonly />
                                 </div>
                             </div>
 							<div class="form-group">
                                 <label class="col-sm-4 control-label">{{Modèle}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="family" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="family" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Type}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Adresse IP}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="host" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="host" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Port}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" readonly />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Dernier Scan}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="lastscan" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="lastscan" readonly />
                                 </div>
                             </div>
 						</div>
@@ -214,6 +214,22 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<div class="col-sm-6">
 									<textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
 								</div>
+							</div>
+							<legend><i class="fas fa-info"></i> {{Appairage}}</legend>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{OK ?}}</label>
+								<div class="col-sm-6">
+									<input type="checkbox" class="form-control eqLogicAttr" data-l1key="is_paired" readonly />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Code Appairage}}</label>
+								<div class="col-lg-2">
+									<input type="text" class="form-control" />
+								</div>
+								<div class="col-lg-1">
+                    				<a class="btn btn-success customclass-sendpaircode"><i class="fas fa-play-circle"></i> {{Envoyer le Code}}</a>
+                				</div>
 							</div>
 						</div>
 					</fieldset>
