@@ -113,7 +113,7 @@ $('.customclass-beginpairing').on('click', function () {
 });
 
 $('.customclass-sendpaircode').on('click', function () {
-  var _pairCode = $('#pairCode').value
+  var _pairCode = $('#pairCode').val()
   $('#div_alert').showAlert({message: 'PairCode Value :: ' + _pairCode, level: 'warning'});
   $.ajax({
       type: "POST",
