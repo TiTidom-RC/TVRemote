@@ -219,7 +219,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Appairage OK ?}}</label>
                                 <div class="col-sm-6">
-                                    <input type="checkbox" class="form-control eqLogicAttr" data-l1key="is_paired" readonly />
+                                    <input type="checkbox" class="form-control eqLogicAttr" data-l1key="is_paired" disabled />
                                 </div>
                             </div>
                             <div class="form-group">
