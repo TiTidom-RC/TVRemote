@@ -231,12 +231,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Code Appairage}}</label>
                                 <div class="input-group">
-                                    <span class="col-lg-2">
-                                        <input type="text" class="form-control roundedLeft input-group-addon" placeholder="123456" />
-                                    </span>
-                                    <span class="col-lg-1 input-group-btn">
-                                        <a class="btn btn-warning customclass-sendpaircode roundedRight"><i class="fas fa-play-circle"></i> {{Envoyer le Code}}</a>
-                                    </div>
+                                    <input type="text" class="form-control roundedLeft input-group-addon" placeholder="123456" />
+                                    <span class="col-lg-1 input-group-btn"><a class="btn btn-warning customclass-sendpaircode roundedRight"><i class="fas fa-play-circle"></i> {{Envoyer le Code}}</a></span>
+                                </div>
                             </div>
                         </div>
                     </fieldset>
