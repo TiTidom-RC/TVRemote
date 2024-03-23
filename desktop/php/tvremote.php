@@ -170,7 +170,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Friendly Name}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" readonly />
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" id="friendlyName" readonly />
                                 </div>
                             </div>
                             <div class="form-group">

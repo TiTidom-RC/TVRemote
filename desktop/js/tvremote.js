@@ -92,6 +92,7 @@ $('.pluginAction[data-action=openLocation]').on('click', function () {
 });
 
 $('.customclass-beginpairing').on('click', function () {
+  var _friendlyName = $('#friendlyName').val()
   var _hostAddr = $('#hostAddr').val()
   var _macAddr = $('#macAddr').val()
   var _portNum = $('#portNum').val()
@@ -113,17 +114,18 @@ $('.customclass-beginpairing').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Lancement Appairage}} :: ' + data.result, level: 'success' });
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Pendant 60s)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'success' });
       }
   });
 });
 
 $('.customclass-sendpaircode').on('click', function () {
+  var _friendlyName = $('#friendlyName').val()
   var _pairCode = $('#pairCode').val()
   var _hostAddr = $('#hostAddr').val()
   var _macAddr = $('#macAddr').val()
   var _portNum = $('#portNum').val()
-  $('#div_alert').showAlert({message: 'PairCode Value :: ' + _pairCode, level: 'warning'});
+  $('#div_alert').showAlert({message: '{{Code Appairage}} (' + _friendlyName + ') :: ' + _pairCode, level: 'warning'});
   $.ajax({
       type: "POST",
       url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
