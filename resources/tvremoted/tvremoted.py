@@ -164,7 +164,7 @@ class TVRemoted:
                 
                 remote_name, remote_mac = await remote.async_get_name_and_mac()
                 
-                self._logger.info("[TVHOSTS][%s] Name:Mac :: %s:%s", _friendly_name, remote_name, remote_mac)
+                self._logger.info("[TVHOSTS][%s] Name:Mac :: %s | %s", _friendly_name, remote_name, remote_mac)
                 
                 data = {
                     'name': name,

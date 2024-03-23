@@ -30,8 +30,8 @@ try {
     ajax::init(array());
 
     if (init('action') == 'resetTVCertKey') {
-        $certfilepath = __DIR__ . "/../../data/config/tvremote-cert.pem";
-        $keyfilepath = __DIR__ . "/../../data/config/tvremote-key.pem";
+        $certfilepath = __DIR__ . "/../../data/config/tvremote_cert.pem";
+        $keyfilepath = __DIR__ . "/../../data/config/tvremote_key.pem";
         if (!file_exists($certfilepath) || !file_exists($keyfilepath)) {
             throw new Exception('[RESET][TVCertKey] Fichier(s) introuvable(s) ::<br />' . $certfilepath . '<br />' . $keyfilepath);
         }
