@@ -102,6 +102,7 @@ $('.customclass-beginpairing').on('click', function () {
       data: {
           action: "beginPairing",
           mac: _macAddr,
+          friendlyname: _friendlyName,
           host: _hostAddr,
           port: _portNum,
       },
@@ -132,6 +133,7 @@ $('.customclass-sendpaircode').on('click', function () {
       data: {
           action: "sendPairCode",
           mac: _macAddr,
+          friendlyname: _friendlyName,
           host: _hostAddr,
           port: _portNum,
           paircode: _pairCode
