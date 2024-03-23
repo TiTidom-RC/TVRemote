@@ -93,10 +93,17 @@ class Config(object):
         return 60
     
     @property
-    def config_folder(self):
-        return 'data/config'
+    def cert_filepath(self):
+        return 'data/config/tvremote_cert.pem'
     
     @property
-    def config_fullpath(self):
-        return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.config_folder))
+    def cerf_file(self):
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.cert_filepath))
     
+    @property
+    def key_filepath(self):
+        return 'data/config/tvremote_key.pem'
+    
+    @property
+    def key_file(self):
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.key_filepath))
