@@ -91,6 +91,67 @@ $('.pluginAction[data-action=openLocation]').on('click', function () {
 	window.open($(this).attr("data-location"), "_blank", null);
 });
 
+$('.customclass-beginpairing').on('click', function () {
+  var _friendlyName = $('#friendlyName').val()
+  var _hostAddr = $('#hostAddr').val()
+  var _macAddr = $('#macAddr').val()
+  var _portNum = $('#portNum').val()
+  $.ajax({
+      type: "POST",
+      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+      data: {
+          action: "beginPairing",
+          mac: _macAddr,
+          friendlyname: _friendlyName,
+          host: _hostAddr,
+          port: _portNum,
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
+              return;
+          }
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Pendant 60s)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'success' });
+      }
+  });
+});
+
+$('.customclass-sendpaircode').on('click', function () {
+  var _friendlyName = $('#friendlyName').val()
+  var _pairCode = $('#pairCode').val()
+  var _hostAddr = $('#hostAddr').val()
+  var _macAddr = $('#macAddr').val()
+  var _portNum = $('#portNum').val()
+  $('#div_alert').showAlert({message: '{{Code Appairage}} (' + _friendlyName + ') :: ' + _pairCode, level: 'warning'});
+  $.ajax({
+      type: "POST",
+      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+      data: {
+          action: "sendPairCode",
+          mac: _macAddr,
+          friendlyname: _friendlyName,
+          host: _hostAddr,
+          port: _portNum,
+          paircode: _pairCode
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
+              return;
+          }
+          $('#div_alert').showAlert({ message: '{{Envoi Code Appairage}} :: ' + data.result, level: 'success' });
+      }
+  });
+});
+
 $('.customclass-scanState').on('click', function () {
 	var scanState = $(this).attr('data-scanState');
   // $('#div_alert').showAlert({message: 'scanState Click :: ' + scanState, level: 'warning'});
@@ -120,9 +181,9 @@ function changeScanState(_scanState) {
 
 $('body').on('tvremote::newdevice', function (_event, _option) {
   if (_option && _option['friendly_name'] && _option['newone'] == '1') {
-    $('#div_alert').showAlert({message: "[SCAN] NEW tvremote détecté :: " + _option['friendly_name'], level: 'warning'});
+    $('#div_alert').showAlert({message: "[SCAN] NEW TVRemote détecté :: " + _option['friendly_name'], level: 'warning'});
   } else if (_option && _option['friendly_name'] && _option['newone'] == '0') {
-    $('#div_alert').showAlert({message: "[SCAN] tvremote MAJ :: " + _option['friendly_name'], level: 'warning'});
+    $('#div_alert').showAlert({message: "[SCAN] TVRemote MAJ :: " + _option['friendly_name'], level: 'warning'});
   }
 });
 

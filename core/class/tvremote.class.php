@@ -22,7 +22,7 @@ class tvremote extends eqLogic {
     /* ************************** Variables Globales ****************************** */
 
     const PYTHON3_PATH = __DIR__ . '/../../resources/venv/bin/python3';
-    const PYENV_PATH = __DIR__ . '/../../resources/pyenv/bin/pyenv';
+    const PYENV_PATH = '/opt/pyenv/bin/pyenv';
 
     /*
      * Permet de définir les possibilités de personnalisation du widget (en cas d'utilisation de la fonction 'toHtml' par exemple)
@@ -39,8 +39,7 @@ class tvremote extends eqLogic {
 
     public static function backupExclude() {
 		return [
-			'resources/venv', 
-            'resources/pyenv'
+			'resources/venv'
 		];
 	}
 
@@ -59,6 +58,7 @@ class tvremote extends eqLogic {
             if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests|python3\-setuptools|python3\-dev|python3\-venv"') < 4) {
                 $return['state'] = 'nok';
             } elseif (!file_exists(self::PYTHON3_PATH)) {
+                log::add(__CLASS__, 'debug', 'Python3 file check failed !');
                 $return['state'] = 'nok';
             } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.131.0|aiohttp==3.9.3|androidtvremote2==0.0.14"') < 3) {
                 $return['state'] = 'nok';
@@ -107,13 +107,7 @@ class tvremote extends eqLogic {
         $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '55112');
         $cmd .= ' --cyclefactor ' . config::byKey('cyclefactor', __CLASS__, '1.0');
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'http:127.0.0.1:port:comp') . '/plugins/tvremote/core/php/jeetvremote.php'; // chemin du callback
-        if (config::byKey('ttsUseExtAddr', 'tvremote') == 1) {
-            $cmd .= ' --ttsweb ' . network::getNetworkAccess('external');
-        } else {
-            $cmd .= ' --ttsweb ' . network::getNetworkAccess('internal');
-        }
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
-        $cmd .= ' --remotetv ' . config::byKey('remoteTV', __CLASS__, '0');
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
         log::add(__CLASS__, 'info', 'Lancement du démon');
         $result = exec($cmd . ' >> ' . log::getPathToLog('tvremote_daemon') . ' 2>&1 &');
@@ -210,9 +204,16 @@ class tvremote extends eqLogic {
         $pyenvVersion = '0.0.0';
         try {
             if (file_exists(self::PYENV_PATH)) {
-               $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
-               config::save('pyenvVersion', $pyenvVersion, 'tvremote');
-            }
+                $pyenvVersion = exec(system::getCmdSudo() . self::PYENV_PATH . " --version | awk '{ print $2 }'");
+                config::save('pyenvVersion', $pyenvVersion, 'tvremote');
+            } 
+            elseif (file_exists(self::PYTHON3_PATH)) {
+                $pythonPyEnvInUse = (exec(system::getCmdSudo() . 'dirname $(readlink ' . self::PYTHON3_PATH . ') | grep -Ewc "opt/pyenv"') == 1) ? true : false;
+                if (!$pythonPyEnvInUse) {
+                    $pyenvVersion = "-";
+                    config::save('pyenvVersion', $pyenvVersion, 'tvremote');
+                }
+            } 
             else {
                 log::add('tvremote', 'error', '[PyEnv-Version] PyEnv File :: KO');
             }
@@ -222,6 +223,108 @@ class tvremote extends eqLogic {
         }
         log::add('tvremote', 'info', '[PyEnv-Version] PyEnvVersion :: ' . $pyenvVersion);
         return $pyenvVersion;
+    }
+
+    public static function changeScanState($_scanState)
+    {
+        if ($_scanState == "scanOn") {
+            $value = array('cmd' => 'scanOn');
+            self::sendToDaemon($value);
+        } else {
+            $value = array('cmd' => 'scanOff');
+            self::sendToDaemon($value);
+        }
+    }
+
+    public static function sendBeginPairing($_mac=null, $_host=null, $_port=null)
+    {
+        if (!is_null($_mac)) {
+            $value = array(
+                'cmd' => 'sendBeginPairing',
+                'mac' => $_mac,
+                'host' => $_host,
+                'port' => $_port
+            );
+            self::sendToDaemon($value);
+            return 'OK';
+        } else {
+            log::add('tvremote', 'debug', '[sendBeginPairing] MAC is missing :: KO');
+            return 'MAC is missing (KO)';
+        }
+    }
+
+    public static function sendPairCode($_mac=null, $_host=null, $_port=null, $_paircode=null)
+    {
+        if (!is_null($_mac)) {
+            $value = array(
+                'cmd' => 'sendPairCode',
+                'mac' => $_mac,
+                'host' => $_host,
+                'port' => $_port,
+                'paircode' => $_paircode
+            );
+            self::sendToDaemon($value);
+            return 'OK';
+        } else {
+            log::add('tvremote', 'debug', '[sendPairCode] MAC is missing :: KO');
+            return 'MAC is missing (KO)';
+        }
+    }
+
+    public static function createAndUpdCastFromScan($_data)
+    {
+        if (!isset($_data['mac'])) {
+            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (MAC) pour créer l\'équipement');
+            event::add('jeedom::alert', array(
+                'level' => 'danger',
+                'page' => 'tvremote',
+                'message' => __('[KO] Information manquante (MAC) pour créer l\'équipement', __FILE__),
+            ));
+            return false;
+        }
+        
+        $newtvremote = tvremote::byLogicalId($_data['mac'], 'tvremote');
+        if (!is_object($newtvremote)) {
+            $eqLogic = new tvremote();
+            $eqLogic->setLogicalId($_data['mac']);
+            $eqLogic->setIsEnable(1);
+            $eqLogic->setIsVisible(1);
+            $eqLogic->setName($_data['friendly_name']);
+            $eqLogic->setEqType_name('tvremote');
+            $eqLogic->setCategory('multimedia','1');
+            $eqLogic->setConfiguration('name', $_data['name']);
+            $eqLogic->setConfiguration('family', $_data['family']);
+            $eqLogic->setConfiguration('friendly_name', $_data['friendly_name']);
+            $eqLogic->setConfiguration('type', $_data['type']);
+            $eqLogic->setConfiguration('host', $_data['host']);
+            $eqLogic->setConfiguration('port', $_data['port']);
+            $eqLogic->setConfiguration('lastscan', $_data['lastscan']);
+            $eqLogic->save();
+
+            event::add('jeedom::alert', array(
+                'level' => 'success',
+                'page' => 'tvremote',
+                'message' => __('[SCAN] TVRemote AJOUTE :: ' .$_data['friendly_name'], __FILE__),
+            ));
+            return $eqLogic;
+        }
+        else {
+            $newtvremote->setConfiguration('name', $_data['name']);
+            $newtvremote->setConfiguration('family', $_data['family']);
+            $newtvremote->setConfiguration('friendly_name', $_data['friendly_name']);
+            $newtvremote->setConfiguration('type', $_data['type']);
+            $newtvremote->setConfiguration('host', $_data['host']);
+            $newtvremote->setConfiguration('port', $_data['port']);
+            $newtvremote->setConfiguration('lastscan', $_data['lastscan']);
+            $newtvremote->save();
+
+            event::add('jeedom::alert', array(
+                'level' => 'success',
+                'page' => 'tvremote',
+                'message' => __('[SCAN] TVRemote MAJ :: ' .$_data['friendly_name'], __FILE__),
+            ));
+            return $newtvremote;
+        }
     }
 
     /* ************************ Methodes static : JEEDOM *************************** */

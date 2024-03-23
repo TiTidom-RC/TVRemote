@@ -79,15 +79,6 @@ if (!isConnect()) {
             </div>        
             <legend><i class="fas fa-tv"></i> {{Remote TV (Télécommande)}}</legend>
             <div class="form-group">
-                <label class="col-lg-3 control-label">{{Activer la Remote TV}}
-                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Activer la prise en charge de la télécommande pour les équipements supportés}}"></i></sup>
-                </label>
-                <div class="col-lg-2">
-                    <input type="checkbox" class="configKey customform-remotetv" data-l1key="remoteTV" />
-                </div>
-            </div>
-            <div class="form-group">
                 <label class="col-lg-3 control-label">{{Effacer le Certificat / Clé}}
                     <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>    
                     <sup><i class="fas fa-question-circle tooltips" title="{{Effacer le certificat et la clé générés au premier appairage à un équipement}}"></i></sup>
@@ -95,9 +86,6 @@ if (!isConnect()) {
                 <div class="col-lg-1">
                     <a class="btn btn-danger customclass-resettvcertkey"><i class="fas fa-trash-alt"></i> {{Effacer Cert/Key}}</a>
                 </div>
-            </div>
-            <legend><i class="fas fa-list-alt"></i> {{Options}}</legend>
-            <div class="form-group">
             </div>
         </div>
     </fieldset>
