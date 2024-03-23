@@ -138,15 +138,17 @@ class TVRemoted:
                 currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
                 
                 _friendly_name = info.get_name()
+                _type = info.type
                 
                 self._logger.info("[TVHOSTS][%s] Name :: %s", _friendly_name, name)
-                self._logger.info("[TVHOSTS][%s] Type :: %s", _friendly_name, info.type)
+                self._logger.info("[TVHOSTS][%s] Type :: %s", _friendly_name, _type)
                 
                 _ip_addr_v4 = "0.0.0.0"
+                _port = info.port
                 for addr in info.parsed_scoped_addresses():
                     if (await self._is_ipv4(addr)):
                         _ip_addr_v4 = addr
-                        self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", _friendly_name, addr, str(info.port))
+                        self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", _friendly_name, addr, str(_port))
                         break
                     # else:
                         # self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
@@ -155,7 +157,7 @@ class TVRemoted:
                     for key, value in info.decoded_properties.items():
                         self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", _friendly_name, key, value)
                 else:
-                    self._logger.warning("[TVHOSTS][%s] Properties :: NO", _friendly_name)
+                    self._logger.warning("[TVHOSTS][%s] Properties :: NONE", _friendly_name)
                 
                 # Connect to Remote and get name and mac address
                 remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _ip_addr_v4)
@@ -168,10 +170,11 @@ class TVRemoted:
                 
                 data = {
                     'name': name,
+                    'family': remote_name,
                     'mac': remote_mac,
-                    'friendly_name': info.get_name(),
+                    'friendly_name': _friendly_name,
                     'lastscan': currentTimeStr,
-                    'type': info.type,
+                    'type': _type,
                     'host': _ip_addr_v4,
                     'port': info.port,
                     'scanmode': 1

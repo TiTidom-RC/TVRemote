@@ -238,25 +238,27 @@ class tvremote extends eqLogic {
 
     public static function createAndUpdCastFromScan($_data)
     {
-        if (!isset($_data['name'])) {
-            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (Name) pour créer l\'équipement');
+        if (!isset($_data['mac'])) {
+            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (MAC) pour créer l\'équipement');
             event::add('jeedom::alert', array(
                 'level' => 'danger',
                 'page' => 'tvremote',
-                'message' => __('[KO] Information manquante (Name) pour créer l\'équipement', __FILE__),
+                'message' => __('[KO] Information manquante (MAC) pour créer l\'équipement', __FILE__),
             ));
             return false;
         }
         
-        $newtvremote = tvremote::byLogicalId($_data['name'], 'tvremote');
+        $newtvremote = tvremote::byLogicalId($_data['mac'], 'tvremote');
         if (!is_object($newtvremote)) {
             $eqLogic = new tvremote();
-            $eqLogic->setLogicalId($_data['name']);
+            $eqLogic->setLogicalId($_data['mac']);
             $eqLogic->setIsEnable(1);
             $eqLogic->setIsVisible(1);
             $eqLogic->setName($_data['friendly_name']);
             $eqLogic->setEqType_name('tvremote');
             $eqLogic->setCategory('multimedia','1');
+            $eqLogic->setConfiguration('name', $_data['name']);
+            $eqLogic->setConfiguration('family', $_data['family']);
             $eqLogic->setConfiguration('friendly_name', $_data['friendly_name']);
             $eqLogic->setConfiguration('type', $_data['type']);
             $eqLogic->setConfiguration('host', $_data['host']);
@@ -272,6 +274,8 @@ class tvremote extends eqLogic {
             return $eqLogic;
         }
         else {
+            $newtvremote->setConfiguration('name', $_data['name']);
+            $newtvremote->setConfiguration('family', $_data['family']);
             $newtvremote->setConfiguration('friendly_name', $_data['friendly_name']);
             $newtvremote->setConfiguration('type', $_data['type']);
             $newtvremote->setConfiguration('host', $_data['host']);

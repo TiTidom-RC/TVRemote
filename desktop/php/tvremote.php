@@ -156,9 +156,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Paramètres du TVRemote}}</legend>
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Name}}</label>
+                                <label class="col-sm-4 control-label">{{Addresse MAC}}</label>
                                 <div class="col-sm-6">
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" readonly>
+                                </div>
+                            </div>
+							<div class="form-group">
+                                <label class="col-sm-4 control-label">{{Nom}}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="name" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -167,10 +173,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="friendly_name" readonly>
                                 </div>
                             </div>
-                            <div class="form-group">
+							<div class="form-group">
                                 <label class="col-sm-4 control-label">{{Modèle}}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="model_name" readonly>
+                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="family" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -180,13 +186,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Fabricant}}</label>
-                                <div class="col-sm-6">
-                                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="manufacturer" readonly>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Host}}</label>
+                                <label class="col-sm-4 control-label">{{Adresse IP}}</label>
                                 <div class="col-sm-6">
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="host" readonly>
                                 </div>

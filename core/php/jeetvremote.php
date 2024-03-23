@@ -59,22 +59,22 @@ try {
     } elseif (isset($result['devices'])) {
         log::add('tvremote','debug','[CALLBACK] TVRemote Devices Discovery');
         foreach ($result['devices'] as $key => $data) {
-            if (!isset($data['name'])) {
-                log::add('tvremote','debug','[CALLBACK] TVRemote Device :: [Name] non défini !');
+            if (!isset($data['mac'])) {
+                log::add('tvremote','debug','[CALLBACK] TVRemote Device :: [MAC] non défini !');
                 continue;
             }
-            log::add('tvremote','debug','[CALLBACK] TVRemote Device :: ' . $data['name']);
+            log::add('tvremote','debug','[CALLBACK] TVRemote Device :: ' . $data['friendly_name']);
             if ($data['scanmode'] != 1) {
                 log::add('tvremote','debug','[CALLBACK] TVRemote Device :: NoScanMode');
                 continue;
             }
-            $tv_remote = tvremote::byLogicalId($data['name'], 'tvremote');
+            $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
             if (!is_object($tv_remote)) {    
-                log::add('tvremote','debug','[CALLBACK] NEW TVRemote détecté :: ' . $data['friendly_name'] . ' (' . $data['name'] . ')');
+                log::add('tvremote','debug','[CALLBACK] NEW TVRemote détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
                 $newtvremote = tvremote::createAndUpdCastFromScan($data);
             }
             else {
-                log::add('tvremote','debug','[CALLBACK] TVRemote Update :: ' . $data['friendly_name'] . ' (' . $data['name'] . ')');
+                log::add('tvremote','debug','[CALLBACK] TVRemote Update :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
                 $updtvremote = tvremote::createAndUpdCastFromScan($data);
             }
         }
