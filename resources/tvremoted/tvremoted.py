@@ -83,19 +83,52 @@ class EQRemote(object):
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
-                    task = asyncio.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
                 except Exception as e:
                     self._logger.error('[EQRRemote][Is_Available] Exception :: %s', e)
-                    logging.debug(traceback.format_exc())
+                    self._logger.debug(traceback.format_exc())
 
             def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
+                try:
+                    data = {
+                        'mac': self._macAddr,
+                        'is_on': is_on,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRRemote][Is_On] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
                 
             def current_app_updated(current_app: str) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
+                try:
+                    data = {
+                        'mac': self._macAddr,
+                        'current_app': current_app,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRRemote][Current_App] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
 
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
+                try:
+                    data = {
+                        'mac': self._macAddr,
+                        'volume_info': volume_info,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRRemote][Volume_Info] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
 
             self._remote.add_is_available_updated_callback(is_available_updated)
             self._remote.add_is_on_updated_callback(is_on_updated)
