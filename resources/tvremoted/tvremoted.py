@@ -88,13 +88,13 @@ class EQRemote(object):
                     self._logger.error('[EQRRemote][Is_Available] Exception :: %s', e)
                     logging.debug(traceback.format_exc())
             
-            def is_on_updated(self, is_on: bool) -> None:
+            def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
             
-            def current_app_updated(self, current_app: str) -> None:
+            def current_app_updated(current_app: str) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
 
-            def volume_info_updated(self, volume_info: dict[str, str | bool]) -> None:
+            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
 
             self._remote.add_is_available_updated_callback(is_available_updated)
