@@ -77,10 +77,14 @@ class EQRemote(object):
             def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
                 try:
-                    # self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+                    _is_available = 0
+                    if (is_available):
+                        _is_available = 1
+                    else;
+                        _is_available = 0
                     data = {
                         'mac': self._macAddr,
-                        'online': is_available,
+                        'online': _is_available,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
