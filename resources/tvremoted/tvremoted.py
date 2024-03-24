@@ -157,7 +157,7 @@ class EQRemote(object):
         
     async def remove(self):
         """Call it to disconnect from a EQRemote"""
-        self.remote.disconnect()
+        self._remote.disconnect()
         await asyncio.sleep(1)
         self._remote = None
         
