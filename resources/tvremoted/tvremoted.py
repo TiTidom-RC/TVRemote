@@ -80,7 +80,7 @@ class EQRemote(object):
                     _is_available = 0
                     if (is_available):
                         _is_available = 1
-                    else;
+                    else:
                         _is_available = 0
                     data = {
                         'mac': self._macAddr,
@@ -133,10 +133,9 @@ class EQRemote(object):
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
                 try:
-                    _volume_info = json.loads(volume_info)
-                    _volume_level = _volume_info['level']
-                    _volume_muted = _volume_info['muted']
-                    _volume_max = _volume_muted['max']
+                    _volume_level = volume_info['level']
+                    _volume_muted = volume_info['muted']
+                    _volume_max = volume_info['max']
                     
                     data = {
                         'mac': self._macAddr,
