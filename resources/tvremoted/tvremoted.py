@@ -71,6 +71,9 @@ class EQRemote(object):
             self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
             self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
             
+            def is_available_updated(is_available: bool) -> None:
+                self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+            
             def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
             
@@ -80,13 +83,10 @@ class EQRemote(object):
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
 
-            def is_available_updated(is_available: bool) -> None:
-                self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
-
+            self._remote.add_is_available_updated_callback(is_available_updated)
             self._remote.add_is_on_updated_callback(is_on_updated)
             self._remote.add_current_app_updated_callback(current_app_updated)
             self._remote.add_volume_info_updated_callback(volume_info_updated)
-            self._remote.add_is_available_updated_callback(is_available_updated)
         
         except asyncio.CancelledError:
             self._logger.debug("[EQRRemote] Stop Main")
