@@ -84,7 +84,7 @@ try {
                 log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: [MAC] non défini !');
                 continue;
             }
-            log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: ' . $data['friendly_name']);
+            log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: ' . $data['mac']);
             if ($data['realtime'] != 1) {
                 continue;
             }

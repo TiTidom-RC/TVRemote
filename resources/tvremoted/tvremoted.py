@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import argparse
 import resource
@@ -91,9 +92,16 @@ class EQRemote(object):
             def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
                 try:
+                    _isOn = 0
+                    if (is_on):
+                        _isOn = 1                        
+                    else:
+                        _isOn = 0
+                        
                     data = {
                         'mac': self._macAddr,
-                        'is_on': is_on,
+                        'online': 1,
+                        'is_on': _isOn,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -107,6 +115,8 @@ class EQRemote(object):
                 try:
                     data = {
                         'mac': self._macAddr,
+                        'online': 1,
+                        'is_on': 1,
                         'current_app': current_app,
                         'realtime': 1
                     }
@@ -119,9 +129,16 @@ class EQRemote(object):
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
                 try:
+                    _volume_info = json.loads(volume_info)
+                    _volume_level = _volume_info['level']
+                    _volume_muted = _volume_info['muted']
+                    _volume_max = _volume_muted['max']
+                    
                     data = {
                         'mac': self._macAddr,
-                        'volume_info': volume_info,
+                        'volume_level': _volume_level,
+                        'volume_muted': _volume_muted,
+                        'volume_max': _volume_max,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
