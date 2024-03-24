@@ -1,5 +1,4 @@
 import datetime
-import json
 import logging
 import argparse
 import resource
@@ -16,7 +15,7 @@ from config import Config
 from jeedom.utils import Utils
 from jeedom.aio_connector import Listener, Publisher
 
-from urllib.parse import urljoin, urlencode, urlparse
+# from urllib.parse import urljoin, urlencode, urlparse
 
 # Import pour ZeroConf
 try:
@@ -77,11 +76,7 @@ class EQRemote(object):
             def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
                 try:
-                    _is_available = 0
-                    if (is_available):
-                        _is_available = 1
-                    else:
-                        _is_available = 0
+                    _is_available = 1 if is_available else 0
                     data = {
                         'mac': self._macAddr,
                         'online': _is_available,
@@ -96,12 +91,7 @@ class EQRemote(object):
             def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
                 try:
-                    _isOn = 0
-                    if (is_on):
-                        _isOn = 1                        
-                    else:
-                        _isOn = 0
-                        
+                    _isOn = 1 if is_on else 0
                     data = {
                         'mac': self._macAddr,
                         'online': 1,
@@ -120,7 +110,6 @@ class EQRemote(object):
                     data = {
                         'mac': self._macAddr,
                         'online': 1,
-                        'is_on': 1,
                         'current_app': current_app,
                         'realtime': 1
                     }
@@ -134,7 +123,7 @@ class EQRemote(object):
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
                 try:
                     _volume_level = volume_info['level']
-                    _volume_muted = volume_info['muted']
+                    _volume_muted = 1 if volume_info['muted'] else 0
                     _volume_max = volume_info['max']
                     
                     data = {
