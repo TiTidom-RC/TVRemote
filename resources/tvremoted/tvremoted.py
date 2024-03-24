@@ -73,7 +73,7 @@ class EQRemote(object):
             self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
             self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
             
-            def is_available_updated(is_available: bool) -> None:
+            async def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
                 try:
                     # self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
@@ -83,24 +83,24 @@ class EQRemote(object):
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
-                    self._loop.run_until_complete(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                    await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
                 except Exception as e:
                     self._logger.error('[EQRRemote][Is_Available] Exception :: %s', e)
                     logging.debug(traceback.format_exc())
             
-            def is_on_updated(is_on: bool) -> None:
+            async def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
             
-            def current_app_updated(current_app: str) -> None:
+            async def current_app_updated(current_app: str) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
 
-            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+            async def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
 
-            self._remote.add_is_available_updated_callback(is_available_updated)
-            self._remote.add_is_on_updated_callback(is_on_updated)
-            self._remote.add_current_app_updated_callback(current_app_updated)
-            self._remote.add_volume_info_updated_callback(volume_info_updated)
+            self._remote.add_is_available_updated_callback(await is_available_updated)
+            self._remote.add_is_on_updated_callback(await is_on_updated)
+            self._remote.add_current_app_updated_callback(await current_app_updated)
+            self._remote.add_volume_info_updated_callback(await volume_info_updated)
         
         except asyncio.CancelledError:
             self._logger.debug("[EQRRemote] Stop Main")
