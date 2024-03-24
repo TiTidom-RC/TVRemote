@@ -44,8 +44,7 @@ try {
             event::add('tvremote::scanState', array(
                 'scanState' => 'scanOff')
             );
-            # tvremote::sendOnStartCastToDaemon();
-
+            tvremote::sendOnStartTVRemoteToDaemon();
         }
     } elseif (isset($result['heartbeat'])) {
         if ($result['heartbeat'] == 1) {
@@ -54,7 +53,7 @@ try {
     } elseif (isset($result['daemonStarted'])) {
         if ($result['daemonStarted'] == '1') {
             log::add('tvremote', 'info', '[CALLBACK] Daemon Started');
-            # tvremote::sendOnStartCastToDaemon();
+            tvremote::sendOnStartTVRemoteToDaemon();
         }
     } elseif (isset($result['devices'])) {
         log::add('tvremote','debug','[CALLBACK] TVRemote Devices Discovery');
@@ -71,11 +70,30 @@ try {
             $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
             if (!is_object($tv_remote)) {    
                 log::add('tvremote','debug','[CALLBACK] NEW TVRemote détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
-                $newtvremote = tvremote::createAndUpdCastFromScan($data);
+                $newtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
             else {
                 log::add('tvremote','debug','[CALLBACK] TVRemote Update :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
-                $updtvremote = tvremote::createAndUpdCastFromScan($data);
+                $updtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
+            }
+        }
+    } elseif (isset($result['devicesRT'])) {
+        log::add('tvremote','debug','[CALLBACK] TVRemote Devices RealTime');
+        foreach ($result['devicesRT'] as $key => $data) {
+            if (!isset($data['mac'])) {
+                log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: [MAC] non défini !');
+                continue;
+            }
+            log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: ' . $data['mac']);
+            if ($data['realtime'] != 1) {
+                continue;
+            }
+            $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
+            if (!is_object($tv_remote)) {    
+                continue;
+            }
+            else {
+                $rtDevice = tvremote::realtimeUpdateDevice($data);
             }
         }
     } else {

@@ -271,7 +271,7 @@ class tvremote extends eqLogic {
         }
     }
 
-    public static function createAndUpdCastFromScan($_data)
+    public static function createAndUpdTVRemoteFromScan($_data)
     {
         if (!isset($_data['mac'])) {
             log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (MAC) pour créer l\'équipement');
@@ -324,6 +324,86 @@ class tvremote extends eqLogic {
                 'message' => __('[SCAN] TVRemote MAJ :: ' .$_data['friendly_name'], __FILE__),
             ));
             return $newtvremote;
+        }
+    }
+
+    public static function sendOnStartTVRemoteToDaemon()
+    {
+        log::add('tvremote', 'info', '[SendOnStart] Envoi Equipements TVRemote Actifs');
+        $i = 0;
+        while ($i < 10) {
+            $deamon_info = self::deamon_info();
+            if ($deamon_info['state'] == 'ok') {
+                break;
+            }
+            sleep(1);
+            $i++;
+        }
+        if ($i >= 10) {
+            log::add('tvremote', 'error', '[SendOnStart] Démon non lancé (>10s) :: KO');
+            return false;
+        }
+        foreach(self::byType('tvremote') as $eqLogic) {
+            if ($eqLogic->getIsEnable()) {
+                $eqLogic->enableTVRemoteToDaemon();
+            }
+            else {
+                $eqLogic->disableTVRemoteToDaemon();
+            }   
+        }
+    }
+
+    public function enableTVRemoteToDaemon()
+    {
+        if ($this->getLogicalId() != '') {
+            $value = array(
+                'cmd' => 'addtvremote',
+                'mac' => $this->getLogicalId(),
+                'host' => $this->getConfiguration('host'),
+                'port' => $this->getConfiguration('port'),
+                'friendly_name' => $this->getConfiguration('friendly_name')
+            );
+            self::sendToDaemon($value);
+        }
+
+    }
+
+    public function disableTVRemoteToDaemon()
+    {
+        if ($this->getLogicalId() != '') {
+            $value = array(
+                'cmd' => 'removetvremote',
+                'mac' => $this->getLogicalId(),
+                'host' => $this->getConfiguration('host'),
+                'port' => $this->getConfiguration('port'),
+                'friendly_name' => $this->getConfiguration('friendly_name')
+            );
+            self::sendToDaemon($value);
+        }
+    }
+
+    public static function realtimeUpdateDevice($_data)
+    {
+        if (!isset($_data['mac'])) {
+            log::add('tvremote', 'error', '[REALTIME][REMOTE] Information manquante (MAC) pour mettre à jour l\'équipement');
+            return false;
+        }
+        $rtdevice = tvremote::byLogicalId($_data['mac'], 'tvremote');
+        if (!is_object($rtdevice)) {
+            log::add('tvremote', 'error', '[REALTIME][REMOTE] Device non existant dans Jeedom');
+            return false;
+        }
+        else {
+            foreach($rtdevice->getCmd('info') as $cmd) {
+                $logicalId = $cmd->getLogicalId();
+                if (key_exists($logicalId, $_data)) {
+                    log::add('tvremote', 'debug', '[REALTIME][REMOTE] Device cmd event :: ' . $logicalId . ' = ' . $_data[$logicalId]);
+                    $cmd->event($_data[$logicalId]);
+                } else {
+                    log::add('tvremote', 'debug', '[REALTIME][REMOTE] Device cmd NON EXIST :: ' . $logicalId);
+                    continue;
+                }
+            }
         }
     }
 
@@ -403,6 +483,21 @@ class tvremote extends eqLogic {
             $cmd->setName(__('En Ligne', __FILE__));
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('online');
+            $cmd->setType('info');
+            $cmd->setSubType('binary');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'is_on');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Power', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('is_on');
             $cmd->setType('info');
             $cmd->setSubType('binary');
 	        $cmd->setIsVisible(1);
@@ -587,42 +682,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'display_name');
+        $cmd = $this->getCmd(null, 'current_app');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Cast App Name', __FILE__));
+            $cmd->setName(__('Current App', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('display_name');
-            $cmd->setType('info');
-            $cmd->setSubType('string');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'app_id');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Cast App Id', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('app_id');
-            $cmd->setType('info');
-            $cmd->setSubType('string');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'last_updated');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Cast Media Updated', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('last_updated');
+	        $cmd->setLogicalId('current_app');
             $cmd->setType('info');
             $cmd->setSubType('string');
 	        $cmd->setIsVisible(1);
@@ -649,15 +714,15 @@ class tvremote extends eqLogic {
         }
 
         if ($this->getIsEnable()) {
-            # $this->enableTVRemoteToDaemon();
+            $this->enableTVRemoteToDaemon();
         } else {
-            # $this->disableTVRemoteToDaemon();
+            $this->disableTVRemoteToDaemon();
         }
     }
 
     // Fonction exécutée automatiquement avant la suppression de l'équipement
     public function preRemove() {
-        # $this->disableTVRemoteToDaemon();
+        $this->disableTVRemoteToDaemon();
     }
 }
 
@@ -678,18 +743,18 @@ class tvremoteCmd extends cmd {
         if ( $this->getType() == "action" ) {
             if ($logicalId == "volumeset") {
                 log::add('tvremote', 'debug', '[CMD] VolumeSet Keys :: ' . json_encode($_options));
-                $googleUUID = $eqLogic->getLogicalId();
-                if (isset($googleUUID) && isset($_options['slider'])) {
-                    log::add('tvremote', 'debug', '[CMD] VolumeSet :: ' . $_options['slider'] . ' / ' . $googleUUID);
-                    # tvremote::actionGCast($googleUUID, "volumeset", $_options['slider']);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC) && isset($_options['slider'])) {
+                    log::add('tvremote', 'debug', '[CMD] VolumeSet :: ' . $_options['slider'] . ' / ' . $deviceMAC);
+                    # tvremote::actionTVRemote($deviceMAC, "volumeset", $_options['slider']);
                 } else {
                     log::add('tvremote', 'debug', '[CMD] VolumeSet :: ERROR = Mauvais paramètre');
                 }
             } elseif (in_array($logicalId, ["volumedown", "volumeup", "media_pause", "media_play", "media_stop", "media_previous", "media_next", "media_quit", "media_rewind", "mute_on", "mute_off"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
-                $googleUUID = $eqLogic->getLogicalId();
-                if (isset($googleUUID)) {
-                    # tvremote::actionGCast($googleUUID, $logicalId);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC)) {
+                    # tvremote::actionTVRemote($deviceMAC, $logicalId);
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
