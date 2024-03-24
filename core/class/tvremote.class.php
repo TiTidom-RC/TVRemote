@@ -703,27 +703,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'app_id');
+        $cmd = $this->getCmd(null, 'current_app');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Cast App Id', __FILE__));
+            $cmd->setName(__('Current App', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('app_id');
-            $cmd->setType('info');
-            $cmd->setSubType('string');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'last_updated');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Cast Media Updated', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('last_updated');
+	        $cmd->setLogicalId('current_app');
             $cmd->setType('info');
             $cmd->setSubType('string');
 	        $cmd->setIsVisible(1);
