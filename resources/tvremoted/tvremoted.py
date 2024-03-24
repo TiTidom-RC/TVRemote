@@ -43,6 +43,7 @@ class EQRemote(object):
         self._host = _host
         self._logger = logging.getLogger(__name__)
         self._jeedom_publisher = _jeedom_publisher
+        self._loop = asyncio.get_running_loop()
 
     async def main(self):
         """
@@ -72,7 +73,7 @@ class EQRemote(object):
             self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
             self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
             
-            async def is_available_updated(is_available: bool) -> None:
+            def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
                 try:
                     # self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
@@ -82,18 +83,18 @@ class EQRemote(object):
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
-                    await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
+                    self._loop.run_until_complete(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
                 except Exception as e:
                     self._logger.error('[EQRRemote][Is_Available] Exception :: %s', e)
                     logging.debug(traceback.format_exc())
             
-            async def is_on_updated(is_on: bool) -> None:
+            def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
             
-            async def current_app_updated(current_app: str) -> None:
+            def current_app_updated(current_app: str) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
 
-            async def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
 
             self._remote.add_is_available_updated_callback(is_available_updated)
