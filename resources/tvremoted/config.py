@@ -94,7 +94,7 @@ class Config(object):
     
     @property
     def pairing_timeout(self):
-        return 60
+        return 300
     
     @property
     def cert_filepath(self):
