@@ -388,12 +388,6 @@ class tvremote extends eqLogic {
             log::add('tvremote', 'error', '[REALTIME][REMOTE] Information manquante (MAC) pour mettre à jour l\'équipement');
             return false;
         }
-        /* if (!isset($_data['status_type'])) {
-            log::add('ttscast', 'error', '[REALTIME][REMOTE] Information manquante (Status_Type) pour mettre à jour l\'équipement');
-            return false;
-        } else {
-            log::add('ttscast', 'debug', '[REALTIME][REMOTE] Status Type :: ' . $_data['status_type']);
-        } */
         $rtdevice = tvremote::byLogicalId($_data['mac'], 'tvremote');
         if (!is_object($rtdevice)) {
             log::add('tvremote', 'error', '[REALTIME][REMOTE] Device non existant dans Jeedom');
@@ -749,18 +743,18 @@ class tvremoteCmd extends cmd {
         if ( $this->getType() == "action" ) {
             if ($logicalId == "volumeset") {
                 log::add('tvremote', 'debug', '[CMD] VolumeSet Keys :: ' . json_encode($_options));
-                $googleUUID = $eqLogic->getLogicalId();
-                if (isset($googleUUID) && isset($_options['slider'])) {
-                    log::add('tvremote', 'debug', '[CMD] VolumeSet :: ' . $_options['slider'] . ' / ' . $googleUUID);
-                    # tvremote::actionGCast($googleUUID, "volumeset", $_options['slider']);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC) && isset($_options['slider'])) {
+                    log::add('tvremote', 'debug', '[CMD] VolumeSet :: ' . $_options['slider'] . ' / ' . $deviceMAC);
+                    # tvremote::actionTVRemote($deviceMAC, "volumeset", $_options['slider']);
                 } else {
                     log::add('tvremote', 'debug', '[CMD] VolumeSet :: ERROR = Mauvais paramètre');
                 }
             } elseif (in_array($logicalId, ["volumedown", "volumeup", "media_pause", "media_play", "media_stop", "media_previous", "media_next", "media_quit", "media_rewind", "mute_on", "mute_off"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
-                $googleUUID = $eqLogic->getLogicalId();
-                if (isset($googleUUID)) {
-                    # tvremote::actionGCast($googleUUID, $logicalId);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC)) {
+                    # tvremote::actionTVRemote($deviceMAC, $logicalId);
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
