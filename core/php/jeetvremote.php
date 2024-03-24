@@ -77,6 +77,25 @@ try {
                 $updtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
         }
+    } elseif (isset($result['devicesRT'])) {
+        log::add('tvremote','debug','[CALLBACK] TVRemote Devices RealTime');
+        foreach ($result['devicesRT'] as $key => $data) {
+            if (!isset($data['mac'])) {
+                log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: [MAC] non défini !');
+                continue;
+            }
+            log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: ' . $data['friendly_name']);
+            if ($data['realtime'] != 1) {
+                continue;
+            }
+            $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
+            if (!is_object($tv_remote)) {    
+                continue;
+            }
+            else {
+                $rtDevice = tvremote::realtimeUpdateDevice($data);
+            }
+        }
     } else {
         log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon'); 
     }

@@ -35,13 +35,14 @@ except ImportError as e:
 class EQRemote(object):
     """This is the Remote Device class"""
 
-    def __init__(self, _mac, _host, _config: Config) -> None:
+    def __init__(self, _mac, _host, _config: Config, _jeedom_publisher) -> None:
         # Standard Init of class
         self._config = _config
+        self._remote = None
         self._macAddr = _mac
         self._host = _host
         self._logger = logging.getLogger(__name__)
-        self._remote = None
+        self._jeedom_publisher = _jeedom_publisher
 
     async def main(self):
         """
@@ -73,14 +74,27 @@ class EQRemote(object):
             
             def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+                try:
+                    # self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+                    data = {
+                        'mac': self._macAddr,
+                        'online': is_available,
+                        'realtime': 1
+                    }
+                    
+                    # Envoi vers Jeedom
+                    self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
+                except Exception as e:
+                    self._logger.error('[EQRRemote][Is_Available] Exception :: %s', e)
+                    logging.debug(traceback.format_exc())
             
-            def is_on_updated(is_on: bool) -> None:
+            def is_on_updated(self, is_on: bool) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
             
-            def current_app_updated(current_app: str) -> None:
+            def current_app_updated(self, current_app: str) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
 
-            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+            def volume_info_updated(self, volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
 
             self._remote.add_is_available_updated_callback(is_available_updated)
@@ -189,7 +203,7 @@ class TVRemoted:
                     if message['mac'] not in self._config.remote_mac:
                         self._config.remote_mac.append(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote MAC :: %s', str(self._config.remote_mac))
-                        self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config)
+                        self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
                         await self._config.remote_devices[message['mac']].main()
 
             elif message['cmd'] == "removetvremote":

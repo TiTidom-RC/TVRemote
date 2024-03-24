@@ -382,6 +382,37 @@ class tvremote extends eqLogic {
         }
     }
 
+    public static function realtimeUpdateDevice($_data)
+    {
+        if (!isset($_data['mac'])) {
+            log::add('tvremote', 'error', '[REALTIME][REMOTE] Information manquante (MAC) pour mettre à jour l\'équipement');
+            return false;
+        }
+        /* if (!isset($_data['status_type'])) {
+            log::add('ttscast', 'error', '[REALTIME][REMOTE] Information manquante (Status_Type) pour mettre à jour l\'équipement');
+            return false;
+        } else {
+            log::add('ttscast', 'debug', '[REALTIME][REMOTE] Status Type :: ' . $_data['status_type']);
+        } */
+        $rtdevice = tvremote::byLogicalId($_data['mac'], 'tvremote');
+        if (!is_object($rtdevice)) {
+            log::add('tvremote', 'error', '[REALTIME][REMOTE] Device non existant dans Jeedom');
+            return false;
+        }
+        else {
+            foreach($rtdevice->getCmd('info') as $cmd) {
+                $logicalId = $cmd->getLogicalId();
+                if (key_exists($logicalId, $_data)) {
+                    log::add('tvremote', 'debug', '[REALTIME][REMOTE] Device cmd event :: ' . $logicalId . ' = ' . $_data[$logicalId]);
+                    $cmd->event($_data[$logicalId]);
+                } else {
+                    log::add('tvremote', 'debug', '[REALTIME][REMOTE] Device cmd NON EXIST :: ' . $logicalId);
+                    continue;
+                }
+            }
+        }
+    }
+
     /* ************************ Methodes static : JEEDOM *************************** */
 
     /*
@@ -458,6 +489,21 @@ class tvremote extends eqLogic {
             $cmd->setName(__('En Ligne', __FILE__));
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('online');
+            $cmd->setType('info');
+            $cmd->setSubType('binary');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'is_on');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Power', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('is_on');
             $cmd->setType('info');
             $cmd->setSubType('binary');
 	        $cmd->setIsVisible(1);
