@@ -32,6 +32,50 @@ class Config(object):
         
         self.pairing_code = None
         
+        self.key_mapping = {
+            "power": "KEYCODE_POWER",
+            "power_on": "KEYCODE_POWER",
+            "power_off": "KEYCODE_POWER",
+            # "power_on": "KEYCODE_WAKEUP",
+            # "power_off": "KEYCODE_SLEEP",
+            "up": "DPAD_UP",
+            "down": "DPAD_DOWN",
+            "left": "DPAD_LEFT",
+            "right": "DPAD_RIGHT",
+            "center": "DPAD_CENTER",
+            "volumedown": "KEYCODE_VOLUME_DOWN",
+            "volumeup": "KEYCODE_VOLUME_UP",
+            "back": "KEYCODE_BACK",
+            "home": "KEYCODE_HOME",
+            "menu": "KEYCODE_MENU",
+            "tv": "KEYCODE_TV",
+            "channel_up": "KEYCODE_CHANNEL_UP",
+            "channel_down": "KEYCODE_CHANNEL_DOWN",
+            "zero": "KEYCODE_0",
+            "one": "KEYCODE_1",
+            "two": "KEYCODE_2",
+            "three": "KEYCODE_3",
+            "four": "KEYCODE_4",
+            "five": "KEYCODE_5",
+            "six": "KEYCODE_6",
+            "seven": "KEYCODE_7",
+            "eight": "KEYCODE_8",
+            "nine": "KEYCODE_9",
+            "info": "KEYCODE_INFO",
+            "mute_on": "KEYCODE_VOLUME_MUTE",
+            "mute_off": "KEYCODE_VOLUME_MUTE",
+            "settings": "KEYCODE_SETTINGS",
+            "input": "KEYCODE_TV_INPUT",
+            "hdmi_1": "KEYCODE_TV_INPUT_HDMI_1",
+            "hdmi_2": "KEYCODE_TV_INPUT_HDMI_2",
+            "hdmi_3": "KEYCODE_TV_INPUT_HDMI_3",
+            "hdmi_4": "KEYCODE_TV_INPUT_HDMI_4",
+            "youtube": "https://www.youtube.com",
+            "netflix": "https://www.netflix.com/title",
+            "amazon_prime_video": "https://app.primevideo.com",
+            "disney_plus": "https://www.disneyplus.com"
+        }
+        
     @property
     def plugin_version(self):
         return self._kwargs.get('pluginversion', '0.0.0')
