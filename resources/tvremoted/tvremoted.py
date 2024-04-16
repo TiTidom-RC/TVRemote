@@ -61,17 +61,39 @@ class EQRemote(object):
                     await self._remote.async_connect()
                     break
                 except InvalidAuth as exc:
-                    self._logger.error("[EQRemote][MAIN][%s] Need to pair again. Exception :: %s", self._macAddr, exc)
+                    self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
                     return
                 except (CannotConnect, ConnectionClosed) as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
                     return
             self._remote.keep_reconnecting()
             
-            self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
-            self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
-            self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
-            self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+            try:
+                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
+                self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
+                self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
+                self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+                
+                _isOn = 1 if self._remote.is_on else 0
+                _volume_level = self._remote.volume_info['level']
+                _volume_muted = 1 if self._remote.volume_info['muted'] else 0
+                _volume_max = self._remote.volume_info['max']
+                
+                data = {
+                    'mac': self._macAddr,
+                    'online': 1,
+                    'is_on': _isOn,
+                    'current_app': self._remote.current_app,
+                    'volume_level': _volume_level,
+                    'volume_muted': _volume_muted,
+                    'volume_max': _volume_max,
+                    'realtime': 1
+                }
+                # Envoi vers Jeedom
+                self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+            except Exception as e:
+                self._logger.error('[EQRemote][MAIN][%s] Exception :: %s', self._macAddr, e)
+                self._logger.debug(traceback.format_exc())
 
             def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
