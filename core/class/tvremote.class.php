@@ -1035,12 +1035,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'lastschedule');
+        $cmd = $this->getCmd(null, 'updatelasttime');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Schedule LastTime', __FILE__));
+            $cmd->setName(__('Update LastTime', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('lastschedule');
+	        $cmd->setLogicalId('updatelasttime');
             $cmd->setType('info');
             $cmd->setSubType('string');
             $cmd->setDisplay('forceReturnLineBefore', '1');
@@ -1052,12 +1052,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'lastschedulets');
+        $cmd = $this->getCmd(null, 'updatelasttimets');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Schedule LastTime (TS)', __FILE__));
+            $cmd->setName(__('Update LastTime (TS)', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('lastschedulets');
+	        $cmd->setLogicalId('updatelasttimets');
             $cmd->setType('info');
             $cmd->setSubType('string');
             $cmd->setDisplay('forceReturnLineBefore', '1');

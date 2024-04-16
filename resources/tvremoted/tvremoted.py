@@ -75,6 +75,10 @@ class EQRemote(object):
                 self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
                 self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
                 self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+            
+                # UpdateLastTime
+                currentTime = int(time.time())
+                currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")    
                 
                 _isOn = 1 if self._remote.is_on else 0
                 if all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
@@ -94,6 +98,8 @@ class EQRemote(object):
                     'volume_level': _volume_level,
                     'volume_muted': _volume_muted,
                     'volume_max': _volume_max,
+                    'updatelasttime': currentTime,
+                    'updatelasttimets': currentTimeStr,
                     'realtime': 1
                 }
                 # Envoi vers Jeedom
@@ -105,10 +111,17 @@ class EQRemote(object):
             def is_available_updated(is_available: bool) -> None:
                 self._logger.info("[EQRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
                 try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
                     _is_available = 1 if is_available else 0
+                    
                     data = {
                         'mac': self._macAddr,
                         'online': _is_available,
+                        'updatelasttime': currentTime,
+                        'updatelasttimets': currentTimeStr,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -120,11 +133,17 @@ class EQRemote(object):
             def is_on_updated(is_on: bool) -> None:
                 self._logger.info("[EQRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
                 try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
                     _isOn = 1 if is_on else 0
                     data = {
                         'mac': self._macAddr,
                         'online': 1,
                         'is_on': _isOn,
+                        'updatelasttime': currentTime,
+                        'updatelasttimets': currentTimeStr,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -136,10 +155,16 @@ class EQRemote(object):
             def current_app_updated(current_app: str) -> None:
                 self._logger.info("[EQRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
                 try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
                     data = {
                         'mac': self._macAddr,
                         'online': 1,
                         'current_app': current_app,
+                        'updatelasttime': currentTime,
+                        'updatelasttimets': currentTimeStr,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -151,6 +176,10 @@ class EQRemote(object):
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
                 self._logger.info("[EQRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
                 try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
                     _volume_level = volume_info['level']
                     _volume_muted = 1 if volume_info['muted'] else 0
                     _volume_max = volume_info['max']
@@ -160,6 +189,8 @@ class EQRemote(object):
                         'volume_level': _volume_level,
                         'volume_muted': _volume_muted,
                         'volume_max': _volume_max,
+                        'updatelasttime': currentTime,
+                        'updatelasttimets': currentTimeStr,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
