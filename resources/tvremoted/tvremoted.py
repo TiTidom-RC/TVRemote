@@ -236,20 +236,19 @@ class TVRemoted:
                         self._logger.debug('[DAEMON][SOCKET] Action :: VolumeSet = %s @ %s', message['value'], message['mac'])
                         if message['mac'] in self._config.remote_mac:
                             await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
-                    elif (message['cmd_action'] in ('volumeup', 'volumedown', 'media_pause', 'media_play', 'media_stop', 'media_next', 'media_quit', 'media_rewind', 'media_previous', 'mute_on', 'mute_off') and 'mac' in message):
+                    elif (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off') and 'mac' in message):
                         self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s', message['cmd_action'], message['mac'])
                         if message['mac'] in self._config.remote_mac:
                             await self._config.remote_devices[message['mac']].send_command(message['cmd_action'])
-                            
-            if message['cmd'] == "scanOn":
-                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn')
-                
+                    else:
+                        self._logger.warning('[DAEMON][SOCKET] Unknown Action :: %s', message['cmd_action'])
+            elif message['cmd'] == "scanOn":
+                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn') 
                 self._config.scanmode = True
                 self._config.scanmode_start = int(time.time())
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
             elif message['cmd'] == "scanOff":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOff')
-                
                 self._config.scanmode = False
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
@@ -272,7 +271,6 @@ class TVRemoted:
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote MAC :: %s', str(self._config.remote_mac))
                         self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
                         await self._config.remote_devices[message['mac']].main()
-
             elif message['cmd'] == "removetvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
                     self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
