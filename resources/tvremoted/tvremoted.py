@@ -77,9 +77,14 @@ class EQRemote(object):
                 self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
                 
                 _isOn = 1 if self._remote.is_on else 0
-                _volume_level = self._remote.volume_info['level']
-                _volume_muted = 1 if self._remote.volume_info['muted'] else 0
-                _volume_max = self._remote.volume_info['max']
+                if all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
+                    _volume_level = self._remote.volume_info['level']
+                    _volume_muted = 1 if self._remote.volume_info['muted'] else 0
+                    _volume_max = self._remote.volume_info['max']
+                else:
+                    _volume_level = 0
+                    _volume_muted = 0
+                    _volume_max = 0
                 
                 data = {
                     'mac': self._macAddr,
