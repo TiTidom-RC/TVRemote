@@ -1113,16 +1113,7 @@ class tvremoteCmd extends cmd {
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
         if ( $this->getType() == "action" ) {
-            if ($logicalId == "volumeset") {
-                log::add('tvremote', 'debug', '[CMD] VolumeSet Keys :: ' . json_encode($_options));
-                $deviceMAC = $eqLogic->getLogicalId();
-                if (isset($deviceMAC) && isset($_options['slider'])) {
-                    log::add('tvremote', 'debug', '[CMD] VolumeSet :: ' . $_options['slider'] . ' / ' . $deviceMAC);
-                    tvremote::actionTVRemote($deviceMAC, "volumeset", $_options['slider']);
-                } else {
-                    log::add('tvremote', 'debug', '[CMD] VolumeSet :: ERROR = Mauvais paramètre');
-                }
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus"])) {
+            if (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
