@@ -153,7 +153,7 @@ class EQRemote(object):
         await asyncio.sleep(1)
         self._remote = None
     
-    async def send_command(self, action: str, value: str | None) -> None:
+    async def send_command(self, action: str = None, value: str = None) -> None:
         """Call it to send command to EQRemote"""
         try:
             self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
