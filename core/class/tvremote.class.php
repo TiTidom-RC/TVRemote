@@ -506,12 +506,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'power');
+        $cmd = $this->getCmd(null, 'is_on');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
             $cmd->setName(__('Power', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('power');
+	        $cmd->setLogicalId('is_on');
             $cmd->setType('info');
             $cmd->setSubType('binary');
 	        $cmd->setIsVisible(0);
