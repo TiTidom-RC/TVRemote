@@ -160,10 +160,13 @@ class EQRemote(object):
             self._remote.send_key_command(self._config.key_mapping[action])
         except ValueError as e:
             self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
+            self._logger.debug(traceback.format_exc())
         except ConnectionClosed as e:
             self._logger.error("[EQRemote][SendCommand] Exception (ConnectionError) :: %s", e)
+            self._logger.debug(traceback.format_exc())
         except Exception as e:
             self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
 class TVRemoted:
     """This is the main class of you daemon"""
 
