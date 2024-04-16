@@ -51,6 +51,8 @@ class EQRemote(object):
         You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
         """
         try:
+            self._logger.debug("[EQRemote][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
+            
             self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host)
             
             if await self._remote.async_generate_cert_if_missing():
@@ -312,6 +314,8 @@ class TVRemoted:
                         self._config.remote_mac.remove(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.remote_mac))
                         await self._config.remote_devices[message['mac']].remove()
+                        del self._config.remote_devices[message['mac']]
+                        
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
