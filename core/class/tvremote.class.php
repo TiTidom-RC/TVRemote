@@ -506,15 +506,54 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'is_on');
+        $cmd = $this->getCmd(null, 'power');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
             $cmd->setName(__('Power', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('is_on');
+	        $cmd->setLogicalId('power');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+	        $cmd->setIsVisible(0);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+        $power_cmd_id = $cmd->getId();
+        
+        $cmd = $this->getCmd(null, 'power_on');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Power On', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('power_on');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            # $cmd->setDisplay('icon', '<i class="fas fa-volume-mute"></i>');
+            $cmd->setValue($power_cmd_id);
 	        $cmd->setIsVisible(1);
+            $cmd->setTemplate('dashboard', 'core::binaryDefault');
+            $cmd->setTemplate('mobile', 'core::binaryDefault');
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'power_off');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Power Off', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('power_off');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            # $cmd->setDisplay('icon', '<i class="fas fa-volume-off"></i>');
+            $cmd->setValue($power_cmd_id);
+	        $cmd->setIsVisible(1);
+            $cmd->setTemplate('dashboard', 'core::binaryDefault');
+            $cmd->setTemplate('mobile', 'core::binaryDefault');
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
@@ -535,27 +574,6 @@ class tvremote extends eqLogic {
             $cmd->setTemplate('dashboard', 'core::tile');
             $cmd->setTemplate('mobile', 'core::tile');
 	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-        $volumeLevelId = $cmd->getId();
-
-        $cmd = $this->getCmd(null, 'volumeset');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Volume Set', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('volumeset');
-            $cmd->setType('action');
-            $cmd->setSubType('slider');
-	        $cmd->setIsVisible(1);
-            $cmd->setTemplate('dashboard', 'core::value');
-            $cmd->setTemplate('mobile', 'core::value');
-            $cmd->setValue($volumeLevelId);
-            $cmd->setConfiguration('minValue', 0);
-            $cmd->setConfiguration('maxValue', 100);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {

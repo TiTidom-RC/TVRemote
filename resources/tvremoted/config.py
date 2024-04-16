@@ -34,13 +34,30 @@ class Config(object):
         
         self.key_mapping = {
             "power": "KEYCODE_POWER",
+            "power_on": "KEYCODE_WAKEUP",
+            "power_off": "KEYCODE_SLEEP",
             "up": "DPAD_UP",
             "down": "DPAD_DOWN",
             "left": "DPAD_LEFT",
             "right": "DPAD_RIGHT",
             "center": "DPAD_CENTER",
             "volumedown": "KEYCODE_VOLUME_DOWN",
-            "volumeup": "KEYCODE_VOLUME_UP"
+            "volumeup": "KEYCODE_VOLUME_UP",
+            "back": "KEYCODE_BACK",
+            "home": "KEYCODE_HOME",
+            "menu": "KEYCODE_MENU",
+            "tv": "KEYCODE_TV",
+            "channel_up": "KEYCODE_CHANNEL_UP",
+            "channel_down": "KEYCODE_CHANNEL_DOWN",
+            "info": "KEYCODE_INFO",
+            "mute_on": "KEYCODE_VOLUME_MUTE",
+            "mute_off": "KEYCODE_VOLUME_MUTE",
+            "settings": "KEYCODE_SETTINGS",
+            "input": "KEYCODE_TV_INPUT",
+            "hdmi_1": "KEYCODE_TV_INPUT_HDMI_1",
+            "hdmi_2": "KEYCODE_TV_INPUT_HDMI_2",
+            "hdmi_3": "KEYCODE_TV_INPUT_HDMI_3",
+            "hdmi_4": "KEYCODE_TV_INPUT_HDMI_4"
         }
         
     @property
