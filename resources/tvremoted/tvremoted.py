@@ -156,8 +156,11 @@ class EQRemote(object):
     async def send_command(self, action: str = None, value: str = None) -> None:
         """Call it to send command to EQRemote"""
         try:
-            self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
-            self._remote.send_key_command(self._config.key_mapping[action])
+            if action in self._config.key_mapping:
+                self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
+                self._remote.send_key_command(self._config.key_mapping[action])
+            else:
+                self._logger.error("[EQRemote][SendCommand] Mapping %s :: Unkown Key !", action)
         except ValueError as e:
             self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
             self._logger.debug(traceback.format_exc())
