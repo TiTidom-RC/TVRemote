@@ -59,7 +59,11 @@ class Config(object):
             "hdmi_1": "KEYCODE_TV_INPUT_HDMI_1",
             "hdmi_2": "KEYCODE_TV_INPUT_HDMI_2",
             "hdmi_3": "KEYCODE_TV_INPUT_HDMI_3",
-            "hdmi_4": "KEYCODE_TV_INPUT_HDMI_4"
+            "hdmi_4": "KEYCODE_TV_INPUT_HDMI_4",
+            "youtube": "https://www.youtube.com",
+            "netflix": "https://www.netflix.com/title",
+            "amazon_prime_video": "https://app.primevideo.com",
+            "disney_plus": "https://www.disneyplus.com"
         }
         
     @property

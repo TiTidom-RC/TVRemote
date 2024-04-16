@@ -158,7 +158,10 @@ class EQRemote(object):
         try:
             if action in self._config.key_mapping:
                 self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
-                self._remote.send_key_command(self._config.key_mapping[action])
+                if action in ('youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
+                    self._remote.send_launch_app_command(self._config.key_mapping[action])
+                else:
+                    self._remote.send_key_command(self._config.key_mapping[action])
             else:
                 self._logger.error("[EQRemote][SendCommand] Command Mapping :: %s :: Unknown Key !", action)
         except ValueError as e:
@@ -170,6 +173,7 @@ class EQRemote(object):
         except Exception as e:
             self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
+            
 class TVRemoted:
     """This is the main class of you daemon"""
 
