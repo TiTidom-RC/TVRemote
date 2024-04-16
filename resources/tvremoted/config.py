@@ -25,9 +25,8 @@ class Config(object):
         self.known_hosts = []
         self.remote_mac = []
         self.remote_names = []
-        self.remote_devices = []
         
-        self.c = {}
+        self.remote_devices = {}
         self.remote_zconf = None
         self.remote_listener = {}
         
