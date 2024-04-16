@@ -34,8 +34,10 @@ class Config(object):
         
         self.key_mapping = {
             "power": "KEYCODE_POWER",
-            "power_on": "KEYCODE_WAKEUP",
-            "power_off": "KEYCODE_SLEEP",
+            "power_on": "KEYCODE_POWER",
+            "power_off": "KEYCODE_POWER",
+            # "power_on": "KEYCODE_WAKEUP",
+            # "power_off": "KEYCODE_SLEEP",
             "up": "DPAD_UP",
             "down": "DPAD_DOWN",
             "left": "DPAD_LEFT",
