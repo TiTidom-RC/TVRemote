@@ -54,27 +54,27 @@ class EQRemote(object):
             self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host)
             
             if await self._remote.async_generate_cert_if_missing():
-                self._logger.info("[EQRRemote][MAIN][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
+                self._logger.info("[EQRemote][MAIN][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
             
             while not self._config.is_ending:
                 try:
                     await self._remote.async_connect()
                     break
                 except InvalidAuth as exc:
-                    self._logger.error("[EQRRemote][MAIN][%s] Need to pair again. Exception :: %s", self._macAddr, exc)
+                    self._logger.error("[EQRemote][MAIN][%s] Need to pair again. Exception :: %s", self._macAddr, exc)
                     return
                 except (CannotConnect, ConnectionClosed) as exc:
-                    self._logger.error("[EQRRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
+                    self._logger.error("[EQRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
                     return
             self._remote.keep_reconnecting()
             
-            self._logger.info("[EQRRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
-            self._logger.info("[EQRRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
-            self._logger.info("[EQRRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
-            self._logger.info("[EQRRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+            self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
+            self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
+            self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
+            self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
 
             def is_available_updated(is_available: bool) -> None:
-                self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
                 try:
                     _is_available = 1 if is_available else 0
                     data = {
@@ -85,11 +85,11 @@ class EQRemote(object):
                     # Envoi vers Jeedom
                     self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
                 except Exception as e:
-                    self._logger.error('[EQRRemote][Is_Available] Exception :: %s', e)
+                    self._logger.error('[EQRemote][Is_Available] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
 
             def is_on_updated(is_on: bool) -> None:
-                self._logger.info("[EQRRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
                 try:
                     _isOn = 1 if is_on else 0
                     data = {
@@ -101,11 +101,11 @@ class EQRemote(object):
                     # Envoi vers Jeedom
                     self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
                 except Exception as e:
-                    self._logger.error('[EQRRemote][Is_On] Exception :: %s', e)
+                    self._logger.error('[EQRemote][Is_On] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
                 
             def current_app_updated(current_app: str) -> None:
-                self._logger.info("[EQRRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
                 try:
                     data = {
                         'mac': self._macAddr,
@@ -116,11 +116,11 @@ class EQRemote(object):
                     # Envoi vers Jeedom
                     self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
                 except Exception as e:
-                    self._logger.error('[EQRRemote][Current_App] Exception :: %s', e)
+                    self._logger.error('[EQRemote][Current_App] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
 
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
-                self._logger.info("[EQRRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
                 try:
                     _volume_level = volume_info['level']
                     _volume_muted = 1 if volume_info['muted'] else 0
@@ -136,7 +136,7 @@ class EQRemote(object):
                     # Envoi vers Jeedom
                     self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
                 except Exception as e:
-                    self._logger.error('[EQRRemote][Volume_Info] Exception :: %s', e)
+                    self._logger.error('[EQRemote][Volume_Info] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
 
             self._remote.add_is_available_updated_callback(is_available_updated)
@@ -145,7 +145,7 @@ class EQRemote(object):
             self._remote.add_volume_info_updated_callback(volume_info_updated)
         
         except asyncio.CancelledError:
-            self._logger.debug("[EQRRemote] Stop Main")
+            self._logger.debug("[EQRemote] Stop Main")
         
     async def remove(self):
         """Call it to disconnect from a EQRemote"""
@@ -160,7 +160,7 @@ class EQRemote(object):
                 self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
                 self._remote.send_key_command(self._config.key_mapping[action])
             else:
-                self._logger.error("[EQRemote][SendCommand] Mapping %s :: Unkown Key !", action)
+                self._logger.error("[EQRemote][SendCommand] Command Mapping :: %s :: Unknown Key !", action)
         except ValueError as e:
             self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
             self._logger.debug(traceback.format_exc())

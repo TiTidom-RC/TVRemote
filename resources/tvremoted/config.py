@@ -38,7 +38,9 @@ class Config(object):
             "down": "DPAD_DOWN",
             "left": "DPAD_LEFT",
             "right": "DPAD_RIGHT",
-            "center": "DPAD_CENTER"
+            "center": "DPAD_CENTER",
+            "volumedown": "KEYCODE_VOLUME_UP",
+            "volumeup": "KEYCODE_VOLUME_DOWN"
         }
         
     @property
