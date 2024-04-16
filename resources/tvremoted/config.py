@@ -25,12 +25,22 @@ class Config(object):
         self.known_hosts = []
         self.remote_mac = []
         self.remote_names = []
+        self.remote_devices = []
         
-        self.remote_devices = {}
+        self.c = {}
         self.remote_zconf = None
         self.remote_listener = {}
         
         self.pairing_code = None
+        
+        self.key_mapping = {
+            "power": "KEYCODE_POWER",
+            "up": "DPAD_UP",
+            "down": "DPAD_DOWN",
+            "left": "DPAD_LEFT",
+            "right": "DPAD_RIGHT",
+            "center": "DPAD_CENTER"
+        }
         
     @property
     def plugin_version(self):

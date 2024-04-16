@@ -152,7 +152,18 @@ class EQRemote(object):
         self._remote.disconnect()
         await asyncio.sleep(1)
         self._remote = None
-        
+    
+    async def send_command(self, action: str, value: str | None) -> None:
+        """Call it to send command to EQRemote"""
+        try:
+            self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
+            self._remote.send_key_command(self._config.key_mapping[action])
+        except ValueError as e:
+            self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
+        except ConnectionClosed as e:
+            self._logger.error("[EQRemote][SendCommand] Exception (ConnectionError) :: %s", e)
+        except Exception as e:
+            self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
 class TVRemoted:
     """This is the main class of you daemon"""
 
@@ -216,6 +227,20 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Invalid apikey from socket : %s', message)
             return
         try:
+            if message['cmd'] == "action":
+                # Gestion des actions
+                self._logger.debug('[DAEMON][SOCKET] Action')
+                if 'cmd_action' in message:
+                    # Traitement des actions (inclus les CustomCmd)
+                    if (message['cmd_action'] == 'volumeset' and all(keys in message for keys in ('value', 'mac'))):
+                        self._logger.debug('[DAEMON][SOCKET] Action :: VolumeSet = %s @ %s', message['value'], message['mac'])
+                        if message['mac'] in self._config.remote_mac:
+                            await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
+                    elif (message['cmd_action'] in ('volumeup', 'volumedown', 'media_pause', 'media_play', 'media_stop', 'media_next', 'media_quit', 'media_rewind', 'media_previous', 'mute_on', 'mute_off') and 'mac' in message):
+                        self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s', message['cmd_action'], message['mac'])
+                        if message['mac'] in self._config.remote_mac:
+                            await self._config.remote_devices[message['mac']].send_command(message['cmd_action'])
+                            
             if message['cmd'] == "scanOn":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn')
                 
