@@ -98,8 +98,8 @@ class EQRemote(object):
                     'volume_level': _volume_level,
                     'volume_muted': _volume_muted,
                     'volume_max': _volume_max,
-                    'updatelasttime': currentTime,
-                    'updatelasttimets': currentTimeStr,
+                    'updatelasttime': currentTimeStr,
+                    'updatelasttimets': currentTime,
                     'realtime': 1
                 }
                 # Envoi vers Jeedom
@@ -120,8 +120,8 @@ class EQRemote(object):
                     data = {
                         'mac': self._macAddr,
                         'online': _is_available,
-                        'updatelasttime': currentTime,
-                        'updatelasttimets': currentTimeStr,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -142,8 +142,8 @@ class EQRemote(object):
                         'mac': self._macAddr,
                         'online': 1,
                         'is_on': _isOn,
-                        'updatelasttime': currentTime,
-                        'updatelasttimets': currentTimeStr,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -163,8 +163,8 @@ class EQRemote(object):
                         'mac': self._macAddr,
                         'online': 1,
                         'current_app': current_app,
-                        'updatelasttime': currentTime,
-                        'updatelasttimets': currentTimeStr,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
@@ -189,8 +189,8 @@ class EQRemote(object):
                         'volume_level': _volume_level,
                         'volume_muted': _volume_muted,
                         'volume_max': _volume_max,
-                        'updatelasttime': currentTime,
-                        'updatelasttimets': currentTimeStr,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
                         'realtime': 1
                     }
                     # Envoi vers Jeedom
