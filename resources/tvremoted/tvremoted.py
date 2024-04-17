@@ -216,7 +216,11 @@ class EQRemote(object):
     async def send_command(self, action: str = None, value: str = None) -> None:
         """Call it to send command to EQRemote"""
         try:
-            if action in self._config.key_mapping:
+            if action in ('tests'):
+                self._logger.debug("[EQRemote][SendCmd - Tests] %s :: %s", action, value)
+                if value is not None:
+                    self._remote.send_launch_app_command(value)
+            elif action in self._config.key_mapping:
                 self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
                 if action in ('youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
                     self._remote.send_launch_app_command(self._config.key_mapping[action])
@@ -303,9 +307,9 @@ class TVRemoted:
                 if 'cmd_action' in message:
                     # Traitement des actions (inclus les CustomCmd)
                     if (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off', 'power_on', 'power_off', 'back', 'home', 'menu', 'tv', 'channel_up', 'channel_down', 'info', 'settings', 'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4', 'youtube', 'netflix', 'amazon_prime_video', 'disney_plus', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero') and 'mac' in message):
-                        self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s', message['cmd_action'], message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s. %s', message['cmd_action'], message['mac'], message['value'])
                         if message['mac'] in self._config.remote_mac:
-                            await self._config.remote_devices[message['mac']].send_command(message['cmd_action'])
+                            await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
                     else:
                         self._logger.warning('[DAEMON][SOCKET] Unknown Action :: %s', message['cmd_action'])
             elif message['cmd'] == "scanOn":
