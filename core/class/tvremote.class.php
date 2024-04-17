@@ -1264,7 +1264,7 @@ class tvremote extends eqLogic {
         $cmd = $this->getCmd(null, 'tests_app');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Tests', __FILE__));
+            $cmd->setName(__('Tests App', __FILE__));
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('tests_app');
             $cmd->setType('action');
