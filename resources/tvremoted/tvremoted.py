@@ -219,7 +219,7 @@ class EQRemote(object):
             if action in ('tests'):
                 self._logger.debug("[EQRemote][SendCmd - Tests] %s :: %s", action, value)
                 if value is not None:
-                    self._remote.send_launch_app_command(value)
+                    self._remote.send_key_command(value)
             elif action in self._config.key_mapping:
                 self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
                 if action in ('youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
