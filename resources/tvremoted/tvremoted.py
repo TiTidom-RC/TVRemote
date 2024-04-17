@@ -216,10 +216,13 @@ class EQRemote(object):
     async def send_command(self, action: str = None, value: str = None) -> None:
         """Call it to send command to EQRemote"""
         try:
-            if action in ('tests'):
+            if action in ('tests', 'tests_app'):
                 self._logger.debug("[EQRemote][SendCmd - Tests] %s :: %s", action, value)
                 if value is not None:
-                    self._remote.send_key_command(value)
+                    if action == 'tests':
+                        self._remote.send_key_command(value)
+                    elif action == 'tests_app':
+                        self._remote.send_launch_app_command(value)
             elif action in self._config.key_mapping:
                 self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
                 if action in ('youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
@@ -306,7 +309,7 @@ class TVRemoted:
                 self._logger.debug('[DAEMON][SOCKET] Action')
                 if 'cmd_action' in message:
                     # Traitement des actions (inclus les CustomCmd)
-                    if (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off', 'power_on', 'power_off', 'back', 'home', 'menu', 'tv', 'channel_up', 'channel_down', 'info', 'settings', 'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4', 'youtube', 'netflix', 'amazon_prime_video', 'disney_plus', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero', 'tests') and 'mac' in message):
+                    if (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off', 'power_on', 'power_off', 'back', 'home', 'menu', 'tv', 'channel_up', 'channel_down', 'info', 'settings', 'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4', 'youtube', 'netflix', 'amazon_prime_video', 'disney_plus', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero', 'tests', 'tests_app') and 'mac' in message):
                         self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s. %s', message['cmd_action'], message['mac'], message['value'])
                         if message['mac'] in self._config.remote_mac:
                             await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])

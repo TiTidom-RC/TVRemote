@@ -1261,6 +1261,22 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
+        $cmd = $this->getCmd(null, 'tests_app');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Tests', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('tests_app');
+            $cmd->setType('action');
+            $cmd->setSubType('message');
+            $cmd->setIsVisible(0);
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Tests App"));
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
         if ($this->getIsEnable()) {
             $this->enableTVRemoteToDaemon();
         } else {
@@ -1289,7 +1305,7 @@ class tvremoteCmd extends cmd {
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
         if ( $this->getType() == "action" ) {
-            if (in_array($logicalId, ["tests"])) {
+            if (in_array($logicalId, ["tests", "tests_app"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC) && isset($_options['message'])) {
