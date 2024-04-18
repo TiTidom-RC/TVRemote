@@ -659,7 +659,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumedown');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-volume-down"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-volume-down icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -675,7 +675,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumeup');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-volume-up"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-volume-up icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -725,7 +725,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('up');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-up"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-up icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -758,7 +758,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('left');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-left"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-left icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -792,7 +792,7 @@ class tvremote extends eqLogic {
             $cmd->setType('action');
             $cmd->setSubType('other');
             $cmd->setDisplay('forceReturnLineAfter', '1');
-            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-right"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-right icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -825,7 +825,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('down');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-down"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-down icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1009,7 +1009,7 @@ class tvremote extends eqLogic {
             $cmd->setType('action');
             $cmd->setSubType('other');
             $cmd->setDisplay('forceReturnLineBefore', '1');
-            $cmd->setDisplay('icon', '<i class="fas fa-minus-square"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-minus-square icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1042,7 +1042,7 @@ class tvremote extends eqLogic {
             $cmd->setType('action');
             $cmd->setSubType('other');
             $cmd->setDisplay('forceReturnLineAfter', '1');
-            $cmd->setDisplay('icon', '<i class="fas fa-plus-square"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-plus-square icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
