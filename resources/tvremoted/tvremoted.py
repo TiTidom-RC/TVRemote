@@ -15,7 +15,7 @@ from config import Config
 from jeedom.utils import Utils
 from jeedom.aio_connector import Listener, Publisher
 
-from urllib.parse import urljoin, urlencode, urlparse
+# from urllib.parse import urljoin, urlencode, urlparse
 
 # Import pour ZeroConf
 try:
@@ -31,7 +31,218 @@ try:
 except ImportError as e: 
     print("[DAEMON][IMPORT] Exception Error: importing module AndroidTVRemote2 ::", e)
     sys.exit(1)
+          
+class EQRemote(object):
+    """This is the Remote Device class"""
+
+    def __init__(self, _mac, _host, _config: Config, _jeedom_publisher) -> None:
+        # Standard Init of class
+        self._config = _config
+        self._remote = None
+        self._macAddr = _mac
+        self._host = _host
+        self._logger = logging.getLogger(__name__)
+        self._jeedom_publisher = _jeedom_publisher
+        self._loop = asyncio.get_running_loop()
+
+    async def main(self):
+        """
+        The is the entry point of your class EQRemote.
+        You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
+        """
+        try:
+            self._logger.debug("[EQRemote][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
+            
+            self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host)
+            
+            if await self._remote.async_generate_cert_if_missing():
+                self._logger.info("[EQRemote][MAIN][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
+            
+            while not self._config.is_ending:
+                try:
+                    await self._remote.async_connect()
+                    break
+                except InvalidAuth as exc:
+                    self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
+                    await asyncio.sleep(60)
+                    continue
+                except (CannotConnect, ConnectionClosed) as exc:
+                    self._logger.error("[EQRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
+                    await asyncio.sleep(60)
+                    continue
+            self._remote.keep_reconnecting()
+            
+            try:
+                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
+                self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
+                self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
+                self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+            
+                # UpdateLastTime
+                currentTime = int(time.time())
+                currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")    
+                
+                _isOn = 1 if self._remote.is_on else 0
+                if all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
+                    _volume_level = self._remote.volume_info['level']
+                    _volume_muted = 1 if self._remote.volume_info['muted'] else 0
+                    _volume_max = self._remote.volume_info['max']
+                else:
+                    _volume_level = 0
+                    _volume_muted = 0
+                    _volume_max = 0
+                
+                data = {
+                    'mac': self._macAddr,
+                    'online': 1,
+                    'is_on': _isOn,
+                    'current_app': self._remote.current_app,
+                    'volume_level': _volume_level,
+                    'volume_muted': _volume_muted,
+                    'volume_max': _volume_max,
+                    'updatelasttime': currentTimeStr,
+                    'updatelasttimets': currentTime,
+                    'realtime': 1
+                }
+                # Envoi vers Jeedom
+                self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+            except Exception as e:
+                self._logger.error('[EQRemote][MAIN][%s] Exception :: %s', self._macAddr, e)
+                self._logger.debug(traceback.format_exc())
+
+            def is_available_updated(is_available: bool) -> None:
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+                try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
+                    _is_available = 1 if is_available else 0
+                    
+                    data = {
+                        'mac': self._macAddr,
+                        'online': _is_available,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRemote][Is_Available] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
+
+            def is_on_updated(is_on: bool) -> None:
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
+                try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
+                    _isOn = 1 if is_on else 0
+                    data = {
+                        'mac': self._macAddr,
+                        'online': 1,
+                        'is_on': _isOn,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRemote][Is_On] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
+                
+            def current_app_updated(current_app: str) -> None:
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
+                try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
+                    data = {
+                        'mac': self._macAddr,
+                        'online': 1,
+                        'current_app': current_app,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRemote][Current_App] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
+
+            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+                self._logger.info("[EQRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
+                try:
+                    # UpdateLastTime
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    
+                    _volume_level = volume_info['level']
+                    _volume_muted = 1 if volume_info['muted'] else 0
+                    _volume_max = volume_info['max']
+                    
+                    data = {
+                        'mac': self._macAddr,
+                        'volume_level': _volume_level,
+                        'volume_muted': _volume_muted,
+                        'volume_max': _volume_max,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
+                        'realtime': 1
+                    }
+                    # Envoi vers Jeedom
+                    self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+                except Exception as e:
+                    self._logger.error('[EQRemote][Volume_Info] Exception :: %s', e)
+                    self._logger.debug(traceback.format_exc())
+
+            self._remote.add_is_available_updated_callback(is_available_updated)
+            self._remote.add_is_on_updated_callback(is_on_updated)
+            self._remote.add_current_app_updated_callback(current_app_updated)
+            self._remote.add_volume_info_updated_callback(volume_info_updated)
+        
+        except asyncio.CancelledError:
+            self._logger.debug("[EQRemote] Stop Main")
+        
+    async def remove(self):
+        """Call it to disconnect from a EQRemote"""
+        self._remote.disconnect()
+        await asyncio.sleep(1)
+        self._remote = None
     
+    async def send_command(self, action: str = None, value: str = None) -> None:
+        """Call it to send command to EQRemote"""
+        try:
+            if action in ('tests', 'tests_app'):
+                self._logger.debug("[EQRemote][SendCmd - Tests] %s :: %s", action, value)
+                if value is not None:
+                    if action == 'tests':
+                        self._remote.send_key_command(value)
+                    elif action == 'tests_app':
+                        self._remote.send_launch_app_command(value)
+            elif action in self._config.key_mapping:
+                self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
+                if action in ('youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
+                    self._remote.send_launch_app_command(self._config.key_mapping[action])
+                else:
+                    self._remote.send_key_command(self._config.key_mapping[action])
+            else:
+                self._logger.error("[EQRemote][SendCommand] Command Mapping :: %s :: Unknown Key !", action)
+        except ValueError as e:
+            self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
+            self._logger.debug(traceback.format_exc())
+        except ConnectionClosed as e:
+            self._logger.error("[EQRemote][SendCommand] Exception (ConnectionError) :: %s", e)
+            self._logger.debug(traceback.format_exc())
+        except Exception as e:
+            self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
+            
 class TVRemoted:
     """This is the main class of you daemon"""
 
@@ -95,15 +306,24 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Invalid apikey from socket : %s', message)
             return
         try:
-            if message['cmd'] == "scanOn":
-                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn')
-                
+            if message['cmd'] == "action":
+                # Gestion des actions
+                self._logger.debug('[DAEMON][SOCKET] Action')
+                if 'cmd_action' in message:
+                    # Traitement des actions (inclus les CustomCmd)
+                    if (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off', 'power_on', 'power_off', 'back', 'home', 'menu', 'tv', 'channel_up', 'channel_down', 'info', 'settings', 'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4', 'youtube', 'netflix', 'amazon_prime_video', 'disney_plus', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero', 'tests', 'tests_app', 'media_next','media_stop','media_pause','media_play','media_rewind','media_previous', 'media_eject') and 'mac' in message):
+                        self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s (%s)', message['cmd_action'], message['mac'], message['value'])
+                        if message['mac'] in self._config.remote_mac:
+                            await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
+                    else:
+                        self._logger.warning('[DAEMON][SOCKET] Unknown Action :: %s', message['cmd_action'])
+            elif message['cmd'] == "scanOn":
+                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn') 
                 self._config.scanmode = True
                 self._config.scanmode_start = int(time.time())
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
             elif message['cmd'] == "scanOff":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOff')
-                
                 self._config.scanmode = False
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
@@ -112,6 +332,35 @@ class TVRemoted:
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
+            elif message['cmd'] == "addtvremote":
+                if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
+                    self._logger.debug('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    if message['host'] not in self._config.known_hosts:
+                        self._config.known_hosts.append(message['host'])
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to KNOWN Devices :: %s', str(self._config.known_hosts))
+                    if message['friendly_name'] not in self._config.remote_names:
+                        self._config.remote_names.append(message['friendly_name'])
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote Names :: %s', str(self._config.remote_names))
+                    if message['mac'] not in self._config.remote_mac:
+                        self._config.remote_mac.append(message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote MAC :: %s', str(self._config.remote_mac))
+                        self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
+                        await self._config.remote_devices[message['mac']].main()
+            elif message['cmd'] == "removetvremote":
+                if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
+                    self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    if message['host'] in self._config.known_hosts:
+                        self._config.known_hosts.remove(message['host'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.known_hosts))
+                    if message['friendly_name'] in self._config.remote_names:
+                        self._config.remote_names.remove(message['friendly_name'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from Remote Names :: %s', str(self._config.remote_names))
+                    if message['mac'] in self._config.remote_mac:
+                        self._config.remote_mac.remove(message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.remote_mac))
+                        await self._config.remote_devices[message['mac']].remove()
+                        del self._config.remote_devices[message['mac']]
+                        
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
@@ -137,7 +386,7 @@ class TVRemoted:
                 await asyncio.sleep(1)
                 currentTime = int(time.time())
                 if (pairing_starttime + self._config.pairing_timeout) <= currentTime:
-                    self._logger.error("[PAIRING][%s] Pairing Code not received in last 60sec :: KO", _mac)
+                    self._logger.error("[PAIRING][%s] Pairing Code not received in last 5min :: KO", _mac)
                     remote = None
                     return
             try:
@@ -267,7 +516,7 @@ class TVRemoted:
                             self._logger.debug('[SCANNER] Scan TVRemote :: ScanMode')
                             await self._tvhosts_from_zeroconf(timeout=60)
                         elif (self._config.scan_lasttime + self._config.scan_schedule <= currentTime):
-                            self._logger.debug('[SCANNER] Scan TVRemote :: ScheduleMode')
+                            # self._logger.debug('[SCANNER] Scan TVRemote :: ScheduleMode')
                             # Scan Schedule
                             self._config.scan_pending = True
                             self._config.scan_lasttime = int(time.time())
@@ -277,7 +526,7 @@ class TVRemoted:
                         
                 except Exception as e:
                     self._logger.error("[MAINLOOP] Exception :: %s", e)
-                    self._logger.info(traceback.format_exc())
+                    self._logger.debug(traceback.format_exc())
                 
                 # Pause Cycle
                 await asyncio.sleep(cycle)

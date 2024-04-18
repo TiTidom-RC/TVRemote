@@ -115,7 +115,7 @@ $('.customclass-beginpairing').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Pendant 60s)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'success' });
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Actif pendant 5min)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'warning' });
       }
   });
 });
@@ -126,7 +126,7 @@ $('.customclass-sendpaircode').on('click', function () {
   var _hostAddr = $('#hostAddr').val()
   var _macAddr = $('#macAddr').val()
   var _portNum = $('#portNum').val()
-  $('#div_alert').showAlert({message: '{{Code Appairage}} (' + _friendlyName + ') :: ' + _pairCode, level: 'warning'});
+  /* $('#div_alert').showAlert({message: '{{Code Appairage}} (' + _friendlyName + ') :: ' + _pairCode, level: 'warning'}); */
   $.ajax({
       type: "POST",
       url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
@@ -154,14 +154,13 @@ $('.customclass-sendpaircode').on('click', function () {
 
 $('.customclass-scanState').on('click', function () {
 	var scanState = $(this).attr('data-scanState');
-  // $('#div_alert').showAlert({message: 'scanState Click :: ' + scanState, level: 'warning'});
 	changeScanState(scanState);
 });
 
 function changeScanState(_scanState) {
-  $.ajax({  // fonction permettant de faire de l'ajax
-    type: "POST", // methode de transmission des données au fichier php
-      url: "plugins/tvremote/core/ajax/tvremote.ajax.php", // url du fichier php
+  $.ajax({
+    type: "POST",
+      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
       data: {
           action: "changeScanState",
           scanState: _scanState,
@@ -170,7 +169,7 @@ function changeScanState(_scanState) {
       error: function (request, status, error) {
           handleAjaxError(request, status, error);
       },
-      success: function (data) {  // si l'appel a bien fonctionné
+      success: function (data) {
           if (data.state != 'ok') {
               $('#div_alert').showAlert({message: data.result, level: 'danger'});
               return;
@@ -189,7 +188,6 @@ $('body').on('tvremote::newdevice', function (_event, _option) {
 
 $('body').on('tvremote::scanState', function (_event, _options) {
   if (_options['scanState'] == "scanOn") {
-    // $('#div_alert').showAlert({message: 'Le Scan est ACTIF !', level: 'warning'});
     if ($('.customclass-scanState').attr('data-scanState') == "scanOn") {
       $.hideAlert();
       $('.customclass-scanState').attr('data-scanState', 'scanOff');
@@ -201,7 +199,6 @@ $('body').on('tvremote::scanState', function (_event, _options) {
   } else {    
     if ($('.customclass-scanState').attr('data-scanState') == "scanOff") {
       $.hideAlert();
-      // $('#div_alert').showAlert({message: '{{Mode Scan TERMINE.}}', level: 'success'});
       $('.customclass-scanState').attr('data-scanState', 'scanOn');
       $('.customclass-scanState').removeClass('logoSecondary').addClass('logoPrimary');
       $('.customicon-scanState').removeClass('icon_red');
