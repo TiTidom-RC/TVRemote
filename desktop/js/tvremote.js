@@ -115,7 +115,7 @@ $('.customclass-beginpairing').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Pendant 60s)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'success' });
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Pendant 60s)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'warning' });
       }
   });
 });

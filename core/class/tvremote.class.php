@@ -658,7 +658,25 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumeup');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-up"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'info');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Info', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('info');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+
+            $cmd->setDisplay('icon', '<i class="fas fa-info-circle"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -682,15 +700,16 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'down');
+        $cmd = $this->getCmd(null, 'settings');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Down', __FILE__));
+            $cmd->setName(__('Settings', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('down');
+	        $cmd->setLogicalId('settings');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-down"></i>');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            $cmd->setDisplay('icon', '<i class="fas fa-cogs"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -714,22 +733,6 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'right');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Right', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('right');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-right"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
         $cmd = $this->getCmd(null, 'center');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
@@ -738,7 +741,25 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('center');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fas fa-dot-circle"></i>');
+            # $cmd->setDisplay('icon', '<i class="fas fa-dot-circle"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-check-circle"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'right');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Right', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('right');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-right"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -754,7 +775,41 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('back');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'down');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Down', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('down');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-down"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'home');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Home', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('home');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            $cmd->setDisplay('icon', '<i class="fas fa-home"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -770,6 +825,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('one');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -802,6 +858,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('three');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -818,6 +875,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('four');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -850,6 +908,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('six');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -866,6 +925,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('seven');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -898,7 +958,25 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('nine');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'channel_down');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Channel -', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('channel_down');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineBefore', '1');
+            $cmd->setDisplay('icon', '<i class="fas fa-minus-square"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -922,21 +1000,24 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'home');
+        $cmd = $this->getCmd(null, 'channel_up');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Home', __FILE__));
+            $cmd->setName(__('Channel +', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('home');
+	        $cmd->setLogicalId('channel_up');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            $cmd->setDisplay('icon', '<i class="fas fa-plus-square"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
             $orderCmd++;
         }
+
+        
 
         $cmd = $this->getCmd(null, 'menu');
         if (!is_object($cmd)) {
@@ -946,7 +1027,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('menu');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-bars"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -962,71 +1043,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('tv');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'channel_up');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Channel UP', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('channel_up');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'channel_down');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Channel DOWN', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('channel_down');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'info');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Info', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('info');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
-        $cmd = $this->getCmd(null, 'settings');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Settings', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('settings');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('icon', '<i class="fas fa-tv"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1114,6 +1131,118 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
+        $cmd = $this->getCmd(null, 'media_previous');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Previous', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_previous');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-step-backward"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'media_rewind');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Rewind', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_rewind');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-backward"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'media_play');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Play', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_play');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-play"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'media_pause');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Pause', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_pause');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-pause"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'media_stop');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Stop', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_stop');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-stop"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'media_next');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Next', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_next');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-step-forward"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'media_quit');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Media Quit', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('media_quit');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('icon', '<i class="fas fa-eject"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
         $cmd = $this->getCmd(null, 'netflix');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
@@ -1138,7 +1267,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('youtube');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('icon', '<i class="fab fa-youtube"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1170,7 +1299,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('amazon_prime_video');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('icon', '<i class="fab fa-amazon"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1314,7 +1443,7 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
