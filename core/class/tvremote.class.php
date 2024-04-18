@@ -1235,12 +1235,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'media_quit');
+        $cmd = $this->getCmd(null, 'media_eject');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Media Quit', __FILE__));
+            $cmd->setName(__('Media Eject', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('media_quit');
+	        $cmd->setLogicalId('media_eject');
             $cmd->setType('action');
             $cmd->setSubType('other');
             $cmd->setDisplay('forceReturnLineAfter', '1');
@@ -1458,7 +1458,7 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous", "media_eject"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {

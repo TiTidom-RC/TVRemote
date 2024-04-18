@@ -76,6 +76,7 @@ class Config(object):
             "media_play": "KEYCODE_MEDIA_PLAY",
             "media_rewind": "KEYCODE_MEDIA_REWIND",
             "media_previous": "KEYCODE_MEDIA_PREVIOUS",
+            "media_eject": "KEYCODE_MEDIA_EJECT",
             "youtube": "https://www.youtube.com",
             "netflix": "https://www.netflix.com/title",
             "amazon_prime_video": "https://app.primevideo.com",
