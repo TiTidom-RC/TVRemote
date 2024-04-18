@@ -321,7 +321,7 @@ class tvremote extends eqLogic {
             $newtvremote->save();
 
             event::add('jeedom::alert', array(
-                'level' => 'success',
+                'level' => 'warning',
                 'page' => 'tvremote',
                 'message' => __('[SCAN] TVRemote MAJ :: ' .$_data['friendly_name'], __FILE__),
             ));
