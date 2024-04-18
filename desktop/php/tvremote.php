@@ -226,7 +226,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 <label class="col-sm-4 control-label">{{Code Appairage}}</label>
                                 <div class="input-group col-lg-3">
                                     <input type="text" class="form-control roundedLeft" placeholder="A2C10E" id="pairCode" />
-                                    <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-play-circle"> {{Envoyer}}</i></a></span>
+                                    <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-play-circle"></i> {{Envoyer}}</a></span>
                                 </div>
                             </div>
                         </div>
