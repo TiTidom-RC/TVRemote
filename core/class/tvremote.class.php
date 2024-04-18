@@ -144,6 +144,11 @@ class tvremote extends eqLogic {
         try {
             $deamon_info = self::deamon_info();
             if ($deamon_info['state'] != 'ok') {
+                event::add('jeedom::alert', array(
+                    'level' => 'danger',
+                    'page' => 'tvremote',
+                    'message' => __('[DAEMON - KO] Envoi impossible, le démon n\'a pas (encore) démarré !"', __FILE__),
+                ));
                 throw new Exception("Le Démon n'est pas démarré !");
             }
             $params['apikey'] = jeedom::getApiKey(__CLASS__);
