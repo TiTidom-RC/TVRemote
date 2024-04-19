@@ -238,7 +238,7 @@ class EQRemote(object):
                         self._remote.send_launch_app_command(value)
             elif action in self._config.key_mapping:
                 self._logger.debug("[EQRemote][SendCommand] %s :: %s", action, self._config.key_mapping[action])
-                if action in ('free', 'youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
+                if action in ('oqee', 'youtube', 'netflix', 'amazon_prime_video', 'disney_plus'):
                     self._remote.send_launch_app_command(self._config.key_mapping[action])
                 else:
                     self._remote.send_key_command(self._config.key_mapping[action])
