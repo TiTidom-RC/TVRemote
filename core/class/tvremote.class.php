@@ -311,7 +311,7 @@ class tvremote extends eqLogic {
             event::add('jeedom::alert', array(
                 'level' => 'success',
                 'page' => 'tvremote',
-                'message' => __('[SCAN] TVRemote AJOUTE :: ' .$_data['friendly_name'], __FILE__),
+                'message' => __('[SCAN] TVRemote AJOUTE :: ', __FILE__) . $_data['friendly_name'],
             ));
             return $eqLogic;
         }
@@ -328,7 +328,7 @@ class tvremote extends eqLogic {
             event::add('jeedom::alert', array(
                 'level' => 'warning',
                 'page' => 'tvremote',
-                'message' => __('[SCAN] TVRemote MAJ :: ' .$_data['friendly_name'], __FILE__),
+                'message' => __('[SCAN] TVRemote MAJ :: ', __FILE__) . $_data['friendly_name'],
             ));
             return $newtvremote;
         }
