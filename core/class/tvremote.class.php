@@ -1252,12 +1252,12 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'netflix');
+        $cmd = $this->getCmd(null, 'oqee');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Netflix', __FILE__));
+            $cmd->setName(__('Free', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('netflix');
+	        $cmd->setLogicalId('oqee');
             $cmd->setType('action');
             $cmd->setSubType('other');
             $cmd->setDisplay('forceReturnLineBefore', '1');
@@ -1285,14 +1285,15 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'disney_plus');
+        $cmd = $this->getCmd(null, 'netflix');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Disney +', __FILE__));
+            $cmd->setName(__('Netflix', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('disney_plus');
+	        $cmd->setLogicalId('netflix');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            # $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1309,8 +1310,24 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('amazon_prime_video');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fab fa-amazon"></i>');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'disney_plus');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Disney +', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('disney_plus');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1458,7 +1475,7 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous", "media_eject"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous", "media_eject"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
