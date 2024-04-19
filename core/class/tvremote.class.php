@@ -280,7 +280,6 @@ class tvremote extends eqLogic {
 
     public static function createAndUpdTVRemoteFromScan($_data)
     {
-        log::add('tvremote', 'debug', '[FROM_SCAN] Start Function.');
         if (!isset($_data['mac'])) {
             event::add('jeedom::alert', array(
                 'level' => 'danger',
