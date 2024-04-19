@@ -55,8 +55,12 @@ class EQRemote(object):
             
             self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host)
             
+            if self._remote is None:
+                self._logger.error("[EQRemote][Remote] Object Creation Failed :: Object is None !")
+                return
+            
             if await self._remote.async_generate_cert_if_missing():
-                self._logger.info("[EQRemote][MAIN][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
+                self._logger.info("[EQRemote][CERT][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
             
             while not self._config.is_ending:
                 try:
@@ -70,6 +74,10 @@ class EQRemote(object):
                     self._logger.error("[EQRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
                     await asyncio.sleep(60)
                     continue
+                except Exception as e:
+                    self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
+                    self._logger.debug(traceback.format_exc())
+                    
             self._remote.keep_reconnecting()
             
             try:
@@ -107,11 +115,11 @@ class EQRemote(object):
                 # Envoi vers Jeedom
                 self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
             except Exception as e:
-                self._logger.error('[EQRemote][MAIN][%s] Exception :: %s', self._macAddr, e)
+                self._logger.error('[EQRemote][MAIN-Publisher][%s] Exception :: %s', self._macAddr, e)
                 self._logger.debug(traceback.format_exc())
 
             def is_available_updated(is_available: bool) -> None:
-                self._logger.info("[EQRemote][MAIN][%s] Notification (Is_Available) :: %s", self._macAddr, is_available)
+                self._logger.info("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -133,7 +141,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
 
             def is_on_updated(is_on: bool) -> None:
-                self._logger.info("[EQRemote][MAIN][%s] Notification (Is_On) :: %s", self._macAddr, is_on)
+                self._logger.info("[EQRemote][Is_On][%s] Notification :: %s", self._macAddr, is_on)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -155,7 +163,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
                 
             def current_app_updated(current_app: str) -> None:
-                self._logger.info("[EQRemote][MAIN][%s] Notification (Current_App) :: %s", self._macAddr, current_app)
+                self._logger.info("[EQRemote][Current_App][%s] Notification :: %s", self._macAddr, current_app)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -176,7 +184,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
 
             def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
-                self._logger.info("[EQRemote][MAIN][%s] Notification (Volume_Info) :: %s", self._macAddr, volume_info)
+                self._logger.info("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -208,6 +216,9 @@ class EQRemote(object):
         
         except asyncio.CancelledError:
             self._logger.debug("[EQRemote] Stop Main")
+        except Exception as e: 
+            self._logger.error("[EQRemote][MAIN] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
         
     async def remove(self):
         """Call it to disconnect from a EQRemote"""
@@ -366,41 +377,61 @@ class TVRemoted:
                 
         except Exception as message_e:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
+            self._logger.debug(traceback.format_exc())
+            
 
     async def _pairing(self, _mac=None, _host=None, _port=None) -> None:
         """ Function to pair Plugin with TV """
         
+        if self._config.scanmode:
+            self._logger.error("[PAIRING] TV ScanMode in Progress. Stop Scan before trying to Pair.")
+            return
+        
         self._config.pairing_code = None
         
         remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _host)
+        if remote is None:
+            self._logger.error("[PAIRING][%s] TVRemote Object is None !", _mac)
+            return
+        
         if await remote.async_generate_cert_if_missing():
             self._logger.info("[PAIRING][%s] Generated New Cert/Key Files :: %s | %s", _mac, self._config.cert_file, self._config.key_file)
         
         pairing_starttime = int(time.time())
         currentTime = int(time.time())
-        await remote.async_start_pairing()
-        self._logger.debug("[PAIRING][%s] Start Pairing...", _mac)
-        while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) > currentTime :
-            currentTime = int(time.time())
-            while not self._config.is_ending and self._config.pairing_code is None :
-                await asyncio.sleep(1)
-                currentTime = int(time.time())
-                if (pairing_starttime + self._config.pairing_timeout) <= currentTime:
-                    self._logger.error("[PAIRING][%s] Pairing Code not received in last 5min :: KO", _mac)
-                    remote = None
-                    return
-            try:
-                self._logger.debug("[PAIRING][%s] Try with Pairing Code :: %s", _mac, str(self._config.pairing_code))
-                return await remote.async_finish_pairing(self._config.pairing_code)
-            except InvalidAuth as exc:
-                self._logger.error("[PAIRING][%s] Invalid Pairing Code. Error :: %s", _mac, exc)
-                await asyncio.sleep(1)
-                continue
-            except ConnectionClosed as exc:
-                self._logger.error("[PAIRING][%s] Initialize Pair Again. Error :: %s", _mac, exc)
-                await asyncio.sleep(1)
-                return await self._pairing(_mac, _host, _port)
         
+        try:
+            try:
+                self._logger.debug("[PAIRING][START][%s] Start Pairing...", _mac)
+                await remote.async_start_pairing()
+            except (CannotConnect, ConnectionClosed) as e:
+                self._logger.error("[PAIRING][START][%s] Exception :: %s", _mac, e)
+                return
+            
+            while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) > currentTime :
+                while not self._config.is_ending and self._config.pairing_code is None :
+                    await asyncio.sleep(1)
+                    currentTime = int(time.time())
+                    if (pairing_starttime + self._config.pairing_timeout) <= currentTime:
+                        self._logger.error("[PAIRING][%s] Pairing Code not received in the last 5min :: KO", _mac)
+                        remote = None
+                        return
+                try:
+                    self._logger.debug("[PAIRING][%s] Trying to Pair with Code :: %s", _mac, str(self._config.pairing_code))
+                    return await remote.async_finish_pairing(self._config.pairing_code)
+                except InvalidAuth as exc:
+                    self._logger.error("[PAIRING][%s] Invalid Pairing Code. Try to send another one. Error :: %s", _mac, exc)
+                    self._config.pairing_code = None
+                    await asyncio.sleep(1)
+                    continue
+                except ConnectionClosed as exc:
+                    self._logger.error("[PAIRING][%s] Initialize Pairing Again. Error :: %s", _mac, exc)
+                    await asyncio.sleep(1)
+                    return await self._pairing(_mac, _host, _port)
+        except Exception as e:
+            self._logger.error("[PAIRING][%s] Exception :: %s", _mac, e)
+            self._logger.debug(traceback.format_exc())
+            
         self._logger.debug("[PAIRING][%s] End Function...", _mac)
         # Libération de la mémoire
         remote = None
@@ -503,7 +534,7 @@ class TVRemoted:
                     if (self._config.scanmode and (self._config.scanmode_start + self._config.scanmode_timeout) <= currentTime):
                         self._config.scanmode = False
                         self._logger.info('[MAINLOOP] ScanMode :: END')
-                        self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
+                        await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
                     # Heartbeat du démon
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                         self._logger.info('[MAINLOOP] Heartbeat = 1')
@@ -520,6 +551,7 @@ class TVRemoted:
                             # Scan Schedule
                             self._config.scan_pending = True
                             self._config.scan_lasttime = int(time.time())
+                            # TODO Ajouter la fonction Scan Schedule
                             self._config.scan_pending = False
                     else:
                         self._logger.debug('[MAINLOOP] ScanMode : SCAN PENDING !')                        
@@ -532,7 +564,10 @@ class TVRemoted:
                 await asyncio.sleep(cycle)
                 
         except asyncio.CancelledError:
-            self._logger.debug("[MAINLOOP] Stop MainLoop")
+            self._logger.warning("[MAINLOOP] Stop MainLoop")
+        except Exception as e:
+            self._logger.error("[MAINLOOP] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
             
     async def _getResourcesUsage(self):
         if (self._logger.isEnabledFor(logging.INFO)):
@@ -636,4 +671,5 @@ except Exception as e:
     filename = exception_traceback.tb_frame.f_code.co_filename
     line_number = exception_traceback.tb_lineno
     _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+    _LOGGER.debug(traceback.format_exc())
 shutdown()
