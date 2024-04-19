@@ -1,7 +1,7 @@
 {
 	"id": "tvremote",
 	"name": "TV Remote",
-	"pluginVersion": "0.7.0",
+	"pluginVersion": "0.7.1",
 	"description" : {
 		"fr_FR": "Plugin pour contrôler les équipements Android de type Télévision (Sony, Nvidia Shield, Freebox TV, etc...) implémentant le service de télécommande Google. Il permet de contrôler les différentes fonctions de sa télévision (power, volume, entrées HDMI, lancement d'applications, chaînes TV, navigation dans l'interface, etc...)",
 		"en_US": "Plugin pour contrôler les équipements Android de type Télévision (Sony, Nvidia Shield, Freebox TV, etc...) implémentant le service de télécommande Google. Il permet de contrôler les différentes fonctions de sa télévision (power, volume, entrées HDMI, lancement d'applications, chaînes TV, navigation dans l'interface, etc...)",
