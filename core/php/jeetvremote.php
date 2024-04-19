@@ -69,11 +69,11 @@ try {
             log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: ' . $data['friendly_name']);
             $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
             if (!is_object($tv_remote)) {    
-                log::add('tvremote','debug','[CALLBACK][Discovery] NEW TVRemote détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
+                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote NEW détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
                 $scannewtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
             else {
-                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Update :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
+                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote UPDATE détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
                 $scanupdtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
         }
