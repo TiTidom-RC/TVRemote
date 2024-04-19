@@ -280,8 +280,9 @@ class tvremote extends eqLogic {
 
     public static function createAndUpdTVRemoteFromScan($_data)
     {
+        log::add('tvremote', 'debug', '[CREATE_FROM_SCAN] Start Function.');
         if (!isset($_data['mac'])) {
-            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (MAC) pour créer l\'équipement');
+            log::add('tvremote', 'error', '[CREATE_FROM_SCAN] Information manquante (MAC) pour créer l\'équipement');
             event::add('jeedom::alert', array(
                 'level' => 'danger',
                 'page' => 'tvremote',
@@ -292,6 +293,7 @@ class tvremote extends eqLogic {
         
         $newtvremote = tvremote::byLogicalId($_data['mac'], 'tvremote');
         if (!is_object($newtvremote)) {
+            log::add('tvremote', 'debug', '[CREATE_FROM_SCAN] Objet non existant.');
             $eqLogic = new tvremote();
             $eqLogic->setLogicalId($_data['mac']);
             $eqLogic->setIsEnable(1);
@@ -316,6 +318,7 @@ class tvremote extends eqLogic {
             return $eqLogic;
         }
         else {
+            log::add('tvremote', 'debug', '[CREATE_FROM_SCAN] Objet déjà existant.');
             $newtvremote->setConfiguration('name', $_data['name']);
             $newtvremote->setConfiguration('family', $_data['family']);
             $newtvremote->setConfiguration('friendly_name', $_data['friendly_name']);
@@ -328,8 +331,9 @@ class tvremote extends eqLogic {
             event::add('jeedom::alert', array(
                 'level' => 'warning',
                 'page' => 'tvremote',
-                'message' => __('[SCAN] TVRemote MAJ :: ', __FILE__) . $_data['friendly_name'],
+                'message' => __('[CREATE_FROM_SCAN] TVRemote MAJ :: ', __FILE__) . $_data['friendly_name'],
             ));
+            log::add('tvremote', 'debug', '[CREATE_FROM_SCAN] TVRemote MAJ :: ' . $_data['friendly_name']);
             return $newtvremote;
         }
     }
