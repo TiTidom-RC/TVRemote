@@ -281,17 +281,18 @@ class tvremote extends eqLogic {
     public static function createAndUpdTVRemoteFromScan($_data)
     {
         if (!isset($_data['mac'])) {
-            log::add('tvremote', 'error', '[CREATEFROMSCAN] Information manquante (MAC) pour créer l\'équipement');
             event::add('jeedom::alert', array(
                 'level' => 'danger',
                 'page' => 'tvremote',
                 'message' => __('[KO] Information manquante (MAC) pour créer l\'équipement', __FILE__),
             ));
+            log::add('tvremote', 'error', '[FROM_SCAN] Information manquante (MAC) pour créer l\'équipement');
             return false;
         }
         
         $newtvremote = tvremote::byLogicalId($_data['mac'], 'tvremote');
         if (!is_object($newtvremote)) {
+            log::add('tvremote', 'debug', '[FROM_SCAN] Objet non existant :: ' . $_data['friendly_name']);
             $eqLogic = new tvremote();
             $eqLogic->setLogicalId($_data['mac']);
             $eqLogic->setIsEnable(1);
@@ -311,11 +312,13 @@ class tvremote extends eqLogic {
             event::add('jeedom::alert', array(
                 'level' => 'success',
                 'page' => 'tvremote',
-                'message' => __('[SCAN] TVRemote AJOUTE :: ' .$_data['friendly_name'], __FILE__),
+                'message' => __('[FROM_SCAN] TVRemote AJOUTE :: ', __FILE__) . $_data['friendly_name'],
             ));
+            log::add('tvremote', 'info', '[FROM_SCAN] TVRemote AJOUTE :: ' . $_data['friendly_name']);
             return $eqLogic;
         }
         else {
+            log::add('tvremote', 'debug', '[FROM_SCAN] Objet déjà existant :: ' . $_data['friendly_name']);
             $newtvremote->setConfiguration('name', $_data['name']);
             $newtvremote->setConfiguration('family', $_data['family']);
             $newtvremote->setConfiguration('friendly_name', $_data['friendly_name']);
@@ -328,8 +331,9 @@ class tvremote extends eqLogic {
             event::add('jeedom::alert', array(
                 'level' => 'warning',
                 'page' => 'tvremote',
-                'message' => __('[SCAN] TVRemote MAJ :: ' .$_data['friendly_name'], __FILE__),
+                'message' => __('[FROM_SCAN] TVRemote MAJ :: ', __FILE__) . $_data['friendly_name'],
             ));
+            log::add('tvremote', 'info', '[FROM_SCAN] TVRemote MAJ :: ' . $_data['friendly_name']);
             return $newtvremote;
         }
     }
