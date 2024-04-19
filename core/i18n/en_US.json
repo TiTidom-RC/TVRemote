@@ -1,3 +1,20 @@
 {
-	
+	"plugins\/tvremote\/desktop\/js\/tvremote.js": {
+		"Nom de la commande": "Commande Name",
+		"Choisir une icône": "Choose an icon",
+		"Commande info liée": "Info Linked Command",
+		"Aucune": "None",
+		"Afficher": "Display",
+		"Historiser": "Historize",
+		"Inverser": "Invert",
+		"Min": "Min",
+		"Max": "Max",
+		"Unité": "Unit",
+		"Tester": "Test",
+		"Supprimer la commande": "Delete Command",
+		"Stop Scan": "Stop Scan",
+		"Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)": "SCAN mode active for 60 seconds. (Click STOP SCAN to stop device discovery)",
+		"Mode Scan TERMINE.": "Scan Mode ENDED.",
+		"Scan": "Scan"
+	}
 }

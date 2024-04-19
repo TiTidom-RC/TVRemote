@@ -62,19 +62,19 @@ try {
                 log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: [MAC] non défini !');
                 continue;
             }
-            log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: ' . $data['friendly_name']);
             if ($data['scanmode'] != 1) {
                 log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: NoScanMode');
                 continue;
             }
+            log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: ' . $data['friendly_name']);
             $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
             if (!is_object($tv_remote)) {    
-                log::add('tvremote','debug','[CALLBACK][Discovery] NEW TVRemote détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
-                $newtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
+                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote NEW détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
+                $scannewtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
             else {
-                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Update :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
-                $updtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
+                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote UPDATE détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
+                $scanupdtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
         }
     } elseif (isset($result['devicesRT'])) {
