@@ -60,7 +60,7 @@ class tvremote extends eqLogic {
             } elseif (!file_exists(self::PYTHON3_PATH)) {
                 log::add(__CLASS__, 'debug', 'Python3 file check failed !');
                 $return['state'] = 'nok';
-            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.131.0|aiohttp==3.9.3|androidtvremote2==0.0.14"') < 3) {
+            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.132.2|aiohttp==3.9.5|androidtvremote2==0.1.1"') < 3) {
                 $return['state'] = 'nok';
             } else {
                 $return['state'] = 'ok';
