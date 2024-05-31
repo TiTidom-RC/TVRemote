@@ -81,7 +81,16 @@ class Config(object):
             "youtube": "https://www.youtube.com",
             "netflix": "https://www.netflix.com/title",
             "primevideo": "https://app.primevideo.com",
-            "disneyplus": "https://www.disneyplus.com"
+            "disneyplus": "https://www.disneyplus.com",
+            "canaplus": "https://www.canalplus.com",
+            "mycanal": "https://www.mycanal.fr",
+            "twitch": "https://www.twitch.tv",
+            "plex": "https://app.plex.tv/desktop",
+            "spotify": "https://open.spotify.com",
+            "deezer": "https://www.deezer.com",
+            "tunein": "https://tunein.com",
+            "radio": "https://radio.fr",
+            "music": "https://music.youtube.com"
         }
         
     @property
