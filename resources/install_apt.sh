@@ -5,17 +5,14 @@ if [ ! -z $1 ]; then
 fi
 
 function log(){
-	if [ -n "$1" ]
-	then
+	if [ -n "$1" ]; then
 		echo "$(date +'[%F %T]') $1";
 	else
-		while read IN  # If it is output from command then loop it
-		do
+		while read -r IN; do
 			echo "$(date +'[%F %T]') $IN";
 		done
 	fi
 }
-
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 VENV_DIR=${BASE_DIR}/venv
 PYENV_OLDDIR=${BASE_DIR}/pyenv
