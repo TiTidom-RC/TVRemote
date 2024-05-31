@@ -1285,9 +1285,11 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('icon', 'oqee.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
-            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/oqee.png" alt="OQEE" style="width: 19px; height: 19px;">');
+            # $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/oqee.png" alt="OQEE" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
