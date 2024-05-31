@@ -80,8 +80,8 @@ class Config(object):
             "oqee": "https://oq.ee/home/",
             "youtube": "https://www.youtube.com",
             "netflix": "https://www.netflix.com/title",
-            "amazon_prime_video": "https://app.primevideo.com",
-            "disney_plus": "https://www.disneyplus.com"
+            "primevideo": "https://app.primevideo.com",
+            "disneyplus": "https://www.disneyplus.com"
         }
         
     @property
