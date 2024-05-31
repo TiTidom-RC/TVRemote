@@ -1283,8 +1283,11 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('oqee');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('icon', 'oqee.png');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/oqee.png" alt="OQEE" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1295,12 +1298,15 @@ class tvremote extends eqLogic {
         $cmd = $this->getCmd(null, 'youtube');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Youtube', __FILE__));
+            $cmd->setName(__('YouTube', __FILE__));
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('youtube');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fab fa-youtube"></i>');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('icon', 'youtube.png');
+            # $cmd->setDisplay('icon', '<i class="fab fa-youtube"></i>');
+            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/youtube.png" alt="YouTube" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1316,8 +1322,10 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('netflix');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('icon', 'netflix.png');
             # $cmd->setDisplay('forceReturnLineBefore', '1');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/netflix.png" alt="Netflix" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1333,7 +1341,10 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('amazon_prime_video');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fab fa-amazon"></i>');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('icon', 'primevideo.png');
+            # $cmd->setDisplay('icon', '<i class="fab fa-amazon"></i>');
+            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/primevideo.png" alt="Prime Video" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1344,13 +1355,15 @@ class tvremote extends eqLogic {
         $cmd = $this->getCmd(null, 'disney_plus');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Disney +', __FILE__));
+            $cmd->setName(__('Disney+', __FILE__));
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('disney_plus');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('icon', 'disneyplus.png');
             $cmd->setDisplay('forceReturnLineAfter', '1');
-            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/disneyplus.png" alt="Disney Plus" style="width: 19px; height: 19px;">');
+            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/disneyplus.png" alt="Disney+" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
