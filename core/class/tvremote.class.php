@@ -1350,7 +1350,7 @@ class tvremote extends eqLogic {
             $cmd->setType('action');
             $cmd->setSubType('other');
             $cmd->setDisplay('forceReturnLineAfter', '1');
-            $cmd->setDisplay('icon', '<img src="images/disneyplus.png" alt="Disney Plus">');
+            $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/disneyplus.png" alt="Disney Plus" style="width: auto; height: 100%;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
