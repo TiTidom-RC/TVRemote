@@ -45,7 +45,26 @@ class tvremote extends eqLogic {
 
     public static function dependancy_install() {
         log::remove(__CLASS__ . '_update');
-        return array('script' => __DIR__ . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency', 'log' => log::getPathToLog(__CLASS__ . '_update'));
+        
+        // debug options for install script
+        $script_sysUpdates = 0;
+        $script_restorePyEnv = 0;
+        $script_restoreVenv = 0;
+
+        if (config::byKey('debugInstallUpdates', 'ttscast') == '1') {
+            $script_sysUpdates = 1;
+            config::save('debugInstallUpdates', '0', 'ttscast');
+        }
+        if (config::byKey('debugRestorePyEnv', 'ttscast') == '1') {
+            $script_restorePyEnv = 1;
+            config::save('debugRestorePyEnv', '0', 'ttscast');
+        }
+        if (config::byKey('debugRestoreVenv', 'ttscast') == '1') {
+            $script_restoreVenv = 1;
+            config::save('debugRestoreVenv', '0', 'ttscast');
+        }
+        
+        return array('script' => __DIR__ . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency' . ' ' . $script_sysUpdates . ' ' . $script_restorePyEnv . ' ' . $script_restoreVenv, 'log' => log::getPathToLog(__CLASS__ . '_update'));
     }
 
     public static function dependancy_info() {
@@ -60,7 +79,7 @@ class tvremote extends eqLogic {
             } elseif (!file_exists(self::PYTHON3_PATH)) {
                 log::add(__CLASS__, 'debug', 'Python3 file check failed !');
                 $return['state'] = 'nok';
-            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.131.0|aiohttp==3.9.3|androidtvremote2==0.0.14"') < 3) {
+            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.132.2|aiohttp==3.9.5|androidtvremote2==0.1.1"') < 3) {
                 $return['state'] = 'nok';
             } else {
                 $return['state'] = 'ok';
@@ -1231,6 +1250,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_next');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-step-forward"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1239,7 +1259,7 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'media_eject');
+        /* $cmd = $this->getCmd(null, 'media_eject');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
             $cmd->setName(__('Media Eject', __FILE__));
@@ -1254,7 +1274,7 @@ class tvremote extends eqLogic {
             $cmd->save();
         } else {
             $orderCmd++;
-        }
+        } */
 
         $cmd = $this->getCmd(null, 'oqee');
         if (!is_object($cmd)) {
@@ -1264,8 +1284,11 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('oqee');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'oqee.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineBefore', '1');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1276,12 +1299,15 @@ class tvremote extends eqLogic {
         $cmd = $this->getCmd(null, 'youtube');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Youtube', __FILE__));
+            $cmd->setName(__('YouTube', __FILE__));
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('youtube');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fab fa-youtube"></i>');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'youtube.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1297,8 +1323,10 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('netflix');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            # $cmd->setDisplay('forceReturnLineBefore', '1');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'netflix.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1306,15 +1334,18 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'amazon_prime_video');
+        $cmd = $this->getCmd(null, 'primevideo');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Amazon Prime Video', __FILE__));
+            $cmd->setName(__('Prime Video', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('amazon_prime_video');
+	        $cmd->setLogicalId('primevideo');
             $cmd->setType('action');
             $cmd->setSubType('other');
-            $cmd->setDisplay('icon', '<i class="fab fa-amazon"></i>');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'primevideo.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1322,16 +1353,38 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'disney_plus');
+        $cmd = $this->getCmd(null, 'disneyplus');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Disney +', __FILE__));
+            $cmd->setName(__('Disney+', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('disney_plus');
+	        $cmd->setLogicalId('disneyplus');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'disneyplus.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'mycanal');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('My Canal', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('mycanal');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'mycanal.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineAfter', '1');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1479,7 +1532,7 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "amazon_prime_video", "disney_plus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous", "media_eject"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {

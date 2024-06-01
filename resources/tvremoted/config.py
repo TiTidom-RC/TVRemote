@@ -80,8 +80,17 @@ class Config(object):
             "oqee": "https://oq.ee/home/",
             "youtube": "https://www.youtube.com",
             "netflix": "https://www.netflix.com/title",
-            "amazon_prime_video": "https://app.primevideo.com",
-            "disney_plus": "https://www.disneyplus.com"
+            "primevideo": "https://app.primevideo.com",
+            "disneyplus": "https://www.disneyplus.com",
+            "canaplus": "https://www.canalplus.com",
+            "mycanal": "https://www.mycanal.fr",
+            "twitch": "https://www.twitch.tv",
+            "plex": "https://app.plex.tv/desktop",
+            "spotify": "https://open.spotify.com",
+            "deezer": "https://www.deezer.com",
+            "tunein": "https://tunein.com",
+            "radio": "https://radio.fr",
+            "music": "https://music.youtube.com"
         }
         
     @property
