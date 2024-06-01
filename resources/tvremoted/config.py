@@ -83,17 +83,14 @@ class Config(object):
             "primevideo": "https://app.primevideo.com",
             "disneyplus": "https://www.disneyplus.com",
             "canaplus": "https://www.canalplus.com",
-            # "mycanal": "https://www.mycanal.fr",
-            "mycanal": "mycanal://",
+            "mycanal": "com.canal.android.canal",
             "appletv": "https://tv.apple.com",
             "twitch": "twitch://home",
             "plex": "plex://",
             "spotify": "spotify://",
             "vlc": "vlc://",
-            
             "deezer": "https://www.deezer.com",
             "tunein": "https://tunein.com",
-            "radio": "https://radio.fr",
             "music": "https://music.youtube.com"
         }
         
