@@ -1289,8 +1289,6 @@ class tvremote extends eqLogic {
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineBefore', '1');
-            # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
-            # $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/oqee.png" alt="OQEE" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1310,8 +1308,6 @@ class tvremote extends eqLogic {
             $cmd->setConfiguration('image', 'youtube.png');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
-            # $cmd->setDisplay('icon', '<i class="fab fa-youtube"></i>');
-            # $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/youtube.png" alt="YouTube" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1331,8 +1327,6 @@ class tvremote extends eqLogic {
             $cmd->setConfiguration('image', 'netflix.png');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
-            # $cmd->setDisplay('forceReturnLineBefore', '1');
-            # $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/netflix.png" alt="Netflix" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1352,8 +1346,6 @@ class tvremote extends eqLogic {
             $cmd->setConfiguration('image', 'primevideo.png');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
-            # $cmd->setDisplay('icon', '<i class="fab fa-amazon"></i>');
-            # $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/primevideo.png" alt="Prime Video" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1373,8 +1365,26 @@ class tvremote extends eqLogic {
             $cmd->setConfiguration('image', 'disneyplus.png');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'mycanal');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('My Canal', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('mycanal');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'mycanal.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineAfter', '1');
-            # $cmd->setDisplay('icon', '<img src="plugins/tvremote/data/images/disneyplus.png" alt="Disney+" style="width: 19px; height: 19px;">');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -1522,7 +1532,7 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
