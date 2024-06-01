@@ -1384,6 +1384,25 @@ class tvremote extends eqLogic {
             $cmd->setConfiguration('image', 'mycanal.png');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'plex');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Plex', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('plex');
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setConfiguration('type', 'application');
+            $cmd->setConfiguration('image', 'plex.png');
+            $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
+            $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1532,7 +1551,7 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero","media_next","media_stop","media_pause","media_play","media_rewind","media_previous"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
