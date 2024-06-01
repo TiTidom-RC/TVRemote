@@ -38,14 +38,14 @@ function tvremote_install() {
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
     }
-    if (config::byKey('debugInstallUpdates', 'ttscast') == '') {
-        config::save('debugInstallUpdates', '0', 'ttscast');
+    if (config::byKey('debugInstallUpdates', 'tvremote') == '') {
+        config::save('debugInstallUpdates', '0', 'tvremote');
     }
-    if (config::byKey('debugRestorePyEnv', 'ttscast') == '') {
-        config::save('debugRestorePyEnv', '0', 'ttscast');
+    if (config::byKey('debugRestorePyEnv', 'tvremote') == '') {
+        config::save('debugRestorePyEnv', '0', 'tvremote');
     }
-    if (config::byKey('debugRestoreVenv', 'ttscast') == '') {
-        config::save('debugRestoreVenv', '0', 'ttscast');
+    if (config::byKey('debugRestoreVenv', 'tvremote') == '') {
+        config::save('debugRestoreVenv', '0', 'tvremote');
     }
 
     $dependencyInfo = tvremote::dependancy_info();
@@ -81,14 +81,14 @@ function tvremote_update() {
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
     }
-    if (config::byKey('debugInstallUpdates', 'ttscast') == '') {
-        config::save('debugInstallUpdates', '0', 'ttscast');
+    if (config::byKey('debugInstallUpdates', 'tvremote') == '') {
+        config::save('debugInstallUpdates', '0', 'tvremote');
     }
-    if (config::byKey('debugRestorePyEnv', 'ttscast') == '') {
-        config::save('debugRestorePyEnv', '0', 'ttscast');
+    if (config::byKey('debugRestorePyEnv', 'tvremote') == '') {
+        config::save('debugRestorePyEnv', '0', 'tvremote');
     }
-    if (config::byKey('debugRestoreVenv', 'ttscast') == '') {
-        config::save('debugRestoreVenv', '0', 'ttscast');
+    if (config::byKey('debugRestoreVenv', 'tvremote') == '') {
+        config::save('debugRestoreVenv', '0', 'tvremote');
     }
 
     $dependencyInfo = tvremote::dependancy_info();
