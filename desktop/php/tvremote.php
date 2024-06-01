@@ -56,7 +56,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
         <legend><i class="fas fa-table"></i> {{Mes TVRemotes}}</legend>
         <?php
         if (count($eqLogics) == 0) {
-            echo '<br><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement TVRemote trouvé, cliquer sur Ajouter pour commencer}}</div>';
+            echo '<br><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement TVRemote trouvé, cliquer sur Scan pour commencer}}</div>';
         } else {
             // Champ de recherche
             echo '<div class="input-group" style="margin:5px;">';
