@@ -51,17 +51,17 @@ class tvremote extends eqLogic {
         $script_restorePyEnv = 0;
         $script_restoreVenv = 0;
 
-        if (config::byKey('debugInstallUpdates', 'ttscast') == '1') {
+        if (config::byKey('debugInstallUpdates', 'tvremote') == '1') {
             $script_sysUpdates = 1;
-            config::save('debugInstallUpdates', '0', 'ttscast');
+            config::save('debugInstallUpdates', '0', 'tvremote');
         }
-        if (config::byKey('debugRestorePyEnv', 'ttscast') == '1') {
+        if (config::byKey('debugRestorePyEnv', 'tvremote') == '1') {
             $script_restorePyEnv = 1;
-            config::save('debugRestorePyEnv', '0', 'ttscast');
+            config::save('debugRestorePyEnv', '0', 'tvremote');
         }
-        if (config::byKey('debugRestoreVenv', 'ttscast') == '1') {
+        if (config::byKey('debugRestoreVenv', 'tvremote') == '1') {
             $script_restoreVenv = 1;
-            config::save('debugRestoreVenv', '0', 'ttscast');
+            config::save('debugRestoreVenv', '0', 'tvremote');
         }
         
         return array('script' => __DIR__ . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency' . ' ' . $script_sysUpdates . ' ' . $script_restorePyEnv . ' ' . $script_restoreVenv, 'log' => log::getPathToLog(__CLASS__ . '_update'));
