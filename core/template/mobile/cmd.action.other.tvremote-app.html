@@ -5,7 +5,7 @@
   <template></template>
   <script>
     var cmd = document.querySelector('.cmd[data-cmd_uid=#uid#]')
-    cmd.querySelector('.execute').addEventListener('click', function() {
+    cmd.querySelector('.action').addEventListener('click', function() {
       jeedom.cmd.execute({ id: '#id#' })
     })
 
@@ -21,7 +21,7 @@
     }
   
     if ('#name#' != '#name_display#') {
-      cmd.querySelector('.execute').setAttribute('title', '#name#')
+      cmd.querySelector('.action').setAttribute('title', '#name#')
     }
   </script>
 </span>
