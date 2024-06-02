@@ -1,4 +1,4 @@
-<span class="cmd cmd-widget" data-type="action" data-subtype="other" data-template="default" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#" data-Logical_Id="#logicalId#" style="display: inline-block;"></span>
+<span class="cmd cmd-widget" data-type="action" data-subtype="other" data-template="default" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#" data-Logical_Id="#logicalId#"></span>
   <center>
     <button class="imgCmd execute tooltips tippied" style="background: none; border: none; padding: 0;">
       <img src="plugins/tvremote/data/images/#logicalId#.png" alt="#name_display#" title="#name_display#" style="width: 35px; height: 35px;border-radius: inherit;">
@@ -10,6 +10,21 @@
     cmd.querySelector('.execute').addEventListener('click', function() {
       jeedom.cmd.execute({ id: '#id#' })
     })
+
+    var prevElement = cmd.previousElementSibling
+    var nextElement = cmd.nextElementSibling
+    if (prevElement?.hasClass('action-buttons')) {
+      prevElement.appendChild(cmd)
+    } else if (nextElement?.getAttribute('data-subtype') == 'other' && nextElement?.getAttribute('data-template') == 'default') {
+      let span = document.createElement('span')
+      span.setAttribute('class', 'action-buttons')
+      cmd.insertAdjacentElement('beforebegin', span)
+      span.appendChild(cmd)
+    }
+  
+    if ('#name#' != '#name_display#') {
+      cmd.querySelector('.execute').setAttribute('title', '#name#')
+    }
   </script>
 </span>
   
