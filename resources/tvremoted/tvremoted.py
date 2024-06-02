@@ -77,6 +77,8 @@ class EQRemote(object):
                 except Exception as e:
                     self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
                     self._logger.debug(traceback.format_exc())
+                    await asyncio.sleep(60)
+                    continue
                     
             self._remote.keep_reconnecting()
             
