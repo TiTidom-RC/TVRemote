@@ -75,6 +75,7 @@ class Config(object):
             "media_pause": "KEYCODE_MEDIA_PAUSE",
             "media_play": "KEYCODE_MEDIA_PLAY",
             "media_rewind": "KEYCODE_MEDIA_REWIND",
+            "media_forward": "KEYCODE_MEDIA_FAST_FORWARD",
             "media_previous": "KEYCODE_MEDIA_PREVIOUS",
             "media_eject": "KEYCODE_MEDIA_EJECT",
             "oqee": "https://oq.ee/home/",
