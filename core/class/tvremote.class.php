@@ -433,11 +433,12 @@ class tvremote extends eqLogic {
             event::add('jeedom::alert', array(
                 'level' => 'warning',
                 'page' => 'tvremote',
-                'message' => __('TV :: ' . $friendly_name .  ' (' . $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc, __FILE__),
+                'message' => __('TV :: ' . $friendly_name .  ' (' . $device_mac . ' / ' . $device_host . ') :: ' . $pairing_exc, __FILE__),
             ));
-            log::add('tvremote', 'error', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc);
+            message::add('tvremote', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' / ' . $device_host . ') :: ' . $pairing_exc, '', 'pairingExc' . $pairingExc->getId());
             # $pairingExc->setConfiguration('pairingState', $_data['pairing_value']);
             # $pairingExc->save();
+
         }
     }
 
