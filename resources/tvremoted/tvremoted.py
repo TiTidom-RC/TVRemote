@@ -309,13 +309,14 @@ class TVRemoted:
         await asyncio.sleep(1)  # allow all tasks to start
 
         self._logger.info("[MAIN] Ready")
-        # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
-        self._config.tasks = [self._listen_task, self._send_task, self._main_task]
-        await asyncio.gather(*self._config.tasks)
         
         # Informer Jeedom que le démon est démarré
         await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
         self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
+        
+        # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
+        self._config.tasks = [self._listen_task, self._send_task, self._main_task]
+        await asyncio.gather(*self._config.tasks)
         
     async def __add_signal_handler(self):
         """
