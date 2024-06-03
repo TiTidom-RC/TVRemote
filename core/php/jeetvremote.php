@@ -96,6 +96,21 @@ try {
                 $rtDevice = tvremote::realtimeUpdateDevice($data);
             }
         }
+    } elseif (isset($result['PairingExc'])) {
+        log::add('tvremote','debug','[CALLBACK] TVRemote Pairing Exception');
+        
+            if (!isset($result['pairing_mac'])) {
+                log::add('tvremote','debug','[CALLBACK] TVRemote Pairing Exception :: [MAC] non défini !');
+                return;
+            }
+            log::add('tvremote','debug','[CALLBACK] TVRemote Pairing Exception :: ' . $result['pairing_mac']);
+            $tv_remote = tvremote::byLogicalId($result['pairing_mac'], 'tvremote');
+            if (!is_object($tv_remote)) {    
+                return;
+            }
+            else {
+                $pairingExc = tvremote::pairingException($result);
+            }
     } else {
         log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon'); 
     }

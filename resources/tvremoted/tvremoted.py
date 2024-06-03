@@ -68,6 +68,15 @@ class EQRemote(object):
                     break
                 except InvalidAuth as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
+                    
+                    # Envoi des logs vers Jeedom
+                    data = {
+                        'PairingExc': str(exc),
+                        'pairing_mac': self._macAddr,
+                        'pairing_host': self._host,
+                        'pairing_value': 0
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
                     await asyncio.sleep(60)
                     continue
                 except (CannotConnect, ConnectionClosed) as exc:
@@ -298,6 +307,11 @@ class TVRemoted:
         await asyncio.sleep(1)  # allow all tasks to start
 
         self._logger.info("[MAIN] Ready")
+        
+        # Informer Jeedom que le démon est démarré
+        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
+        self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
+        
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         self._config.tasks = [self._listen_task, self._send_task, self._main_task]
         await asyncio.gather(*self._config.tasks)
@@ -381,7 +395,6 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
             self._logger.debug(traceback.format_exc())
             
-
     async def _pairing(self, _mac=None, _host=None, _port=None) -> None:
         """ Function to pair Plugin with TV """
         
@@ -423,6 +436,7 @@ class TVRemoted:
                     return await remote.async_finish_pairing(self._config.pairing_code)
                 except InvalidAuth as exc:
                     self._logger.error("[PAIRING][%s] Invalid Pairing Code. Try to send another one. Error :: %s", _mac, exc)
+                    # TODO : Informer le Plugin du mauvais code de Pairing
                     self._config.pairing_code = None
                     await asyncio.sleep(1)
                     continue
@@ -523,10 +537,6 @@ class TVRemoted:
         # Main Loop for Daemon
         self._logger.debug("[MAINLOOP] Start MainLoop")
         try:
-            # Informer Jeedom que le démon est démarré
-            await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
-            self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
-            
             while not self._config.is_ending:
                 try:
                     # *** Actions de la MainLoop ***
