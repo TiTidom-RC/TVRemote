@@ -76,7 +76,7 @@ class EQRemote(object):
                         'pairing': 0,
                         'pairing_exc': str(exc)
                     }
-                    self._loop.create_task(self._jeedom_publisher.add_change('PairingExc::' + data['mac'], data))
+                    await self._jeedom_publisher.add_change('PairingExc::' + data['mac'], data)
                     
                     await asyncio.sleep(60)
                     continue
