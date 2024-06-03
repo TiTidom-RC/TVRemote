@@ -431,7 +431,7 @@ class tvremote extends eqLogic {
             $pairing_exc = $_data['pairing_exc'];
             
             event::add('jeedom::alert', array(
-                'level' => 'danger',
+                'level' => 'warning',
                 'page' => 'tvremote',
                 'message' => __('TV :: ' . $friendly_name .  ' (' . $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc, __FILE__),
             ));
