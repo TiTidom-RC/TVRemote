@@ -420,7 +420,8 @@ class tvremote extends eqLogic {
         }
         $pairingExc = tvremote::byLogicalId($_data['mac'], 'tvremote');
         if (!is_object($pairingExc)) {
-            log::add('tvremote', 'error', "[PAIRING][EXCEPTION] Device (" . $_data['mac'] . ") non existant dans Jeedom");
+            $mac_addr = $_data['mac'];
+            log::add('tvremote', 'error', '[PAIRING][EXCEPTION] Device (' . $mac_addr . ') non existant dans Jeedom');
             return false;
         }
         else {
@@ -428,7 +429,13 @@ class tvremote extends eqLogic {
             $device_mac = $_data['mac'];
             $device_host = $_data['device_host'];
             $pairing_exc = $_data['pairing_exc'];
-            log::add('tvremote', 'danger', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc);
+            
+            event::add('jeedom::alert', array(
+                'level' => 'danger',
+                'page' => 'tvremote',
+                'message' => __('TV :: ' . $friendly_name .  ' (' . $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc, __FILE__),
+            ));
+            log::add('tvremote', 'error', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc);
             # $pairingExc->setConfiguration('pairing', $_data['pairing']);
             # $pairingExc->save();
         }
