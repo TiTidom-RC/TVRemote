@@ -72,8 +72,7 @@ class EQRemote(object):
                     # Envoi des logs vers Jeedom
                     data = {
                         'mac': self._macAddr,
-                        'client_name': self._config.client_name,
-                        'client_host': self._host,
+                        'device_host': self._host,
                         'pairing': 0,
                         'pairing_exc': str(exc)
                     }
@@ -397,7 +396,6 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
             self._logger.debug(traceback.format_exc())
             
-
     async def _pairing(self, _mac=None, _host=None, _port=None) -> None:
         """ Function to pair Plugin with TV """
         
