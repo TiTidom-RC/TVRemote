@@ -412,6 +412,24 @@ class tvremote extends eqLogic {
         }
     }
 
+    public static function pairingException($_data)
+    {
+        if (!isset($_data['mac'])) {
+            log::add('tvremote', 'error', '[PAIRING][EXCEPTION] Information manquante (MAC) pour mettre à jour l\'équipement');
+            return false;
+        }
+        $pairingExc = tvremote::byLogicalId($_data['mac'], 'tvremote');
+        if (!is_object($pairingExc)) {
+            log::add('tvremote', 'error', "[PAIRING][EXCEPTION] Device (" . $_data['mac'] . ") non existant dans Jeedom");
+            return false;
+        }
+        else {
+            log::add('tvremote', 'error', "[PAIRING][EXCEPTION][" . $_data['client_name'] . "] TV (" .  $_data['mac'] . " | " . $_data['client_host'] . ") :: " . $_data['pairing_exc']);
+            # $pairingExc->setConfiguration('pairing', $_data['pairing']);
+            # $pairingExc->save();
+        }
+    }
+
     public static function realtimeUpdateDevice($_data)
     {
         if (!isset($_data['mac'])) {

@@ -68,6 +68,17 @@ class EQRemote(object):
                     break
                 except InvalidAuth as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
+                    
+                    # Envoi des logs vers Jeedom
+                    data = {
+                        'mac': self._macAddr,
+                        'client_name': self._config.client_name,
+                        'client_host': self._host,
+                        'pairing': 0,
+                        'pairing_exc': exc
+                    }
+                    self._loop.create_task(self._jeedom_publisher.add_change('PairingExc::' + data['mac'], data))
+                    
                     await asyncio.sleep(60)
                     continue
                 except (CannotConnect, ConnectionClosed) as exc:
