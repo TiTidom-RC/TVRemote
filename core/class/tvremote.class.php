@@ -425,7 +425,10 @@ class tvremote extends eqLogic {
         }
         else {
             $friendly_name = $pairingExc->getConfiguration('friendly_name');
-            log::add('tvremote', 'error', "[PAIRING][EXCEPTION][" . $friendly_name . "] TV (" .  $_data['mac'] . " | " . $_data['device_host'] . ") :: " . $_data['pairing_exc']);
+            $device_mac = $_data['mac'];
+            $device_host = $_data['device_host'];
+            $pairing_exc = $_data['pairing_exc'];
+            log::add('tvremote', 'error', '[PAIRING][EXCEPTION][' . $friendly_name . '] TV (' .  $device_mac . ' | ' . $device_host . ') :: ' . $pairing_exc);
             # $pairingExc->setConfiguration('pairing', $_data['pairing']);
             # $pairingExc->save();
         }
