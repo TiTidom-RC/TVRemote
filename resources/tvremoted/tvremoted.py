@@ -313,6 +313,10 @@ class TVRemoted:
         self._config.tasks = [self._listen_task, self._send_task, self._main_task]
         await asyncio.gather(*self._config.tasks)
         
+        # Informer Jeedom que le démon est démarré
+        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
+        self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
+        
     async def __add_signal_handler(self):
         """
         This function register signal handler to interupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
@@ -534,10 +538,6 @@ class TVRemoted:
         # Main Loop for Daemon
         self._logger.debug("[MAINLOOP] Start MainLoop")
         try:
-            # Informer Jeedom que le démon est démarré
-            await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
-            self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
-            
             while not self._config.is_ending:
                 try:
                     # *** Actions de la MainLoop ***
