@@ -75,7 +75,7 @@ class EQRemote(object):
                         'client_name': self._config.client_name,
                         'client_host': self._host,
                         'pairing': 0,
-                        'pairing_exc': exc
+                        'pairing_exc': str(exc)
                     }
                     self._loop.create_task(self._jeedom_publisher.add_change('PairingExc::' + data['mac'], data))
                     
@@ -439,6 +439,7 @@ class TVRemoted:
                     return await remote.async_finish_pairing(self._config.pairing_code)
                 except InvalidAuth as exc:
                     self._logger.error("[PAIRING][%s] Invalid Pairing Code. Try to send another one. Error :: %s", _mac, exc)
+                    # TODO : Informer le Plugin du mauvais code de Pairing
                     self._config.pairing_code = None
                     await asyncio.sleep(1)
                     continue
