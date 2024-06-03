@@ -1,16 +1,14 @@
-<div class="cmd cmd-widget reportModeHidden" data-type="action" data-subtype="other" data-template="default" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#" data-Logical_Id="#logicalId#">
-  <div class="content">
-    <a class="imgCmd execute tooltips tippied ui-corner-all">
-      <img src="plugins/tvremote/data/images/#logicalId#.png" alt="#name_display#" title="#name_display#" style="width: 35px; height: 35px;border-radius: inherit;">
-    </a>
-  </div>
+<span class="cmd cmd-widget" data-type="action" data-subtype="other" data-template="default" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#" data-Logical_Id="#logicalId#">
+  <a class="imgCmd action ui-corner-all" style="padding: 0!important;display: contents;cursor: pointer;">
+    <img src="plugins/tvremote/data/images/#logicalId#.png" alt="#name_display#" title="#name_display#" style="width: 35px; height: 35px;border-radius: inherit;">
+  </a>
   <template></template>
   <script>
     var cmd = document.querySelector('.cmd[data-cmd_uid=#uid#]')
-    cmd.querySelector('.execute').addEventListener('click', function() {
+    cmd.querySelector('.action').addEventListener('click', function() {
       jeedom.cmd.execute({ id: '#id#' })
     })
-  
+
     var prevElement = cmd.previousElementSibling
     var nextElement = cmd.nextElementSibling
     if (prevElement?.hasClass('action-buttons')) {
@@ -23,8 +21,8 @@
     }
   
     if ('#name#' != '#name_display#') {
-      cmd.querySelector('.execute').setAttribute('title', '#name#')
+      cmd.querySelector('.action').setAttribute('title', '#name#')
     }
   </script>
-</div>
+</span>
   
