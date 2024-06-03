@@ -71,13 +71,12 @@ class EQRemote(object):
                     
                     # Envoi des logs vers Jeedom
                     data = {
-                        'mac': self._macAddr,
-                        'device_host': self._host,
-                        'pairing': 0,
-                        'pairing_exc': str(exc)
+                        'PairingExc': str(exc),
+                        'pairing_mac': self._macAddr,
+                        'pairing_host': self._host,
+                        'pairing_value': 0
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
-                    
                     await asyncio.sleep(60)
                     continue
                 except (CannotConnect, ConnectionClosed) as exc:
