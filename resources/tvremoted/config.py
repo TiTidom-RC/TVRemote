@@ -34,6 +34,7 @@ class Config(object):
         
         self.key_mapping = {
             "power": "KEYCODE_POWER",
+            # "power": "KEYCODE_TV_POWER",
             "power_on": "KEYCODE_POWER",
             "power_off": "KEYCODE_POWER",
             # "power_on": "KEYCODE_WAKEUP",
