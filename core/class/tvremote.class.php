@@ -1547,34 +1547,34 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'tests');
+        $cmd = $this->getCmd(null, 'keycode');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Tests', __FILE__));
+            $cmd->setName(__('Key Code', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('tests');
+	        $cmd->setLogicalId('keycode');
             $cmd->setType('action');
             $cmd->setSubType('message');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Tests"));
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Key Code"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'tests_app');
+        $cmd = $this->getCmd(null, 'appcode');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Tests App', __FILE__));
+            $cmd->setName(__('App Code', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('tests_app');
+	        $cmd->setLogicalId('appcode');
             $cmd->setType('action');
             $cmd->setSubType('message');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Tests App"));
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "App Code"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
@@ -1609,14 +1609,14 @@ class tvremoteCmd extends cmd {
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
         if ( $this->getType() == "action" ) {
-            if (in_array($logicalId, ["tests", "tests_app"])) {
+            if (in_array($logicalId, ["keycode", "appcode"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC) && isset($_options['message'])) {
                     tvremote::actionTVRemote($deviceMAC, $logicalId, $_options['message']);
                 }
                 else {
-                    log::add('tvremote', 'debug', '[CMD - TESTS] Il manque un paramètre pour lancer la commande '. $logicalId);
+                    log::add('tvremote', 'debug', '[CMD - Key/App Code] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
             } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "appletv", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero", "media_next", "media_stop", "media_pause", "media_play", "media_rewind", "media_forward", "media_previous"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
