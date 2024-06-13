@@ -1547,34 +1547,34 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'tests');
+        $cmd = $this->getCmd(null, 'keycode');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Tests', __FILE__));
+            $cmd->setName(__('Key Code', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('tests');
+	        $cmd->setLogicalId('keycode');
             $cmd->setType('action');
             $cmd->setSubType('message');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Tests"));
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Key Code"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
             $orderCmd++;
         }
 
-        $cmd = $this->getCmd(null, 'tests_app');
+        $cmd = $this->getCmd(null, 'appcode');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Tests App', __FILE__));
+            $cmd->setName(__('App Code', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('tests_app');
+	        $cmd->setLogicalId('appcode');
             $cmd->setType('action');
             $cmd->setSubType('message');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Tests App"));
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "App Code"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
