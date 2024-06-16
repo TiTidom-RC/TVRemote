@@ -19,7 +19,7 @@ class Config(object):
         self.resources_lasttime = int(time.time())
         self.resources_firsttime = int(time.time())
         
-        self.client_name = "Plugin TVRemote (Jeedom)"
+        self.client_name = "Plugin TVRemote"
         
         self.tasks = []
         self.known_hosts = []
@@ -90,6 +90,7 @@ class Config(object):
             "twitch": "twitch://home",
             "plex": "plex://",
             "spotify": "spotify://",
+            "molotov": "tv.molotov.app",
             "vlc": "vlc://",
             "deezer": "https://www.deezer.com",
             "tunein": "https://tunein.com",
