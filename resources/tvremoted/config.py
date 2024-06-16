@@ -90,7 +90,7 @@ class Config(object):
             "twitch": "twitch://home",
             "plex": "plex://",
             "spotify": "spotify://",
-            "molotov": "molotov://",
+            "molotov": "tv.molotov.app",
             "vlc": "vlc://",
             "deezer": "https://www.deezer.com",
             "tunein": "https://tunein.com",
