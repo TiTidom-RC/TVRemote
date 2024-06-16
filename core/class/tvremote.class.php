@@ -130,6 +130,7 @@ class tvremote extends eqLogic {
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
         log::add(__CLASS__, 'info', 'Lancement du démon');
+        log::add(__CLASS__, 'debug', 'Commande de lancement du démon :: ' . $cmd);
         $result = exec($cmd . ' >> ' . log::getPathToLog('tvremote_daemon') . ' 2>&1 &');
         $i = 0;
         while ($i < 20) {
