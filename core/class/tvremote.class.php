@@ -127,10 +127,10 @@ class tvremote extends eqLogic {
         $cmd .= ' --cyclefactor ' . config::byKey('cyclefactor', __CLASS__, '1.0');
         $cmd .= ' --jeedomname ' . preg_replace('/\s+/', '', config::byKey('name', 'core', 'Jeedom'));
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'http:127.0.0.1:port:comp') . '/plugins/tvremote/core/php/jeetvremote.php'; // chemin du callback
+        log::add(__CLASS__, 'debug', 'Daemon Cmd (w/o APIKey) :: ' . $cmd);
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
         log::add(__CLASS__, 'info', 'Lancement du démon');
-        log::add(__CLASS__, 'debug', 'Commande de lancement du démon :: ' . $cmd);
         $result = exec($cmd . ' >> ' . log::getPathToLog('tvremote_daemon') . ' 2>&1 &');
         $i = 0;
         while ($i < 20) {
