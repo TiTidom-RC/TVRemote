@@ -125,7 +125,7 @@ class tvremote extends eqLogic {
         $cmd .= ' --pluginversion ' . config::byKey('pluginVersion', __CLASS__, '0.0.0');
         $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '55112');
         $cmd .= ' --cyclefactor ' . config::byKey('cyclefactor', __CLASS__, '1.0');
-        $cmd .= ' --jeedomname ' . config::byKey('name', 'core', 'Jeedom');
+        $cmd .= ' --jeedomname ' . preg_replace('/\s+/', '', config::byKey('name', 'core', 'Jeedom'));
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'http:127.0.0.1:port:comp') . '/plugins/tvremote/core/php/jeetvremote.php'; // chemin du callback
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
