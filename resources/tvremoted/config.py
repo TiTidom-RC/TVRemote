@@ -19,8 +19,6 @@ class Config(object):
         self.resources_lasttime = int(time.time())
         self.resources_firsttime = int(time.time())
         
-        self.client_name = "Plugin TVRemote"
-        
         self.tasks = []
         self.known_hosts = []
         self.remote_mac = []
@@ -128,6 +126,10 @@ class Config(object):
     @property
     def cycle_factor(self):
         return float(self._kwargs.get('cyclefactor', 1.0))
+    
+    @property
+    def client_name(self):
+        return "Plugin TVRemote :: " + self._kwargs.get('jeedomname', 'Jeedom')
     
     @property
     def cycle_event(self):

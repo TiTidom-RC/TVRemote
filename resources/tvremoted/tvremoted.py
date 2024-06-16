@@ -354,8 +354,8 @@ class TVRemoted:
                 self._config.scanmode = False
                 await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
-                self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s / %s', message['mac'], message['host'], message['port'], message['name'])
-                await self._pairing(message['mac'], message['host'], message['port'], message['name'])
+                self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s / %s', message['mac'], message['host'], message['port'])
+                await self._pairing(message['mac'], message['host'], message['port'])
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
@@ -395,7 +395,7 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
             self._logger.debug(traceback.format_exc())
             
-    async def _pairing(self, _mac=None, _host=None, _port=None, _name=None) -> None:
+    async def _pairing(self, _mac=None, _host=None, _port=None) -> None:
         """ Function to pair Plugin with TV """
         
         if self._config.scanmode:
@@ -403,13 +403,7 @@ class TVRemoted:
             return
         
         self._config.pairing_code = None
-        clientName = None
-        if _name is not None:
-            clientName = self._config.client_name + " :: " + _name
-        else:
-            clientName = self._config.client_name
-        
-        remote = AndroidTVRemote(clientName, self._config.cert_file, self._config.key_file, _host)
+        remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _host)
         if remote is None:
             self._logger.error("[PAIRING][%s] TVRemote Object is None !", _mac)
             return
@@ -636,6 +630,7 @@ def get_args():
     parser.add_argument("--pluginversion", help="Plugin Version", type=str)
     parser.add_argument("--socketport", help="Port for TVRemote server", type=str)
     parser.add_argument("--cyclefactor", help="Cycle Factor", type=str)
+    parser.add_argument("--jeedomname", help="Jeedom Name", type=str)
     parser.add_argument("--callback", help="Jeedom callback url", type=str)
     parser.add_argument("--apikey", help="Plugin API Key", type=str)
     parser.add_argument("--pid", help="daemon pid", type=str)
@@ -665,6 +660,7 @@ logging.getLogger('asyncio').setLevel(logging.WARNING)
 try:
     _LOGGER.info('[DAEMON] Starting Daemon')
     _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
+    _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
     _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
     _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
     _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
