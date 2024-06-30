@@ -77,9 +77,8 @@ class tvremote extends eqLogic {
             if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests|python3\-setuptools|python3\-dev|python3\-venv"') < 4) {
                 $return['state'] = 'nok';
             } elseif (!file_exists(self::PYTHON3_PATH)) {
-                log::add(__CLASS__, 'debug', 'Python3 file check failed !');
                 $return['state'] = 'nok';
-            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "zeroconf==0.132.2|aiohttp==3.9.5|androidtvremote2==0.1.1"') < 3) {
+            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "' . config::byKey('pythonDepString', 'tvremote', '', true) . '"') < config::byKey('pythonDepNum', 'tvremote', 0, true)) {
                 $return['state'] = 'nok';
             } else {
                 $return['state'] = 'ok';
@@ -191,10 +190,12 @@ class tvremote extends eqLogic {
         try {
             if (!file_exists(dirname(__FILE__) . '/../../plugin_info/info.json')) {
                 log::add('tvremote', 'warning', '[Plugin-Version] fichier info.json manquant');
+                return $pluginVersion;
             }
             $data = json_decode(file_get_contents(dirname(__FILE__) . '/../../plugin_info/info.json'), true);
             if (!is_array($data)) {
                 log::add('tvremote', 'warning', '[Plugin-Version] Impossible de décoder le fichier info.json');
+                return $pluginVersion;
             }
             try {
                 $pluginVersion = $data['pluginVersion'];
@@ -208,6 +209,39 @@ class tvremote extends eqLogic {
         }
         log::add('tvremote', 'info', '[Plugin-Version] PluginVersion :: ' . $pluginVersion);
         return $pluginVersion;
+    }
+
+    public static function getPythonDepFromRequirements() {
+        $pythonDepString = '';
+        $pythonDepNum = 0;
+        try {
+            if (!file_exists(dirname(__FILE__) . '/../../resources/requirements.txt')) {
+                log::add('tvremote', 'error', '[Python-Dep] Fichier requirements.txt manquant');
+                config::save('pythonDepString', $pythonDepString, 'tvremote');
+                config::save('pythonDepNum', $pythonDepNum, 'tvremote');
+                return false;
+            }
+            $data = file_get_contents(dirname(__FILE__) . '/../../resources/requirements.txt');
+            if (!is_string($data)) {
+                log::add('tvremote', 'error', '[Python-Dep] Impossible de lire le fichier requirements.txt');
+                config::save('pythonDepString', $pythonDepString, 'tvremote');
+                config::save('pythonDepNum', $pythonDepNum, 'tvremote');
+                return false;
+            }
+            $lines = explode("\n", $data);
+            $nonEmptyLines = array_filter($lines, function($line) {
+                return trim($line) !== '';
+            });
+            $pythonDepString = join("|", $nonEmptyLines);
+            $pythonDepNum = count($nonEmptyLines);
+        }
+        catch (\Exception $e) {
+            log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
+        }
+        log::add('tvremote', 'info', '[Python-Dep] PythonDepString / PythonDepNum :: ' . $pythonDepString . " / " . $pythonDepNum);
+        config::save('pythonDepString', $pythonDepString, 'tvremote');
+        config::save('pythonDepNum', $pythonDepNum, 'tvremote');
+        return true;
     }
 
     public static function getPythonVersion() {

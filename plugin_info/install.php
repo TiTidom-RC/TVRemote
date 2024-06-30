@@ -26,6 +26,8 @@ function tvremote_install() {
     message::removeAll('tvremote');
     message::add('tvremote', 'Installation du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
 
+    tvremote::getPythonDepFromRequirements();
+
     if (config::byKey('pythonVersion', 'tvremote') == '') {
         config::save('pythonVersion', '?.?.?', 'tvremote');
     }
@@ -68,6 +70,8 @@ function tvremote_update() {
 
     message::removeAll('tvremote');
     message::add('tvremote', 'Mise à jour du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
+
+    tvremote::getPythonDepFromRequirements();
 
     if (config::byKey('pythonVersion', 'tvremote') == '') {
         config::save('pythonVersion', '?.?.?', 'tvremote');
