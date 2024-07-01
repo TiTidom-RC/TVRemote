@@ -238,7 +238,7 @@ class tvremote extends eqLogic {
         catch (\Exception $e) {
             log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
         }
-        log::add('tvremote', 'info', '[Python-Dep] PythonDepString / PythonDepNum :: ' . $pythonDepString . " / " . $pythonDepNum);
+        log::add('tvremote', 'debug', '[Python-Dep] PythonDepString / PythonDepNum :: ' . $pythonDepString . " / " . $pythonDepNum);
         config::save('pythonDepString', $pythonDepString, 'tvremote');
         config::save('pythonDepNum', $pythonDepNum, 'tvremote');
         return true;
