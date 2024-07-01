@@ -8,12 +8,14 @@ function log(){
 	if [ -n "$1" ]; then
 		echo "$(date +'[%F %T]') $1";
 	else
-		while read -r IN; do
+		while IFS= read -r IN; do
 			echo "$(date +'[%F %T]') $IN";
 		done
 	fi
 }
+
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REQUIREMENTS_FILE=${BASE_DIR}/requirements.txt
 VENV_DIR=${BASE_DIR}/venv
 PYENV_OLDDIR=${BASE_DIR}/pyenv
 PYENV_DIR=/opt/pyenv
@@ -210,7 +212,7 @@ log "*****************************"
 ${VENV_DIR}/bin/python3 -m pip install --upgrade pip wheel | log
 log "** Install Pip / Wheel :: Done **"
 echo 75 > ${PROGRESS_FILE}
-${VENV_DIR}/bin/python3 -m pip install zeroconf==0.132.2 aiohttp==3.9.5 androidtvremote2==0.1.1 | log
+${VENV_DIR}/bin/python3 -m pip install -r ${REQUIREMENTS_FILE} | log
 log "** Install Python3 librairies :: Done **"
 echo 95 > ${PROGRESS_FILE}
 log "****************************"
