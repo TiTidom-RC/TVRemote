@@ -89,6 +89,7 @@ class Config(object):
             "plex": "plex://",
             "spotify": "spotify://",
             "molotov": "tv.molotov.app",
+            "orangetv": "com.orange.owtv.tv",
             "vlc": "vlc://",
             "deezer": "https://www.deezer.com",
             "tunein": "https://tunein.com",
