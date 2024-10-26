@@ -1,10 +1,14 @@
 {
 	"id": "tvremote",
 	"name": "TV Remote",
-	"pluginVersion": "1.1.3",
-	"description" : {
+	"pluginVersion": "1.1.5",
+	"description": {
 		"fr_FR": "Plugin pour contrôler les équipements Android de type Télévision (Sony, Nvidia Shield, Freebox TV, etc...) implémentant le service de télécommande Google. Il permet de contrôler les différentes fonctions de sa télévision (power, volume, entrées HDMI, lancement d'applications, chaînes TV, navigation dans l'interface, etc...)",
-		"en_US": "Plugin to control Android TV devices (Sony, Nvidia Shield, Freebox TV, etc...) implementing the Google remote control service. It allows you to control various functions of your TV (power, volume, HDMI inputs, launching applications, TV channels, navigating the interface, etc...)"
+		"en_US": "Plugin to control Android TV devices (Sony, Nvidia Shield, Freebox TV, etc...) implementing the Google remote control service. It allows you to control various functions of your TV (power, volume, HDMI inputs, launching applications, TV channels, navigating the interface, etc...)",
+		"es_ES": "Plugin para controlar dispositivos Android TV (Sony, Nvidia Shield, Freebox TV, etc.) que implementan el servicio de control remoto de Google. Permite controlar las distintas funciones del televisor (encendido, volumen, entradas HDMI, inicio de aplicaciones, canales de TV, navegación por la interfaz, etc.)",
+		"de_DE": "Plugin zur Steuerung von Android-Geräten vom Typ Fernseher (Sony, Nvidia Shield, Freebox TV, usw.), die den Google-Fernbedienungsdienst implementieren. Damit kann man die verschiedenen Funktionen seines Fernsehers steuern (Power, Lautstärke, HDMI-Eingänge, Starten von Apps, TV-Kanälen, Navigation durch die Benutzeroberfläche, usw.)",
+		"it_IT": "Plugin per il controllo di dispositivi Android TV (Sony, Nvidia Shield, Freebox TV, ecc.) che implementa il servizio di controllo remoto di Google. Consente di controllare le varie funzioni del televisore (accensione, volume, ingressi HDMI, avvio di applicazioni, canali TV, navigazione nell'interfaccia, ecc.)",
+		"pt_PT": "Plugin para controlar os dispositivos Android TV (Sony, Nvidia Shield, Freebox TV, etc.) que implementam o serviço de telecomando Google. Permite-lhe controlar as diferentes funções do seu televisor (potência, volume, entradas HDMI, lançamento de aplicações, canais de TV, navegação na interface, etc.)"
 	},
 	"utilization": "Scannez les équipemments de type Android TV présents sur votre réseau (vos équipements doivent être connectés sur votre réseau en filaire ou WiFi, avoir une IP, et que le service google.remotetv soit implémenté dans votre version de Google TV), lancez la procédure d'appairage pour ensuite contrôler ces équipements à partir de Jeedom.",
 	"licence": "AGPL",
@@ -15,16 +19,20 @@
 	"hasOwnDeamon": true,
 	"maxDependancyInstallTime": 60,
 	"changelog": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/changelog",
-    "documentation": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/index",
-    "changelog_beta": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/beta/changelog",
-    "documentation_beta": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/beta/index",
+	"documentation": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/index",
+	"changelog_beta": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/beta/changelog",
+	"documentation_beta": "https://titidom-rc.github.io/Documentation/#language#/TVRemote/beta/index",
 	"link": {
-        "forum": "https://community.jeedom.com/tag/plugin-tvremote",
-        "video": ""
-    },
+		"forum": "https://community.jeedom.com/tag/plugin-tvremote",
+		"video": ""
+	},
 	"language": [
+		"de_DE",
+		"en_US",
+		"es_ES",
 		"fr_FR",
-		"en_US"
+		"it_IT",
+		"pt_PT"
 	],
 	"compatibility": [
 		"miniplus",
