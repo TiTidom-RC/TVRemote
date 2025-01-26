@@ -63,7 +63,7 @@ class Publisher():
         return asyncio.create_task(self._send_async())
 
     async def test_callback(self):
-        """test_callback will return true if communication with Jeedom is sucessfull or false otherwise"""
+        """test_callback will return true if communication with Jeedom is successful or false otherwise"""
         try:
             async with self._jeedom_session.get(self._callback_url + '?test=1&apikey=' + self._api_key) as resp:
                 if resp.status != 200:
