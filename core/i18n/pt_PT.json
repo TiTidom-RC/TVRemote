@@ -147,8 +147,10 @@
         "Visible": "Visível"
     },
     "plugins\/tvremote\/plugin_info\/configuration.php": {
+        "Cocher cette case désactivera les messages de mise à jour du plugin dans le centre de message": "Marcar esta caixa desativará as mensagens de atualização do plugin no centro de mensagens.",
         "Démon": "Demónio",
         "Dépendances": "Dependências",
+        "Désactiver les messages de MàJ": "Desativar mensagens de atualização",
         "Effacer Cert\/Key": "Eliminar o certificado\/chave",
         "Effacer le Certificat \/ Clé": "Eliminar certificado \/ chave",
         "Effacer le certificat et la clé générés au premier appairage à un équipement": "Eliminar o certificado e a chave gerados aquando do primeiro emparelhamento com um dispositivo",
