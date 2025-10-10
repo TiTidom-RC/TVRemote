@@ -49,6 +49,9 @@ function tvremote_install() {
     if (config::byKey('debugRestoreVenv', 'tvremote') == '') {
         config::save('debugRestoreVenv', '0', 'tvremote');
     }
+    if (config::byKey('disableUpdateMsg', 'tvremote') == '') {
+        config::save('disableUpdateMsg', '0', 'tvremote');
+    }
 
     $dependencyInfo = tvremote::dependancy_info();
     if (!isset($dependencyInfo['state'])) {
@@ -68,8 +71,10 @@ function tvremote_update() {
     $pluginVersion = tvremote::getPluginVersion();
     config::save('pluginVersion', $pluginVersion, 'tvremote');
 
-    message::removeAll('tvremote');
-    message::add('tvremote', 'Mise à jour du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
+    if (config::byKey('disableUpdateMsg', 'tvremote', '0') == '0') {
+        message::removeAll('tvremote');
+        message::add('tvremote', 'Mise à jour du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
+    }
 
     tvremote::getPythonDepFromRequirements();
 
@@ -93,6 +98,9 @@ function tvremote_update() {
     }
     if (config::byKey('debugRestoreVenv', 'tvremote') == '') {
         config::save('debugRestoreVenv', '0', 'tvremote');
+    }
+    if (config::byKey('disableUpdateMsg', 'tvremote') == '') {
+        config::save('disableUpdateMsg', '0', 'tvremote');
     }
 
     $dependencyInfo = tvremote::dependancy_info();
