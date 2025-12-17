@@ -642,7 +642,12 @@ def shutdown():
     config.is_ending = True
 
     _LOGGER.debug("[SHUTDOWN] Removing PID file %s", config.pid_filename)
-    os.remove(config.pid_filename)
+    try:
+        os.remove(config.pid_filename)
+    except FileNotFoundError:
+        _LOGGER.debug("[SHUTDOWN] PID file already removed or does not exist")
+    except Exception as e:
+        _LOGGER.error("[SHUTDOWN] Error removing PID file: %s", e)
 
     _LOGGER.debug("[SHUTDOWN] Exit 0")
     sys.stdout.flush()
