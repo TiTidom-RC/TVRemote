@@ -27,7 +27,7 @@ except ImportError as e:
 
 # Import pour AndroidTVRemote2
 try:
-    from androidtvremote2 import AndroidTVRemote, CannotConnect, ConnectionClosed, InvalidAuth
+    from androidtvremote2 import AndroidTVRemote, CannotConnect, ConnectionClosed, InvalidAuth, VolumeInfo
 except ImportError as e: 
     print("[DAEMON][IMPORT] Exception Error: importing module AndroidTVRemote2 ::", e)
     sys.exit(1)
@@ -45,7 +45,7 @@ class EQRemote(object):
         self._jeedom_publisher = _jeedom_publisher
         self._loop = asyncio.get_running_loop()
 
-    async def main(self):
+    async def main(self) -> None:
         """
         The is the entry point of your class EQRemote.
         You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
@@ -102,7 +102,7 @@ class EQRemote(object):
                 currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")    
                 
                 _isOn = 1 if self._remote.is_on else 0
-                if all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
+                if self._remote.volume_info is not None and all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
                     _volume_level = self._remote.volume_info['level']
                     _volume_muted = 1 if self._remote.volume_info['muted'] else 0
                     _volume_max = self._remote.volume_info['max']
@@ -194,7 +194,7 @@ class EQRemote(object):
                     self._logger.error('[EQRemote][Current_App] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
 
-            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+            def volume_info_updated(volume_info: VolumeInfo) -> None:
                 self._logger.info("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
                 try:
                     # UpdateLastTime
@@ -231,15 +231,19 @@ class EQRemote(object):
             self._logger.error("[EQRemote][MAIN] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
         
-    async def remove(self):
+    async def remove(self) -> None:
         """Call it to disconnect from a EQRemote"""
-        self._remote.disconnect()
+        if self._remote is not None:
+            self._remote.disconnect()
         await asyncio.sleep(1)
         self._remote = None
     
-    async def send_command(self, action: str = None, value: str = None) -> None:
+    async def send_command(self, action: str | None = None, value: str | None = None) -> None:
         """Call it to send command to EQRemote"""
         try:
+            if self._remote is None:
+                self._logger.error("[EQRemote][SendCommand] Remote is None")
+                return
             if action in ('keycode', 'appcode'):
                 self._logger.debug("[EQRemote][SendCmd - Key/App Code] %s :: %s", action, value)
                 if value is not None:
@@ -281,7 +285,7 @@ class TVRemoted:
         # self._tvhosts_task = None
         # self._search_task = None
 
-    async def main(self):
+    async def main(self) -> None:
         """
         The is the entry point of your daemon.
         You should start the asyncio loop with this function like this: `asyncio.run(daemon.main())`
@@ -316,15 +320,15 @@ class TVRemoted:
         self._config.tasks = [self._listen_task, self._send_task, self._main_task]
         await asyncio.gather(*self._config.tasks)
         
-    async def __add_signal_handler(self):
+    async def __add_signal_handler(self) -> None:
         """
-        This function register signal handler to interupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
+        This function register signal handler to interrupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
         """
         loop = asyncio.get_running_loop()
         loop.add_signal_handler(signal.SIGINT, functools.partial(self._ask_exit, signal.SIGINT))
         loop.add_signal_handler(signal.SIGTERM, functools.partial(self._ask_exit, signal.SIGTERM))
 
-    async def _on_socket_message(self, message: list):
+    async def _on_socket_message(self, message: dict) -> None:
         """
         This function will be called by the "listen task" once a message is received from Jeedom.
         You must implement the different actions that your daemon can handle.
@@ -348,11 +352,13 @@ class TVRemoted:
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn') 
                 self._config.scanmode = True
                 self._config.scanmode_start = int(time.time())
-                await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
+                if self._jeedom_publisher is not None:
+                    await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
             elif message['cmd'] == "scanOff":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOff')
                 self._config.scanmode = False
-                await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
+                if self._jeedom_publisher is not None:
+                    await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
                 self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s / %s', message['mac'], message['host'], message['port'])
                 await self._pairing(message['mac'], message['host'], message['port'])
@@ -402,6 +408,10 @@ class TVRemoted:
             self._logger.error("[PAIRING] TV ScanMode in Progress. Stop Scan before trying to Pair.")
             return
         
+        if _host is None:
+            self._logger.error("[PAIRING] Host is None")
+            return
+        
         self._config.pairing_code = None
         remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _host)
         if remote is None:
@@ -432,7 +442,8 @@ class TVRemoted:
                         return
                 try:
                     self._logger.debug("[PAIRING][%s] Trying to Pair with Code :: %s", _mac, str(self._config.pairing_code))
-                    return await remote.async_finish_pairing(self._config.pairing_code)
+                    if self._config.pairing_code is not None:
+                        return await remote.async_finish_pairing(self._config.pairing_code)
                 except InvalidAuth as exc:
                     self._logger.error("[PAIRING][%s] Invalid Pairing Code. Try to send another one. Error :: %s", _mac, exc)
                     # TODO : Informer le Plugin du mauvais code de Pairing
@@ -509,7 +520,8 @@ class TVRemoted:
                     'scanmode': 1
                 }
                 # Envoi vers Jeedom
-                await self._jeedom_publisher.add_change('devices::' + data['name'], data)
+                if self._jeedom_publisher is not None:
+                    await self._jeedom_publisher.add_change('devices::' + data['name'], data)
                 
                 # Libération de la mémoire
                 remote = None
@@ -532,7 +544,7 @@ class TVRemoted:
         await zc.async_close()
         self._logger.info("[TVHOSTS] TV Browser :: STOP")
 
-    async def _mainLoop(self, cycle=2.0):
+    async def _mainLoop(self, cycle: float = 2.0) -> None:
         # Main Loop for Daemon
         self._logger.debug("[MAINLOOP] Start MainLoop")
         try:
@@ -545,11 +557,13 @@ class TVRemoted:
                     if (self._config.scanmode and (self._config.scanmode_start + self._config.scanmode_timeout) <= currentTime):
                         self._config.scanmode = False
                         self._logger.info('[MAINLOOP] ScanMode :: END')
-                        await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
+                        if self._jeedom_publisher is not None:
+                            await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
                     # Heartbeat du démon
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                         self._logger.info('[MAINLOOP] Heartbeat = 1')
-                        await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
+                        if self._jeedom_publisher is not None:
+                            await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
                         self._config.heartbeat_lasttime = currentTime
                         await self._getResourcesUsage()
                     # Scan New TVRemote
@@ -580,9 +594,9 @@ class TVRemoted:
             self._logger.error("[MAINLOOP] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
             
-    async def _getResourcesUsage(self):
+    async def _getResourcesUsage(self) -> None:
         if (self._logger.isEnabledFor(logging.INFO)):
-            resourcesUse = resource.getrusage(resource.RUSAGE_SELF)
+            resourcesUse = resource.getrusage(resource.RUSAGE_SELF)  # type: ignore[attr-defined]
             try:
                 uTime = getattr(resourcesUse, 'ru_utime')
                 sTime = getattr(resourcesUse, 'ru_stime')
@@ -597,34 +611,37 @@ class TVRemoted:
             except Exception:
                 pass
     
-    async def _is_ipv4(self, ip: str):
+    async def _is_ipv4(self, ip: str) -> bool:
         try:
             ipaddress.IPv4Address(ip)
             return True
         except ValueError:
             return False
             
-    def _ask_exit(self, sig):
+    def _ask_exit(self, sig: int) -> None:
         """
         This function will be called in case a signal is received, see `__add_signal_handler`. You don't need to change anything here
         """
         self._logger.info("[ASKEXIT] Signal %i caught, exiting...", sig)
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """
         This function can be called from outside to stop the daemon if needed`
         You need to close your remote connexions and cancel background tasks if any here.
         """
         self._logger.debug('[CLOSE] Cancel all tasks')
         # self._search_task.cancel()  # don't forget to cancel your background task
-        self._main_task.cancel()
-        self._listen_task.cancel()
-        self._send_task.cancel()
+        if self._main_task is not None:
+            self._main_task.cancel()
+        if self._listen_task is not None:
+            self._listen_task.cancel()
+        if self._send_task is not None:
+            self._send_task.cancel()
 
 # ----------------------------------------------------------------------------
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
     parser.add_argument("--pluginversion", help="Plugin Version", type=str)
@@ -637,7 +654,7 @@ def get_args():
 
     return parser.parse_args()
 
-def shutdown():
+def shutdown() -> None:
     _LOGGER.info("[SHUTDOWN] Shuting down")
     config.is_ending = True
 
@@ -686,8 +703,11 @@ try:
     asyncio.run(daemon.main())
 except Exception as e:
     exception_type, exception_object, exception_traceback = sys.exc_info()
-    filename = exception_traceback.tb_frame.f_code.co_filename
-    line_number = exception_traceback.tb_lineno
-    _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+    if exception_traceback is not None:
+        filename = exception_traceback.tb_frame.f_code.co_filename
+        line_number = exception_traceback.tb_lineno
+        _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+    else:
+        _LOGGER.error('[DAEMON] Fatal error: %s(%s)', e, exception_type)
     _LOGGER.debug(traceback.format_exc())
 shutdown()
