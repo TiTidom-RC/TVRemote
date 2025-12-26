@@ -1,5 +1,7 @@
 import os
+import re
 import time
+import unicodedata
 
 
 class Config(object):
@@ -130,7 +132,13 @@ class Config(object):
     
     @property
     def client_name(self):
-        return "Plugin TVRemote :: " + self._kwargs.get('jeedomname', 'Jeedom')
+        # Sanitize jeedom name: normalize accents, keep only alphanumeric, hyphens, underscores
+        jeedom_name = self._kwargs.get('jeedomname', 'Jeedom').strip()
+        # Normalize accents (é -> e, ç -> c, etc.)
+        normalized = unicodedata.normalize('NFKD', jeedom_name).encode('ASCII', 'ignore').decode('ASCII')
+        # Replace invalid characters with underscore
+        safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', normalized) or 'Jeedom'
+        return f"Plugin TVRemote :: {safe_name}"
     
     @property
     def cycle_event(self):
