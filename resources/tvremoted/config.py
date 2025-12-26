@@ -161,7 +161,7 @@ class Config(object):
         return 60
     
     @property
-    def scan_timemout(self):
+    def scan_timeout(self):
         return 10
     
     @property
