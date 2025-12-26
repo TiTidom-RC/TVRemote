@@ -17,7 +17,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 <!-- Boutons de gestion du plugin -->
                 <div class="eqLogicThumbnailContainer">
                     <?php
-                    if (config::byKey('scanState', 'tvremote', '0') == "scanOn") {
+                    if (config::byKey('scanState', 'tvremote', '0') === "scanOn") {
                     ?>
                         <div class="cursor eqLogicAction logoSecondary customclass-scanState" data-scanState="scanOff" data-action="scan">
                             <i class="fas fa-search-plus icon_red customicon-scanState"></i>

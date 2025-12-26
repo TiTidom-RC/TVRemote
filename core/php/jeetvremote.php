@@ -22,36 +22,49 @@ try {
         echo __('Vous n\'etes pas autorisé à effectuer cette action', __FILE__);
         die();
     }
-    if (init('test') != '') {
+    if (init('test') !== '') {
         echo 'OK';
         die();
     }
     $result = json_decode(file_get_contents("php://input"), true);
-    if (!is_array($result)) {
+    
+    // Gestion des erreurs JSON (important pour PHP 8.4+)
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        log::add('tvremote', 'error', '[CALLBACK] JSON decode error: ' . json_last_error_msg());
         die();
     }
+    
+    if (!is_array($result)) {
+        log::add('tvremote', 'error', '[CALLBACK] Result is not an array');
+        die();
+    }
+    
+    // Log du contenu reçu pour debug
+    log::add('tvremote', 'debug', '[CALLBACK] Received data: ' . json_encode($result));
 
     if (isset($result['scanState'])) {
-        if ($result['scanState'] == "scanOn") {
+        if ($result['scanState'] === "scanOn") {
             log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOn'); 
             config::save('scanState', 'scanOn', 'tvremote');
             event::add('tvremote::scanState', array(
                 'scanState' => 'scanOn')
             );
+            log::add('tvremote', 'debug', '[CALLBACK] event::add tvremote::scanState scanOn sent');
         } else {
             log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOff'); 
             config::save('scanState', 'scanOff', 'tvremote');
             event::add('tvremote::scanState', array(
                 'scanState' => 'scanOff')
             );
+            log::add('tvremote', 'debug', '[CALLBACK] event::add tvremote::scanState scanOff sent');
             tvremote::sendOnStartTVRemoteToDaemon();
         }
     } elseif (isset($result['heartbeat'])) {
-        if ($result['heartbeat'] == 1) {
+        if ($result['heartbeat'] === 1) {
             log::add('tvremote','info','[CALLBACK] tvremote Daemon Heartbeat (600s)');
         }
     } elseif (isset($result['daemonStarted'])) {
-        if ($result['daemonStarted'] == '1') {
+        if ($result['daemonStarted'] === 1) {
             log::add('tvremote', 'info', '[CALLBACK] Daemon Started');
             tvremote::sendOnStartTVRemoteToDaemon();
         }
@@ -62,7 +75,7 @@ try {
                 log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: [MAC] non défini !');
                 continue;
             }
-            if ($data['scanmode'] != 1) {
+            if ($data['scanmode'] !== 1) {
                 log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: NoScanMode');
                 continue;
             }
@@ -85,7 +98,7 @@ try {
                 continue;
             }
             log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: ' . $data['mac']);
-            if ($data['realtime'] != 1) {
+            if ($data['realtime'] !== 1) {
                 continue;
             }
             $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');

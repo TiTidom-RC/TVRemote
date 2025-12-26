@@ -313,7 +313,7 @@ class TVRemoted:
         self._logger.info("[MAIN] Ready")
         
         # Informer Jeedom que le démon est démarré
-        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
+        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': 1})
         self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
         
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
@@ -563,7 +563,7 @@ class TVRemoted:
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                         self._logger.info('[MAINLOOP] Heartbeat = 1')
                         if self._jeedom_publisher is not None:
-                            await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
+                            await self._jeedom_publisher.send_to_jeedom({'heartbeat': 1})
                         self._config.heartbeat_lasttime = currentTime
                         await self._getResourcesUsage()
                     # Scan New TVRemote

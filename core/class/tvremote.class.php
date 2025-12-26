@@ -51,15 +51,15 @@ class tvremote extends eqLogic {
         $script_restorePyEnv = 0;
         $script_restoreVenv = 0;
 
-        if (config::byKey('debugInstallUpdates', 'tvremote') == '1') {
+        if (config::byKey('debugInstallUpdates', 'tvremote') === '1') {
             $script_sysUpdates = 1;
             config::save('debugInstallUpdates', '0', 'tvremote');
         }
-        if (config::byKey('debugRestorePyEnv', 'tvremote') == '1') {
+        if (config::byKey('debugRestorePyEnv', 'tvremote') === '1') {
             $script_restorePyEnv = 1;
             config::save('debugRestorePyEnv', '0', 'tvremote');
         }
-        if (config::byKey('debugRestoreVenv', 'tvremote') == '1') {
+        if (config::byKey('debugRestoreVenv', 'tvremote') === '1') {
             $script_restoreVenv = 1;
             config::save('debugRestoreVenv', '0', 'tvremote');
         }
@@ -107,7 +107,7 @@ class tvremote extends eqLogic {
     public static function deamon_start() {
         self::deamon_stop();
         $deamon_info = self::deamon_info();
-        if ($deamon_info['launchable'] != 'ok') {
+        if ($deamon_info['launchable'] !== 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
 
@@ -164,7 +164,7 @@ class tvremote extends eqLogic {
     public static function sendToDaemon($params) {
         try {
             $deamon_info = self::deamon_info();
-            if ($deamon_info['state'] != 'ok') {
+            if ($deamon_info['state'] !== 'ok') {
                 event::add('jeedom::alert', array(
                     'level' => 'danger',
                     'page' => 'tvremote',
@@ -303,7 +303,8 @@ class tvremote extends eqLogic {
 
     public static function changeScanState($_scanState)
     {
-        if ($_scanState == "scanOn") {
+        log::add('tvremote', 'debug', '[changeScanState] Received state: ' . $_scanState);
+        if ($_scanState === "scanOn") {
             $value = array('cmd' => 'scanOn');
             self::sendToDaemon($value);
         } else {
@@ -378,10 +379,9 @@ class tvremote extends eqLogic {
             $eqLogic->setConfiguration('lastscan', $_data['lastscan']);
             $eqLogic->save();
 
-            event::add('jeedom::alert', array(
-                'level' => 'success',
-                'page' => 'tvremote',
-                'message' => __('[FROM_SCAN] TVRemote AJOUTE :: ', __FILE__) . $_data['friendly_name'],
+            event::add('tvremote::scanResult', array(
+                'friendly_name' => $_data['friendly_name'],
+                'isNew' => 1
             ));
             log::add('tvremote', 'info', '[FROM_SCAN] TVRemote AJOUTE :: ' . $_data['friendly_name']);
             return $eqLogic;
@@ -397,10 +397,9 @@ class tvremote extends eqLogic {
             $newtvremote->setConfiguration('lastscan', $_data['lastscan']);
             $newtvremote->save();
 
-            event::add('jeedom::alert', array(
-                'level' => 'warning',
-                'page' => 'tvremote',
-                'message' => __('[FROM_SCAN] TVRemote MAJ :: ', __FILE__) . $_data['friendly_name'],
+            event::add('tvremote::scanResult', array(
+                'friendly_name' => $_data['friendly_name'],
+                'isNew' => 0
             ));
             log::add('tvremote', 'info', '[FROM_SCAN] TVRemote MAJ :: ' . $_data['friendly_name']);
             return $newtvremote;
@@ -435,7 +434,7 @@ class tvremote extends eqLogic {
 
     public function enableTVRemoteToDaemon()
     {
-        if ($this->getLogicalId() != '') {
+        if ($this->getLogicalId() !== '') {
             $value = array(
                 'cmd' => 'addtvremote',
                 'mac' => $this->getLogicalId(),
@@ -450,7 +449,7 @@ class tvremote extends eqLogic {
 
     public function disableTVRemoteToDaemon()
     {
-        if ($this->getLogicalId() != '') {
+        if ($this->getLogicalId() !== '') {
             $value = array(
                 'cmd' => 'removetvremote',
                 'mac' => $this->getLogicalId(),
@@ -1696,7 +1695,7 @@ class tvremoteCmd extends cmd {
         
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
-        if ( $this->getType() == "action" ) {
+        if ( $this->getType() === "action" ) {
             if (in_array($logicalId, ["keycode", "appcode"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();

@@ -29,7 +29,7 @@ try {
     */
     ajax::init(array());
 
-    if (init('action') == 'resetTVCertKey') {
+    if (init('action') === 'resetTVCertKey') {
         $certfilepath = __DIR__ . "/../../data/config/tvremote_cert.pem";
         $keyfilepath = __DIR__ . "/../../data/config/tvremote_key.pem";
         if (!file_exists($certfilepath) || !file_exists($keyfilepath)) {
@@ -40,14 +40,14 @@ try {
         unlink($keyfilepath);
         ajax::success("{$certfilepath}<br />{$keyfilepath}");
     }
-    elseif (init('action') == 'changeScanState') {
+    elseif (init('action') === 'changeScanState') {
         tvremote::changeScanState(init('scanState'));
         ajax::success();
     }
-    elseif (init('action') == 'beginPairing') {
+    elseif (init('action') === 'beginPairing') {
         ajax::success(tvremote::sendBeginPairing(init('mac'), init('host'), init('port')));
     }
-    elseif (init('action') == 'sendPairCode') {
+    elseif (init('action') === 'sendPairCode') {
         ajax::success(tvremote::sendPairCode(init('mac'), init('host'), init('port'), init('paircode')));
     }
 

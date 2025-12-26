@@ -140,7 +140,7 @@ if (!isConnect()) {
                 handleAjaxError(request, status, error);
             },
             success: function (data) {
-                if (data.state != 'ok') {
+                if (data.state !== 'ok') {
                     $('#div_alert').showAlert({ message: data.result, level: 'danger' });
                     return;
                 }

@@ -178,32 +178,32 @@ function changeScanState(_scanState) {
   });
 }
 
-$('body').on('tvremote::newdevice', function (_event, _option) {
-  if (_option && _option['friendly_name'] && _option['newone'] == '1') {
-    $('#div_alert').showAlert({message: "[SCAN] NEW TVRemote détecté :: " + _option['friendly_name'], level: 'warning'});
-  } else if (_option && _option['friendly_name'] && _option['newone'] == '0') {
+$('body').on('tvremote::scanResult', function (_event, _option) {
+  if (_option && _option['friendly_name'] && _option['isNew'] === 1) {
+    $('#div_alert').showAlert({message: "[SCAN] TVRemote AJOUTE :: " + _option['friendly_name'], level: 'success'});
+  } else if (_option && _option['friendly_name'] && _option['isNew'] === 0) {
     $('#div_alert').showAlert({message: "[SCAN] TVRemote MAJ :: " + _option['friendly_name'], level: 'warning'});
   }
 });
 
 $('body').on('tvremote::scanState', function (_event, _options) {
-  if (_options['scanState'] == "scanOn") {
-    if ($('.customclass-scanState').attr('data-scanState') == "scanOn") {
-      $.hideAlert();
-      $('.customclass-scanState').attr('data-scanState', 'scanOff');
-      $('.customclass-scanState').removeClass('logoPrimary').addClass('logoSecondary');
-      $('.customicon-scanState').addClass('icon_red');
-      $('.customtext-scanState').text('{{Stop Scan}}');
-      $('#div_alert').showAlert({message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning'});
-    }
-  } else {    
-    if ($('.customclass-scanState').attr('data-scanState') == "scanOff") {
-      $.hideAlert();
-      $('.customclass-scanState').attr('data-scanState', 'scanOn');
-      $('.customclass-scanState').removeClass('logoSecondary').addClass('logoPrimary');
-      $('.customicon-scanState').removeClass('icon_red');
-      $('.customtext-scanState').text('{{Scan}}');
-      window.location.reload();
-    }
+  console.log('[TVRemote] scanState event received:', _options);
+  
+  if (_options['scanState'] === "scanOn") {
+    console.log('[TVRemote] Activating scan mode');
+    $.hideAlert();
+    $('.customclass-scanState').attr('data-scanState', 'scanOff');
+    $('.customclass-scanState').removeClass('logoPrimary').addClass('logoSecondary');
+    $('.customicon-scanState').addClass('icon_red');
+    $('.customtext-scanState').text('{{Stop Scan}}');
+    $('#div_alert').showAlert({message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning'});
+  } else if (_options['scanState'] === "scanOff") {
+    console.log('[TVRemote] Deactivating scan mode');
+    $.hideAlert();
+    $('.customclass-scanState').attr('data-scanState', 'scanOn');
+    $('.customclass-scanState').removeClass('logoSecondary').addClass('logoPrimary');
+    $('.customicon-scanState').removeClass('icon_red');
+    $('.customtext-scanState').text('{{Scan}}');
+    window.location.reload();
   }
 });
