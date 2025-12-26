@@ -187,10 +187,10 @@ $('body').on('tvremote::scanResult', function (_event, _option) {
 });
 
 $('body').on('tvremote::scanState', function (_event, _options) {
-  console.log('[TVRemote] scanState event received:', _options);
+  // console.log('[TVRemote] scanState event received:', _options);
   
   if (_options['scanState'] === "scanOn") {
-    console.log('[TVRemote] Activating scan mode');
+    // console.log('[TVRemote] Activating scan mode');
     $.hideAlert();
     $('.customclass-scanState').attr('data-scanState', 'scanOff');
     $('.customclass-scanState').removeClass('logoPrimary').addClass('logoSecondary');
@@ -198,7 +198,7 @@ $('body').on('tvremote::scanState', function (_event, _options) {
     $('.customtext-scanState').text('{{Stop Scan}}');
     $('#div_alert').showAlert({message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning'});
   } else if (_options['scanState'] === "scanOff") {
-    console.log('[TVRemote] Deactivating scan mode');
+    // console.log('[TVRemote] Deactivating scan mode');
     $.hideAlert();
     $('.customclass-scanState').attr('data-scanState', 'scanOn');
     $('.customclass-scanState').removeClass('logoSecondary').addClass('logoPrimary');
