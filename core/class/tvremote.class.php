@@ -35,7 +35,7 @@ class tvremote extends eqLogic {
      */
     // public static $_encryptConfigKey = array('voiceRSSAPIKey');
 
-    /* ************************ Methodes statiques : Démon & Dépendances *************************** */
+    /* ************************ Méthodes statiques : Démon & Dépendances *************************** */
 
     public static function backupExclude() {
 		return [
@@ -184,7 +184,7 @@ class tvremote extends eqLogic {
         }
     }
 
-    /* ************************ Methodes static : PLUGIN *************************** */
+    /* ************************ Static Methods : PLUGIN *************************** */
 
     public static function getPluginVersion() {
         $pluginVersion = '0.0.0';
@@ -422,6 +422,7 @@ class tvremote extends eqLogic {
             log::add('tvremote', 'error', '[SendOnStart] Démon non lancé (>10s) :: KO');
             return false;
         }
+        /** @var tvremote $eqLogic */
         foreach(self::byType('tvremote') as $eqLogic) {
             if ($eqLogic->getIsEnable()) {
                 $eqLogic->enableTVRemoteToDaemon();
@@ -529,7 +530,7 @@ class tvremote extends eqLogic {
         self::sendToDaemon($value);
     }
 
-    /* ************************ Methodes static : JEEDOM *************************** */
+    /* ************************ Static Methods : JEEDOM *************************** */
 
     /*
      * Fonction exécutée automatiquement toutes les minutes par Jeedom
