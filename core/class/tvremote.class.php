@@ -71,6 +71,7 @@ class tvremote extends eqLogic {
         $return = array();
         $return['log'] = log::getPathToLog(__CLASS__ . '_update');
         $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependency';
+        
         if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependency')) {
             $return['state'] = 'in_progress';
         } else {
@@ -229,11 +230,24 @@ class tvremote extends eqLogic {
                 return false;
             }
             $lines = explode("\n", $data);
-            $nonEmptyLines = array_filter($lines, function($line) {
-                return trim($line) !== '';
-            });
-            $pythonDepString = join("|", $nonEmptyLines);
-            $pythonDepNum = count($nonEmptyLines);
+            $packages = array();
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '' || strpos($line, '#') === 0) {
+                    continue; // Ignore les lignes vides et les commentaires
+                }
+                // Retire les extras [async], [dev], etc.
+                $line = preg_replace('/\[[^\]]*\]/', '', $line);
+                // Normalise le nom du package : remplace - par _ (convention pip)
+                // Exemple: adb-shell==0.4.4 devient adb_shell==0.4.4
+                if (preg_match('/^([a-zA-Z0-9_-]+)(.*)$/', $line, $matches)) {
+                    $packageName = str_replace('-', '_', $matches[1]);
+                    $versionPart = $matches[2]; // ==0.4.4, >=1.0, etc.
+                    $packages[] = $packageName . $versionPart;
+                }
+            }
+            $pythonDepString = join("|", $packages);
+            $pythonDepNum = count($packages);
         }
         catch (\Exception $e) {
             log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
