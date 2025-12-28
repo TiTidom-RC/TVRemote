@@ -217,6 +217,19 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             </div>
                             <legend><i class="fas fa-link"></i> {{Appairage TVRemote}}</legend>
                             <div id="tvremote-pairing-section">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure Appairage TVRemote}}</strong>
+                                    <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
+                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
+                                        <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
+                                        <li>{{Un code apparaît sur votre TV (ex: A2C10E)}}</li>
+                                        <li>{{Entrez ce code dans le champ Code et cliquez sur Envoyer}}</li>
+                                    </ol>
+                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
+                                        {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-lg-3">
@@ -247,9 +260,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
                                     <ol style="margin-top: 10px; margin-bottom: 5px;">
                                         <li>{{Paramètres → À propos → Build (appuyer 7 fois)}}</li>
-                                        <li>{{Options développeur → Débogage USB (activer)}}</li>
-                                        <li>{{Options développeur → Débogage réseau (activer)}}</li>
+                                        <li>{{Options développeur → Débogage USB [Optionnel] (Activer)}}</li>
+                                        <li>{{Options développeur → Débogage réseau (Activer)}}</li>
                                     </ol>
+                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
+                                        {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Statut}}</label>
