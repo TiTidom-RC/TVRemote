@@ -222,7 +222,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
                                     <ol style="margin-top: 10px; margin-bottom: 5px;">
                                         <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
-                                        <li>{{Un code apparaît sur votre TV (ex: A2C10E)}}</li>
+                                        <li>{{Un code apparaît sur votre TV (Ex: A2C10E)}}</li>
                                         <li>{{Entrez ce code dans le champ Code et cliquez sur Envoyer}}</li>
                                     </ol>
                                     <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
@@ -259,7 +259,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <i class="fas fa-info-circle"></i> <strong>{{Activation ADB sur la TV}}</strong>
                                     <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
                                     <ol style="margin-top: 10px; margin-bottom: 5px;">
-                                        <li>{{Paramètres → À propos → Build (appuyer 7 fois)}}</li>
+                                        <li>{{Paramètres → À propos → Build (Appuyer 7 fois)}}</li>
                                         <li>{{Options développeur → Débogage USB (Activer)}}</li>
                                         <li>{{Options développeur → Débogage réseau (Activer, si disponible)}}</li>
                                     </ol>
