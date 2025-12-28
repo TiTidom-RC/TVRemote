@@ -221,7 +221,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-lg-3">
                                         <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="tvremote_paired_status" />
-                                        <span class="label label-danger" id="tvremote-pairing-status">
+                                        <span class="label label-danger" id="tvremote-pairing-status" style="display:none;">
                                             <i class="fas fa-times-circle"></i> {{Non appairé}}
                                         </span>
                                     </div>
@@ -246,7 +246,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-lg-3">
                                         <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_paired_status" />
-                                        <span class="label label-danger" id="adb-pairing-status">
+                                        <span class="label label-danger" id="adb-pairing-status" style="display:none;">
                                             <i class="fas fa-times-circle"></i> {{Non appairé}}
                                         </span>
                                     </div>
