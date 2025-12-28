@@ -260,8 +260,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
                                     <ol style="margin-top: 10px; margin-bottom: 5px;">
                                         <li>{{Paramètres → À propos → Build (appuyer 7 fois)}}</li>
-                                        <li>{{Options développeur → Débogage USB [Optionnel] (Activer)}}</li>
-                                        <li>{{Options développeur → Débogage réseau (Activer)}}</li>
+                                        <li>{{Options développeur → Débogage USB (Activer)}}</li>
+                                        <li>{{Options développeur → Débogage réseau (Activer, si disponible)}}</li>
                                     </ol>
                                     <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
