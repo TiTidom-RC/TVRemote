@@ -167,7 +167,7 @@ $('.customclass-beginpairingadb').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Appairage ADB lancé. Autorisez la connexion sur votre TV.}}', level: 'warning' });
+          $('#div_alert').showAlert({ message: '{{Appairage ADB lancé. Veuillez vérifier votre TV et ACCEPTER la demande d\'autorisation ADB qui s\'affiche à l\'écran.}}', level: 'warning' });
       }
   });
 });
@@ -203,6 +203,38 @@ $('body').on('tvremote::scanResult', function (_event, _option) {
     $('#div_alert').showAlert({message: "[SCAN] TVRemote AJOUTE :: " + _option['friendly_name'], level: 'success'});
   } else if (_option && _option['friendly_name'] && _option['isNew'] === 0) {
     $('#div_alert').showAlert({message: "[SCAN] TVRemote MAJ :: " + _option['friendly_name'], level: 'warning'});
+  }
+});
+
+$('body').on('tvremote::adbPairingResult', function (_event, _option) {
+  if (_option && _option['adb_paired'] === 1) {
+    var deviceName = _option['friendly_name'] || _option['mac'];
+    $('#div_alert').showAlert({message: '{{Appairage ADB réussi pour}} ' + deviceName, level: 'success'});
+    // Update status indicator
+    $('#adb-pairing-status').removeClass('label-danger').addClass('label-success');
+    $('#adb-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
+  } else if (_option && _option['adb_paired'] === 0) {
+    var deviceName = _option['friendly_name'] || _option['mac'];
+    $('#div_alert').showAlert({message: '{{Échec de l\'appairage ADB pour}} ' + deviceName + ' : ' + (_option['message'] || '{{Erreur inconnue}}'), level: 'danger'});
+    // Update status indicator
+    $('#adb-pairing-status').removeClass('label-success').addClass('label-danger');
+    $('#adb-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
+  }
+});
+
+$('body').on('tvremote::tvremotePairingResult', function (_event, _option) {
+  if (_option && _option['tvremote_paired'] === 1) {
+    var deviceName = _option['friendly_name'] || _option['mac'];
+    $('#div_alert').showAlert({message: '{{Appairage TVRemote réussi pour}} ' + deviceName, level: 'success'});
+    // Update status indicator
+    $('#tvremote-pairing-status').removeClass('label-danger').addClass('label-success');
+    $('#tvremote-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
+  } else if (_option && _option['tvremote_paired'] === 0) {
+    var deviceName = _option['friendly_name'] || _option['mac'];
+    $('#div_alert').showAlert({message: '{{Échec de l\'appairage TVRemote pour}} ' + deviceName + ' : ' + (_option['message'] || '{{Erreur inconnue}}'), level: 'danger'});
+    // Update status indicator
+    $('#tvremote-pairing-status').removeClass('label-success').addClass('label-danger');
+    $('#tvremote-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
   }
 });
 

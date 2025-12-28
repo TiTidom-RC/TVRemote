@@ -381,6 +381,15 @@ class EQRemoteADB(object):
                     }
                     await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
                     
+                    # If it's an authorization error, notify that pairing was revoked
+                    if isinstance(e, DeviceAuthError):
+                        self._logger.warning("[EQRemoteADB][MAIN][%s] Authorization revoked - ADB access denied by device", self._macAddr)
+                        revoke_data = {
+                            'mac': self._macAddr,
+                            'adb_auth_revoked': 1
+                        }
+                        await self._jeedom_publisher.send_to_jeedom(revoke_data)
+                    
                     await asyncio.sleep(10)  # Wait before retry
                     
         except asyncio.CancelledError:
@@ -707,7 +716,18 @@ class TVRemoted:
                 try:
                     self._logger.debug("[PAIRING][%s] Trying to Pair with Code :: %s", _mac, str(self._config.pairing_code))
                     if self._config.pairing_code is not None:
-                        return await remote.async_finish_pairing(self._config.pairing_code)
+                        result = await remote.async_finish_pairing(self._config.pairing_code)
+                        if result:
+                            self._logger.info("[PAIRING][%s] Pairing successful", _mac)
+                            # Inform Jeedom about successful pairing
+                            if self._jeedom_publisher is not None:
+                                data = {
+                                    'mac': _mac,
+                                    'tvremote_paired': 1,
+                                    'message': 'TVRemote pairing successful'
+                                }
+                                await self._jeedom_publisher.send_to_jeedom(data)
+                        return result
                 except InvalidAuth as exc:
                     self._logger.error("[PAIRING][%s] Invalid Pairing Code. Try to send another one. Error :: %s", _mac, exc)
                     # TODO : Informer le Plugin du mauvais code de Pairing
