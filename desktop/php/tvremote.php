@@ -242,6 +242,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             </div>
                             <legend><i class="fas fa-link"></i> {{Appairage ADB}}</legend>
                             <div id="adb-pairing-section">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>{{Activation ADB sur la TV}}</strong>
+                                    <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
+                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
+                                        <li>{{Paramètres → À propos → Build (appuyer 7 fois)}}</li>
+                                        <li>{{Options développeur → Débogage USB (activer)}}</li>
+                                        <li>{{Options développeur → Débogage réseau (activer)}}</li>
+                                    </ol>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-lg-3">

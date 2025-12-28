@@ -562,7 +562,8 @@ class tvremote extends eqLogic {
                         'mac' => $_data['mac'],
                         'friendly_name' => $friendlyName,
                         'tvremote_paired' => 1,
-                        'message' => 'Appairage TVRemote Détecté'
+                        'message' => 'Appairage TVRemote Détecté',
+                        'auto_detected' => true
                     ));
                 }
                 if ($adbStatusChanged) {
@@ -570,7 +571,8 @@ class tvremote extends eqLogic {
                         'mac' => $_data['mac'],
                         'friendly_name' => $friendlyName,
                         'adb_paired' => 1,
-                        'message' => 'Appairage ADB Détecté'
+                        'message' => 'Appairage ADB Détecté',
+                        'auto_detected' => true
                     ));
                 }
             }

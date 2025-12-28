@@ -209,7 +209,10 @@ $('body').on('tvremote::scanResult', function (_event, _option) {
 $('body').on('tvremote::adbPairingResult', function (_event, _option) {
   if (_option && _option['adb_paired'] === 1) {
     var deviceName = _option['friendly_name'] || _option['mac'];
-    $('#div_alert').showAlert({message: '{{Appairage ADB réussi pour}} ' + deviceName, level: 'success'});
+    // Only show alert if it's not an auto-detection
+    if (!_option['auto_detected']) {
+      $('#div_alert').showAlert({message: '{{Appairage ADB réussi pour}} ' + deviceName, level: 'success'});
+    }
     // Update status indicator
     $('#adb-pairing-status').removeClass('label-danger').addClass('label-success');
     $('#adb-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
@@ -225,7 +228,10 @@ $('body').on('tvremote::adbPairingResult', function (_event, _option) {
 $('body').on('tvremote::tvremotePairingResult', function (_event, _option) {
   if (_option && _option['tvremote_paired'] === 1) {
     var deviceName = _option['friendly_name'] || _option['mac'];
-    $('#div_alert').showAlert({message: '{{Appairage TVRemote réussi pour}} ' + deviceName, level: 'success'});
+    // Only show alert if it's not an auto-detection
+    if (!_option['auto_detected']) {
+      $('#div_alert').showAlert({message: '{{Appairage TVRemote réussi pour}} ' + deviceName, level: 'success'});
+    }
     // Update status indicator
     $('#tvremote-pairing-status').removeClass('label-danger').addClass('label-success');
     $('#tvremote-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
