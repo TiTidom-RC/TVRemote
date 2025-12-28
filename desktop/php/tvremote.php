@@ -265,7 +265,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     </ol>
                                     <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
-                                        {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                        {{La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
                                     </div>
                                 </div>
                                 <div class="form-group">
