@@ -348,6 +348,23 @@ class tvremote extends eqLogic {
         }
     }
 
+    public static function sendBeginPairingAdb($_mac=null, $_host=null)
+    {
+        if (!is_null($_mac)) {
+            $value = array(
+                'cmd' => 'sendBeginPairingAdb',
+                'mac' => $_mac,
+                'host' => $_host
+            );
+            self::sendToDaemon($value);
+            log::add('tvremote', 'info', '[sendBeginPairingAdb] Demande d\'appairage ADB envoyée :: MAC=' . $_mac . ' Host=' . $_host);
+            return 'OK';
+        } else {
+            log::add('tvremote', 'debug', '[sendBeginPairingAdb] MAC is missing :: KO');
+            return 'MAC is missing (KO)';
+        }
+    }
+
     public static function createAndUpdTVRemoteFromScan($_data)
     {
         if (!isset($_data['mac'])) {
@@ -518,16 +535,54 @@ class tvremote extends eqLogic {
         }
     }
 
-    public static function actionTVRemote($mac=null, $action=null, $message=null) {
-        log::add('tvremote', 'debug', '[ActionTVRemote] Infos :: ' . $mac . ' / ' . $action . " / " . $message);
+    public static function actionTVRemote($mac=null, $action=null, $message=null, $options=null) {
+        log::add('tvremote', 'debug', '[ActionTVRemote] Infos :: ' . $mac . ' / ' . $action . " / " . $message . " / options=" . $options);
+        
         $value = array(
             'cmd' => 'action', 
             'cmd_action' => $action, 
             'value' => $message, 
-            'mac' => $mac
+            'mac' => $mac,
+            'options' => $options
         );
+        
         log::add('tvremote', 'debug', '[ActionTVRemote] ArrayToSend :: ' . json_encode($value));
         self::sendToDaemon($value);
+    }
+
+    public static function customCmdDecoder($customCmd=null) {
+        log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd :: ' . $customCmd);
+        try {
+            $data = json_decode("{" . $customCmd . "}", true);
+            log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Data :: ' . json_encode($data));
+            $resAction = '';
+            $resCmd = array();
+            $resOptions = array();
+
+            # Commande et Valeur
+            if (array_key_exists('action', $data)) {
+                $resAction = $data['action'];
+            }
+            if (array_key_exists('value', $data)) {
+                $resCmd['message'] = $data['value'];
+            }
+
+            # Options
+            $optionKeys = ['protocol', 'raw'];
+            foreach ($optionKeys as $key) {
+                if (array_key_exists($key, $data)) {
+                    $resOptions[$key] = $data[$key];
+                }
+            }
+
+            $resCmd['title'] = substr(json_encode($resOptions), 1, -1);
+            log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Title :: ' . $resCmd['title']);
+            return [$resAction, $resCmd];
+        }
+        catch (Exception $e) {
+            log::add('tvremote', 'error', '[customCmdDecoder] CustomCmd Decoder Exception :: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /* ************************ Static Methods : JEEDOM *************************** */
@@ -1644,7 +1699,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('message');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Key Code"));
+            $cmd->setDisplay('parameters', array("title_placeholder" => "Options", "message_placeholder" => "Key Code"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
@@ -1661,7 +1716,24 @@ class tvremote extends eqLogic {
             $cmd->setSubType('message');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "App Code"));
+            $cmd->setDisplay('parameters', array("title_placeholder" => "Options", "message_placeholder" => "App Code"));
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'adbshell');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('ADB Shell', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('adbshell');
+            $cmd->setType('action');
+            $cmd->setSubType('message');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            $cmd->setIsVisible(0);
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "ADB Command"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
@@ -1696,11 +1768,40 @@ class tvremoteCmd extends cmd {
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
         if ( $this->getType() === "action" ) {
-            if (in_array($logicalId, ["keycode", "appcode"])) {
+            // Gestion de customcmd en premier
+            if (in_array($logicalId, ["customcmd"])) {
+                if (isset($_options['message'])) {
+                    log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                    [$logicalId, $_options] = tvremote::customCmdDecoder($_options['message']);
+                    log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' (Custom Decoded Message) :: ' . json_encode($_options));
+                }
+                else {
+                    log::add('tvremote', 'debug', '[CMD] Il manque un paramètre pour lancer la commande '. $logicalId);
+                }
+            }
+            
+            // Extraire message et title (options) des options, comme dans TTSCast
+            $message = isset($_options['message']) ? $_options['message'] : null;
+            $options = isset($_options['title']) ? $_options['title'] : null;
+            
+            if (in_array($logicalId, ["keycode", "appcode", "adbshell"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
-                if (isset($deviceMAC) && isset($_options['message'])) {
-                    tvremote::actionTVRemote($deviceMAC, $logicalId, $_options['message']);
+                if (isset($deviceMAC) && isset($message)) {
+                    // Pour adbshell, forcer protocol=adb et changer logicalId en shell
+                    if ($logicalId === "adbshell") {
+                        $logicalId = "shell";
+                        // Ajouter protocol:adb aux options si pas déjà présent
+                        if (empty($options)) {
+                            $options = '"protocol":"adb"';
+                        } else {
+                            // Vérifier si protocol est déjà défini
+                            if (strpos($options, '"protocol"') === false) {
+                                $options = '"protocol":"adb",' . $options;
+                            }
+                        }
+                    }
+                    tvremote::actionTVRemote($deviceMAC, $logicalId, $message, $options);
                 }
                 else {
                     log::add('tvremote', 'debug', '[CMD - Key/App Code] Il manque un paramètre pour lancer la commande '. $logicalId);
@@ -1709,7 +1810,7 @@ class tvremoteCmd extends cmd {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
-                    tvremote::actionTVRemote($deviceMAC, $logicalId);
+                    tvremote::actionTVRemote($deviceMAC, $logicalId, null, $options);
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));

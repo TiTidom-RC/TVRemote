@@ -22,11 +22,15 @@ class Config(object):
         self.resources_firsttime = int(time.time())
         
         self.tasks = []
-        self.known_hosts = []
-        self.remote_mac = []
-        self.remote_names = []
+        self.known_hosts = []  # Hosts for AndroidTVRemote2
+        self.known_hosts_adb = []  # Hosts for ADB
+        self.remote_mac = []  # MAC addresses for AndroidTVRemote2
+        self.remote_mac_adb = []  # MAC addresses for ADB
+        self.remote_names = []  # Names for AndroidTVRemote2
+        self.remote_names_adb = []  # Names for ADB
         
-        self.remote_devices = {}
+        self.remote_devices = {}  # Devices using AndroidTVRemote2 - key is MAC
+        self.remote_devices_adb = {}  # Devices using ADB - key is MAC
         self.remote_zconf = None
         self.remote_listener = {}
         
@@ -187,3 +191,23 @@ class Config(object):
     @property
     def key_file(self):
         return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.key_filepath))
+    
+    @property
+    def adb_key_filepath(self):
+        return 'data/config/adbkey'
+    
+    @property
+    def adb_key_file(self):
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.adb_key_filepath))
+    
+    @property
+    def adb_pub_filepath(self):
+        return 'data/config/adbkey.pub'
+    
+    @property
+    def adb_pub_file(self):
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), self.adb_pub_filepath))
+    
+    @property
+    def adb_timeout(self):
+        return 10

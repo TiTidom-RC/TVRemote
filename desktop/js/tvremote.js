@@ -92,7 +92,6 @@ $('.pluginAction[data-action=openLocation]').on('click', function () {
 });
 
 $('.customclass-beginpairing').on('click', function () {
-  var _friendlyName = $('#friendlyName').val()
   var _hostAddr = $('#hostAddr').val()
   var _macAddr = $('#macAddr').val()
   var _portNum = $('#portNum').val()
@@ -102,7 +101,6 @@ $('.customclass-beginpairing').on('click', function () {
       data: {
           action: "beginPairing",
           mac: _macAddr,
-          friendlyname: _friendlyName,
           host: _hostAddr,
           port: _portNum,
       },
@@ -115,25 +113,22 @@ $('.customclass-beginpairing').on('click', function () {
               $('#div_alert').showAlert({ message: data.result, level: 'danger' });
               return;
           }
-          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Actif pendant 5min)}} :: ' + data.result + ' (' + _friendlyName + ')', level: 'warning' });
+          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Actif pendant 5min)}} :: ' + data.result, level: 'warning' });
       }
   });
 });
 
 $('.customclass-sendpaircode').on('click', function () {
-  var _friendlyName = $('#friendlyName').val()
   var _pairCode = $('#pairCode').val()
   var _hostAddr = $('#hostAddr').val()
   var _macAddr = $('#macAddr').val()
   var _portNum = $('#portNum').val()
-  /* $('#div_alert').showAlert({message: '{{Code Appairage}} (' + _friendlyName + ') :: ' + _pairCode, level: 'warning'}); */
   $.ajax({
       type: "POST",
       url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
       data: {
           action: "sendPairCode",
           mac: _macAddr,
-          friendlyname: _friendlyName,
           host: _hostAddr,
           port: _portNum,
           paircode: _pairCode
@@ -148,6 +143,31 @@ $('.customclass-sendpaircode').on('click', function () {
               return;
           }
           $('#div_alert').showAlert({ message: '{{Envoi Code Appairage}} :: ' + data.result, level: 'success' });
+      }
+  });
+});
+
+$('.customclass-beginpairingadb').on('click', function () {
+  var _hostAddr = $('#hostAddr').val()
+  var _macAddr = $('#macAddr').val()
+  $.ajax({
+      type: "POST",
+      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+      data: {
+          action: "beginPairingAdb",
+          mac: _macAddr,
+          host: _hostAddr
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
+              return;
+          }
+          $('#div_alert').showAlert({ message: '{{Appairage ADB lancé. Autorisez la connexion sur votre TV.}}', level: 'warning' });
       }
   });
 });

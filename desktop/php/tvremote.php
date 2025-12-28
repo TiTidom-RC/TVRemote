@@ -215,18 +215,29 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
                                 </div>
                             </div>
-                            <legend><i class="fas fa-play-circle"></i> {{Procédure Appairage TV}}</legend>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">{{(Re)Lancer Apparairage}}</label>
-                                <div class="col-lg-2">
-                                    <a class="btn btn-success customclass-beginpairing"><i class="fas fa-play-circle"></i> {{Appairage}}</a>
+                            <legend><i class="fas fa-play-circle"></i> {{Procédure Appairage TVRemote}}</legend>
+                            <div id="tvremote-pairing-section">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{(Re)Lancer Appairage}}</label>
+                                    <div class="col-lg-2">
+                                        <a class="btn btn-success customclass-beginpairing"><i class="fas fa-play-circle"></i> {{Appairage}}</a>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Code Appairage}}</label>
+                                    <div class="input-group col-lg-3">
+                                        <input type="text" class="form-control roundedLeft" placeholder="A2C10E" id="pairCode" />
+                                        <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-play-circle"></i> {{Envoyer}}</a></span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Code Appairage}}</label>
-                                <div class="input-group col-lg-3">
-                                    <input type="text" class="form-control roundedLeft" placeholder="A2C10E" id="pairCode" />
-                                    <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-play-circle"></i> {{Envoyer}}</a></span>
+                            <legend><i class="fas fa-link"></i> {{Procédure Appairage ADB}}</legend>
+                            <div id="adb-pairing-section">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Appairage ADB}}</label>
+                                    <div class="col-lg-4">
+                                        <a class="btn btn-success customclass-beginpairingadb"><i class="fas fa-link"></i> {{Appairer}}</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

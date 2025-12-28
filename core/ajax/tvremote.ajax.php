@@ -40,6 +40,17 @@ try {
         unlink($keyfilepath);
         ajax::success("{$certfilepath}<br />{$keyfilepath}");
     }
+    elseif (init('action') === 'resetAdbKeys') {
+        $adbkeyfilepath = __DIR__ . "/../../data/config/adbkey";
+        $adbpubfilepath = __DIR__ . "/../../data/config/adbkey.pub";
+        if (!file_exists($adbkeyfilepath) || !file_exists($adbpubfilepath)) {
+            throw new Exception('[RESET][AdbKeys] Fichier(s) introuvable(s) ::<br />' . $adbkeyfilepath . '<br />' . $adbpubfilepath);
+        }
+        log::add('tvremote', 'debug', "[RESET][AdbKeys] ADB keys filepath :: {$adbkeyfilepath} / {$adbpubfilepath}");
+        unlink($adbkeyfilepath);
+        unlink($adbpubfilepath);
+        ajax::success("{$adbkeyfilepath}<br />{$adbpubfilepath}");
+    }
     elseif (init('action') === 'changeScanState') {
         tvremote::changeScanState(init('scanState'));
         ajax::success();
@@ -50,9 +61,12 @@ try {
     elseif (init('action') === 'sendPairCode') {
         ajax::success(tvremote::sendPairCode(init('mac'), init('host'), init('port'), init('paircode')));
     }
+    elseif (init('action') === 'beginPairingAdb') {
+        ajax::success(tvremote::sendBeginPairingAdb(init('mac'), init('host')));
+    }
 
     throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
-    /*     * *********Catch exeption*************** */
+    /*     * *********Catch exception*************** */
 } catch (Exception $e) {
     ajax::error(displayException($e), $e->getCode());
 }

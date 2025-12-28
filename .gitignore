@@ -1,7 +1,15 @@
 data/config/*.json
+data/config/adbkey*
 .project
 .DS_Store
 Thumbs.db
 *.php~
 .vscode
 .venv
+
+# ADB development and test files
+resources/adb_dev/
+
+# Python
+__pycache__/
+*.pyc
