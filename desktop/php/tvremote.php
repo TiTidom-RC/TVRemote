@@ -215,10 +215,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
                                 </div>
                             </div>
-                            <legend><i class="fas fa-link"></i> {{Procédure Appairage TVRemote}}</legend>
+                            <legend><i class="fas fa-link"></i> {{Appairage TVRemote}}</legend>
                             <div id="tvremote-pairing-section">
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">{{Statut Appairage}}</label>
+                                    <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-lg-3">
                                         <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="tvremote_paired_status" />
                                         <span class="label label-danger" id="tvremote-pairing-status">
@@ -227,23 +227,23 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">{{Lancer Appairage}}</label>
+                                    <label class="col-sm-4 control-label">{{Action}}</label>
                                     <div class="col-lg-2">
                                         <a class="btn btn-success customclass-beginpairing"><i class="fas fa-play-circle"></i> {{Appairer}}</a>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">{{Code Appairage}}</label>
+                                    <label class="col-sm-4 control-label">{{Code}}</label>
                                     <div class="input-group col-lg-3">
                                         <input type="text" class="form-control roundedLeft" placeholder="A2C10E" id="pairCode" />
                                         <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-paper-plane"></i> {{Envoyer}}</a></span>
                                     </div>
                                 </div>
                             </div>
-                            <legend><i class="fas fa-link"></i> {{Procédure Appairage ADB}}</legend>
+                            <legend><i class="fas fa-link"></i> {{Appairage ADB}}</legend>
                             <div id="adb-pairing-section">
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">{{Statut Appairage}}</label>
+                                    <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-lg-3">
                                         <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_paired_status" />
                                         <span class="label label-danger" id="adb-pairing-status">
@@ -252,7 +252,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">{{Lancer Appairage}}</label>
+                                    <label class="col-sm-4 control-label">{{Action}}</label>
                                     <div class="col-lg-2">
                                         <a class="btn btn-success customclass-beginpairingadb"><i class="fas fa-link"></i> {{Appairer}}</a>
                                     </div>
