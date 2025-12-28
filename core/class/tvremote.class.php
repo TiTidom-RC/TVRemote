@@ -815,21 +815,6 @@ class tvremote extends eqLogic {
         }
         $mute_cmd_id = $cmd->getId();
 
-        $cmd = $this->getCmd(null, 'adb_shell_output');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Sortie ADB Shell', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('adb_shell_output');
-            $cmd->setType('info');
-            $cmd->setSubType('string');
-	        $cmd->setIsVisible(0);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        }
-
         $cmd = $this->getCmd(null, 'mute_on');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
@@ -1804,6 +1789,21 @@ class tvremote extends eqLogic {
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
             $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "ADB Command"));
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'adb_shell_output');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Sortie ADB Shell', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('adb_shell_output');
+            $cmd->setType('info');
+            $cmd->setSubType('string');
+	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
