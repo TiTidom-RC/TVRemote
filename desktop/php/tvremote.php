@@ -220,17 +220,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Statut Appairage}}</label>
                                     <div class="col-lg-3">
-                                        <span class="label <?php 
-                                            $tvremotePaired = $eqLogic->getConfiguration('tvremote_paired_status', 0);
-                                            echo ($tvremotePaired == 1) ? 'label-success' : 'label-danger';
-                                        ?>" id="tvremote-pairing-status">
-                                            <?php 
-                                            if ($tvremotePaired == 1) {
-                                                echo '<i class="fas fa-check-circle"></i> {{Appairé}}';
-                                            } else {
-                                                echo '<i class="fas fa-times-circle"></i> {{Non appairé}}';
-                                            }
-                                            ?>
+                                        <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="tvremote_paired_status" />
+                                        <span class="label label-danger" id="tvremote-pairing-status">
+                                            <i class="fas fa-times-circle"></i> {{Non appairé}}
                                         </span>
                                     </div>
                                 </div>
@@ -253,17 +245,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Statut Appairage}}</label>
                                     <div class="col-lg-3">
-                                        <span class="label <?php 
-                                            $adbPaired = $eqLogic->getConfiguration('adb_paired_status', 0);
-                                            echo ($adbPaired == 1) ? 'label-success' : 'label-danger';
-                                        ?>" id="adb-pairing-status">
-                                            <?php 
-                                            if ($adbPaired == 1) {
-                                                echo '<i class="fas fa-check-circle"></i> {{Appairé}}';
-                                            } else {
-                                                echo '<i class="fas fa-times-circle"></i> {{Non appairé}}';
-                                            }
-                                            ?>
+                                        <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_paired_status" />
+                                        <span class="label label-danger" id="adb-pairing-status">
+                                            <i class="fas fa-times-circle"></i> {{Non appairé}}
                                         </span>
                                     </div>
                                 </div>

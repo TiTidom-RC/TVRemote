@@ -259,3 +259,26 @@ $('body').on('tvremote::scanState', function (_event, _options) {
     window.location.reload();
   }
 });
+
+// Update pairing status badges when configuration changes
+$('.eqLogicAttr[data-l2key="tvremote_paired_status"]').on('change', function() {
+  var status = $(this).val();
+  if (status == 1) {
+    $('#tvremote-pairing-status').removeClass('label-danger').addClass('label-success');
+    $('#tvremote-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
+  } else {
+    $('#tvremote-pairing-status').removeClass('label-success').addClass('label-danger');
+    $('#tvremote-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
+  }
+}).trigger('change');
+
+$('.eqLogicAttr[data-l2key="adb_paired_status"]').on('change', function() {
+  var status = $(this).val();
+  if (status == 1) {
+    $('#adb-pairing-status').removeClass('label-danger').addClass('label-success');
+    $('#adb-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
+  } else {
+    $('#adb-pairing-status').removeClass('label-success').addClass('label-danger');
+    $('#adb-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
+  }
+}).trigger('change');
