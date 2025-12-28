@@ -522,6 +522,37 @@ class tvremote extends eqLogic {
             return false;
         }
         else {
+            // Get friendly name for logs
+            $friendlyName = $rtdevice->getConfiguration('friendly_name', $rtdevice->getName());
+            
+            // Auto-detect pairing status from device data
+            $needsSave = false;
+            
+            // Detect TVRemote pairing: if we receive device info (online=1, is_on exists), pairing is valid
+            if (key_exists('online', $_data) && $_data['online'] === 1 && key_exists('is_on', $_data)) {
+                $currentStatus = $rtdevice->getConfiguration('tvremote_paired_status', 0);
+                if ($currentStatus == 0) {
+                    log::add('tvremote', 'info', '[REALTIME][REMOTE] TVRemote connected - auto-detecting pairing status for :: ' . $friendlyName);
+                    $rtdevice->setConfiguration('tvremote_paired_status', 1);
+                    $needsSave = true;
+                }
+            }
+            
+            // Detect ADB pairing: if adb_connected=1, pairing is valid
+            if (key_exists('adb_connected', $_data) && $_data['adb_connected'] === 1) {
+                $currentStatus = $rtdevice->getConfiguration('adb_paired_status', 0);
+                if ($currentStatus == 0) {
+                    log::add('tvremote', 'info', '[REALTIME][REMOTE] ADB connected - auto-detecting pairing status for :: ' . $friendlyName);
+                    $rtdevice->setConfiguration('adb_paired_status', 1);
+                    $needsSave = true;
+                }
+            }
+            
+            // Save configuration if pairing status was updated
+            if ($needsSave) {
+                $rtdevice->save();
+            }
+            
             foreach($rtdevice->getCmd('info') as $cmd) {
                 $logicalId = $cmd->getLogicalId();
                 if (key_exists($logicalId, $_data)) {
