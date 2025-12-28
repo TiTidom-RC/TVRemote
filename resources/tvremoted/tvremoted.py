@@ -344,7 +344,7 @@ class EQRemoteADB(object):
                 try:
                     if not self._connected:
                         self._logger.debug("[EQRemoteADB][MAIN][%s] Connecting to ADB...", self._macAddr)
-                        await self._adb.connect(rsa_keys=[self._signer], auth_timeout_s=self._config.adb_timeout)
+                        await self._adb.connect(rsa_keys=[self._signer], auth_timeout_s=self._config.adb_auth_timeout)
                         self._connected = True
                         self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB", self._macAddr)
                         
@@ -826,7 +826,7 @@ class TVRemoted:
             
             try:
                 # Try to connect
-                await adb.connect(rsa_keys=[signer], auth_timeout_s=self._config.adb_timeout)
+                await adb.connect(rsa_keys=[signer], auth_timeout_s=self._config.adb_auth_timeout)
                 self._logger.info("[PAIRING_ADB][%s] ADB connection successful", _mac)
                 
                 # Inform Jeedom

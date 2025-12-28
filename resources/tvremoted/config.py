@@ -210,4 +210,8 @@ class Config(object):
     
     @property
     def adb_timeout(self):
-        return 10
+        return 30
+    
+    @property
+    def adb_auth_timeout(self):
+        return 60
