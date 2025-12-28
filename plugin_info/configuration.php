@@ -113,23 +113,23 @@ if (!isConnect()) {
 			        </select>
 	            </div>
             </div>        
-            <legend><i class="fas fa-tv"></i> {{Remote TV (Télécommande)}}</legend>
+            <legend><i class="fas fa-tv"></i> {{Réinitialisation}}</legend>
             <div class="form-group">
-                <label class="col-lg-3 control-label">{{Effacer le Certificat TVRemote}}
-                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Effacer le certificat et la clé générés au premier appairage à un équipement}}"></i></sup>
+                <label class="col-lg-3 control-label">{{Certificat TVRemote}}
+                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après cette action}}"></i></sup>    
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Supprime le certificat et la clé générés lors du premier appairage. Nécessite un nouvel appairage de tous les équipements TVRemote}}"></i></sup>
                 </label>
                 <div class="col-lg-1">
-                    <a class="btn btn-danger customclass-resettvcertkey"><i class="fas fa-trash-alt"></i> {{Effacer}}</a>
+                    <a class="btn btn-danger customclass-resettvcertkey"><i class="fas fa-trash-alt"></i> {{Supprimer}}</a>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-lg-3 control-label">{{Effacer la Clé ADB}}
-                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Effacer les clés RSA générées pour l'appairage ADB}}"></i></sup>
+                <label class="col-lg-3 control-label">{{Certificat ADB}}
+                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après cette action}}"></i></sup>    
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Supprime le certificat généré pour ADB. Nécessite un nouvel appairage de tous les équipements ADB}}"></i></sup>
                 </label>
                 <div class="col-lg-1">
-                    <a class="btn btn-danger customclass-resetadbkeys"><i class="fas fa-trash-alt"></i> {{Effacer}}</a>
+                    <a class="btn btn-danger customclass-resetadbkeys"><i class="fas fa-trash-alt"></i> {{Supprimer}}</a>
                 </div>
             </div>
         </div>
