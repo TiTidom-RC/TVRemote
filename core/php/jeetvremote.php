@@ -143,25 +143,25 @@ try {
             
             // Get friendly name for user-friendly message
             $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
-        } else {
-            $friendlyName = $result['mac']; // Fallback to MAC if device not found
-        }
-        
-        // Send event to JavaScript
-        event::add('tvremote::adbPairingResult', array(
-            'mac' => $result['mac'],
-            'friendly_name' => $friendlyName,
-            'adb_paired' => $result['adb_paired'],
-            'message' => isset($result['message']) ? $result['message'] : ''
-        ));
-        
-        // Log the message if present
-        if (isset($result['message'])) {
-            if ($result['adb_paired'] === 1) {
-                log::add('tvremote', 'info', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
-            } else {
-                log::add('tvremote', 'warning', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
+            
+            // Send event to JavaScript only if equipment exists
+            event::add('tvremote::adbPairingResult', array(
+                'mac' => $result['mac'],
+                'friendly_name' => $friendlyName,
+                'adb_paired' => $result['adb_paired'],
+                'message' => isset($result['message']) ? $result['message'] : ''
+            ));
+            
+            // Log the message if present
+            if (isset($result['message'])) {
+                if ($result['adb_paired'] === 1) {
+                    log::add('tvremote', 'info', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
+                } else {
+                    log::add('tvremote', 'warning', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
+                }
             }
+        } else {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing :: Equipment not found in Jeedom :: ' . $result['mac']);
         }
     } elseif (isset($result['adb_auth_revoked'])) {
         log::add('tvremote', 'warning', '[CALLBACK] ADB Authorization Revoked');
@@ -183,13 +183,45 @@ try {
             // Get friendly name for user-friendly message
             $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
             
-            // Send event to JavaScript
+            // Send event to JavaScript only if equipment exists
             event::add('tvremote::adbPairingResult', array(
                 'mac' => $result['mac'],
                 'friendly_name' => $friendlyName,
                 'adb_paired' => 0,
                 'message' => 'Authorization revoked from TV. Please pair again.'
             ));
+        } else {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Auth Revoked :: Equipment not found in Jeedom :: ' . $result['mac']);
+        }
+    } elseif (isset($result['pairing_value'])) {
+        log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error');
+        
+        if (!isset($result['pairing_mac'])) {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error :: [MAC] non défini !');
+            return;
+        }
+        
+        log::add('tvremote', 'warning', '[CALLBACK] TVRemote Not Paired :: ' . $result['pairing_mac'] . ' :: ' . (isset($result['PairingExc']) ? $result['PairingExc'] : 'Unknown error'));
+        
+        // Update equipment configuration with pairing status
+        $tv_remote = tvremote::byLogicalId($result['pairing_mac'], 'tvremote');
+        if (is_object($tv_remote)) {
+            $tv_remote->setConfiguration('tvremote_paired_status', $result['pairing_value']);
+            $tv_remote->save();
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Status saved :: ' . $result['pairing_mac'] . ' :: ' . $result['pairing_value']);
+            
+            // Get friendly name for user-friendly message
+            $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
+            
+            // Send event to JavaScript only if equipment exists
+            event::add('tvremote::tvremotePairingResult', array(
+                'mac' => $result['pairing_mac'],
+                'friendly_name' => $friendlyName,
+                'tvremote_paired' => $result['pairing_value'],
+                'message' => isset($result['PairingExc']) ? $result['PairingExc'] : 'Device not paired. Please start pairing procedure.'
+            ));
+        } else {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error :: Equipment not found in Jeedom :: ' . $result['pairing_mac']);
         }
     } elseif (isset($result['tvremote_paired'])) {
         log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Result');
@@ -210,25 +242,25 @@ try {
             
             // Get friendly name for user-friendly message
             $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
-        } else {
-            $friendlyName = $result['mac']; // Fallback to MAC if device not found
-        }
-        
-        // Send event to JavaScript
-        event::add('tvremote::tvremotePairingResult', array(
-            'mac' => $result['mac'],
-            'friendly_name' => $friendlyName,
-            'tvremote_paired' => $result['tvremote_paired'],
-            'message' => isset($result['message']) ? $result['message'] : ''
-        ));
-        
-        // Log the message if present
-        if (isset($result['message'])) {
-            if ($result['tvremote_paired'] === 1) {
-                log::add('tvremote', 'info', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
-            } else {
-                log::add('tvremote', 'warning', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
+            
+            // Send event to JavaScript only if equipment exists
+            event::add('tvremote::tvremotePairingResult', array(
+                'mac' => $result['mac'],
+                'friendly_name' => $friendlyName,
+                'tvremote_paired' => $result['tvremote_paired'],
+                'message' => isset($result['message']) ? $result['message'] : ''
+            ));
+            
+            // Log the message if present
+            if (isset($result['message'])) {
+                if ($result['tvremote_paired'] === 1) {
+                    log::add('tvremote', 'info', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
+                } else {
+                    log::add('tvremote', 'warning', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
+                }
             }
+        } else {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing :: Equipment not found in Jeedom :: ' . $result['mac']);
         }
     } else {
         log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon'); 
