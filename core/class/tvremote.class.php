@@ -561,7 +561,7 @@ class tvremote extends eqLogic {
                     event::add('tvremote::tvremotePairingResult', array(
                         'mac' => $_data['mac'],
                         'friendly_name' => $friendlyName,
-                        'status' => 1,
+                        'tvremote_paired' => 1,
                         'message' => 'Appairage TVRemote Détecté'
                     ));
                 }
@@ -569,7 +569,7 @@ class tvremote extends eqLogic {
                     event::add('tvremote::adbPairingResult', array(
                         'mac' => $_data['mac'],
                         'friendly_name' => $friendlyName,
-                        'status' => 1,
+                        'adb_paired' => 1,
                         'message' => 'Appairage ADB Détecté'
                     ));
                 }
