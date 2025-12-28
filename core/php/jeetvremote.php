@@ -90,6 +90,16 @@ try {
                 $scanupdtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
         }
+    } elseif (isset($result['shell_result_mac']) && isset($result['shell_result_value'])) {
+        log::add('tvremote', 'debug', '[CALLBACK][Shell Result] MAC :: ' . $result['shell_result_mac']);
+        $tv_remote = tvremote::byLogicalId($result['shell_result_mac'], 'tvremote');
+        if (is_object($tv_remote)) {
+            $cmd = $tv_remote->getCmd('info', 'shell_result');
+            if (is_object($cmd)) {
+                $cmd->event($result['shell_result_value']);
+                log::add('tvremote', 'info', '[CALLBACK][Shell Result] Updated for ' . $tv_remote->getName() . ' [:100] :: ' . substr($result['shell_result_value'], 0, 100));
+            }
+        }
     } elseif (isset($result['devicesRT'])) {
         log::add('tvremote','debug','[CALLBACK] TVRemote Devices RealTime');
         foreach ($result['devicesRT'] as $key => $data) {

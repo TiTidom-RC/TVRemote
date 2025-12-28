@@ -815,6 +815,21 @@ class tvremote extends eqLogic {
         }
         $mute_cmd_id = $cmd->getId();
 
+        $cmd = $this->getCmd(null, 'shell_result');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Résultat Shell', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('shell_result');
+            $cmd->setType('info');
+            $cmd->setSubType('string');
+	        $cmd->setIsVisible(0);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
         $cmd = $this->getCmd(null, 'mute_on');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();

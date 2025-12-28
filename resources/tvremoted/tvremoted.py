@@ -443,7 +443,16 @@ class EQRemoteADB(object):
                             self._logger.debug("[EQRemoteADB][SendCmd - Shell Advanced] %s", value)
                     
                     result = await self._adb.shell(value)
-                    self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
+                    if len(result) > 500:
+                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
+                    else:
+                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
+                    # Envoyer le résultat à Jeedom
+                    data = {
+                        'shell_result_mac': self._macAddr,
+                        'shell_result_value': result
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
             elif action == 'keycode':
                 # Send keycode via ADB
                 if value is not None:
