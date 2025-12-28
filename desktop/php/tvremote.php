@@ -218,7 +218,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <legend><i class="fas fa-link"></i> {{Appairage TVRemote}}</legend>
                             <div id="tvremote-pairing-section">
                                 <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure Appairage TVRemote}}</strong>
+                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure}}</strong>
                                     <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
                                     <ol style="margin-top: 10px; margin-bottom: 5px;">
                                         <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
