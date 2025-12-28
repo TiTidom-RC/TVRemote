@@ -113,7 +113,7 @@ if (!isConnect()) {
 			        </select>
 	            </div>
             </div>        
-            <legend><i class="fas fa-tv"></i> {{Réinitialisation}}</legend>
+            <legend><i class="fas fa-redo"></i> {{Réinitialisation}}</legend>
             <div class="form-group">
                 <label class="col-lg-3 control-label">{{Certificat TVRemote}}
                     <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après cette action}}"></i></sup>    
