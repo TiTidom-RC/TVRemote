@@ -527,14 +527,17 @@ class tvremote extends eqLogic {
             
             // Auto-detect pairing status from device data
             $needsSave = false;
+            $tvremoteStatusChanged = false;
+            $adbStatusChanged = false;
             
             // Detect TVRemote pairing: if we receive device info (online=1, is_on exists), pairing is valid
             if (key_exists('online', $_data) && $_data['online'] === 1 && key_exists('is_on', $_data)) {
                 $currentStatus = $rtdevice->getConfiguration('tvremote_paired_status', 0);
                 if ($currentStatus == 0) {
-                    log::add('tvremote', 'info', '[REALTIME][REMOTE] TVRemote connected - auto-detecting pairing status for :: ' . $friendlyName);
+                    log::add('tvremote', 'info', '[REALTIME][REMOTE] Détection Automatique :: TVRemote appairé et connecté pour ' . $friendlyName . ' - passage du statut à 1');
                     $rtdevice->setConfiguration('tvremote_paired_status', 1);
                     $needsSave = true;
+                    $tvremoteStatusChanged = true;
                 }
             }
             
@@ -542,15 +545,34 @@ class tvremote extends eqLogic {
             if (key_exists('adb_connected', $_data) && $_data['adb_connected'] === 1) {
                 $currentStatus = $rtdevice->getConfiguration('adb_paired_status', 0);
                 if ($currentStatus == 0) {
-                    log::add('tvremote', 'info', '[REALTIME][REMOTE] ADB connected - auto-detecting pairing status for :: ' . $friendlyName);
+                    log::add('tvremote', 'info', '[REALTIME][REMOTE] Détection Automatique :: ADB appairé et connecté pour ' . $friendlyName . ' - passage du statut à 1');
                     $rtdevice->setConfiguration('adb_paired_status', 1);
                     $needsSave = true;
+                    $adbStatusChanged = true;
                 }
             }
             
             // Save configuration if pairing status was updated
             if ($needsSave) {
                 $rtdevice->save();
+                
+                // Send JavaScript events to update UI
+                if ($tvremoteStatusChanged) {
+                    event::add('tvremote::tvremotePairingResult', array(
+                        'mac' => $_data['mac'],
+                        'friendly_name' => $friendlyName,
+                        'status' => 1,
+                        'message' => 'Appairage TVRemote Détecté'
+                    ));
+                }
+                if ($adbStatusChanged) {
+                    event::add('tvremote::adbPairingResult', array(
+                        'mac' => $_data['mac'],
+                        'friendly_name' => $friendlyName,
+                        'status' => 1,
+                        'message' => 'Appairage ADB Détecté'
+                    ));
+                }
             }
             
             foreach($rtdevice->getCmd('info') as $cmd) {
