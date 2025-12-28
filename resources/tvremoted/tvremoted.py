@@ -449,8 +449,8 @@ class EQRemoteADB(object):
                         self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
                     # Envoyer le résultat à Jeedom
                     data = {
-                        'shell_result_mac': self._macAddr,
-                        'shell_result_value': result
+                        'adb_shell_output_mac': self._macAddr,
+                        'adb_shell_output_value': result
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
             elif action == 'keycode':

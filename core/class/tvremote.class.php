@@ -815,12 +815,12 @@ class tvremote extends eqLogic {
         }
         $mute_cmd_id = $cmd->getId();
 
-        $cmd = $this->getCmd(null, 'shell_result');
+        $cmd = $this->getCmd(null, 'adb_shell_output');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Résultat Shell', __FILE__));
+            $cmd->setName(__('Sortie ADB Shell', __FILE__));
             $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('shell_result');
+	        $cmd->setLogicalId('adb_shell_output');
             $cmd->setType('info');
             $cmd->setSubType('string');
 	        $cmd->setIsVisible(0);
