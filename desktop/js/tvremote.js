@@ -95,49 +95,50 @@ function addCmdToTable(_cmd) {
   html.push('<i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i></td>');
   html.push('</tr>');
   
-  $('#table_cmd tbody').append(html.join(''));
-  var $tr = $('#table_cmd tbody tr').last();
+  let newRow = document.createElement('tr')
+  newRow.innerHTML = html.join('')
+  newRow.classList.add('cmd')
+  newRow.setAttribute('data-cmd_id', init(_cmd.id))
+  document.getElementById('table_cmd').querySelector('tbody').appendChild(newRow)
+  
   jeedom.eqLogic.buildSelectCmd({
-    id: $('.eqLogicAttr[data-l1key=id]').value(),
+    id: document.querySelector('.eqLogicAttr[data-l1key=id]').jeeValue(),
     filter: { type: 'info' },
     error: function (error) {
-      $('#div_alert').showAlert({ message: error.message, level: 'danger' })
+      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
     },
     success: function (result) {
-      var $cmdValue = $tr.find('.cmdAttr[data-l1key=value]');
-      var $cmdToRefresh = $tr.find('.cmdAttr[data-l2key=cmdToRefresh]');
-      var $cmdTypeSelect = $tr.find('.cmdAttr[data-l2key=cmdType]');
-      
-      $cmdValue.append(result);
-      $cmdToRefresh.append(result);
-      $tr.setValues(_cmd, '.cmdAttr');
-      jeedom.cmd.changeType($tr, init(_cmd.subType));
+      newRow.querySelector('.cmdAttr[data-l1key=value]')?.insertAdjacentHTML('beforeend', result)
+      newRow.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')?.insertAdjacentHTML('beforeend', result)
+      newRow.setJeeValues(_cmd, '.cmdAttr')
+      jeedom.cmd.changeType(newRow, init(_cmd.subType))
       
       // Global refresh command: hide all custom fields
-      var isGlobalRefresh = init(_cmd.logicalId) === 'refresh';
+      var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
       if (isGlobalRefresh) {
-        $tr.find('.cmdType, .type, .subType, .cmdAttr[data-l1key=value], .adb-shell-cmd').hide();
-        $cmdToRefresh.hide();
-        return;
+        newRow.querySelectorAll('.cmdType, .type, .subType, .cmdAttr[data-l1key=value], .adb-shell-cmd').unseen()
+        newRow.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')?.unseen()
+        return
       }
       
       // Auto-detect cmdType for existing commands without explicit configuration
-      var isNewCmd = !isset(_cmd.id) || _cmd.id === '';
+      var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
+      var cmdTypeSelect = newRow.querySelector('.cmdAttr[data-l2key=cmdType]')
       if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
-          $cmdTypeSelect.val('adb-shell');
+          cmdTypeSelect.value = 'adb-shell'
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
-          $cmdTypeSelect.val('refresh-cmd');
+          cmdTypeSelect.value = 'refresh-cmd'
         } else if (!isNewCmd) {
           // Native plugin command: hide custom fields
-          $tr.find('.cmdType, .adb-shell-cmd').hide();
+          newRow.querySelectorAll('.cmdType, .adb-shell-cmd').unseen()
         }
       }
       
       // Trigger change event for detected custom commands
-      var detectedCmdType = $cmdTypeSelect.val();
+      var detectedCmdType = cmdTypeSelect.value
       if (detectedCmdType && detectedCmdType !== 'plugin') {
-        $cmdTypeSelect.trigger('change');
+        cmdTypeSelect.triggerEvent('change')
       }
     }
   })
@@ -145,248 +146,288 @@ function addCmdToTable(_cmd) {
 
 
 
-// Handle cmdType change
-$('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
-  var $tr = $(this).closest('tr');
-  var cmdType = $(this).val();
-  var $type = $tr.find('.type');
-  var $subType = $tr.find('.subType');
-  var $adbShellCmd = $tr.find('.adb-shell-cmd');
-  var $cmdToRefresh = $tr.find('.cmdAttr[data-l2key=cmdToRefresh]');
+// Handle cmdType change with event delegation
+document.getElementById('table_cmd').addEventListener('change', function(event) {
+  if (!event.target.matches('.cmdAttr[data-l2key=cmdType]')) return
+  
+  var tr = event.target.closest('tr')
+  var cmdType = event.target.value
+  var type = tr.querySelector('.type')
+  var subType = tr.querySelector('.subType')
+  var adbShellCmd = tr.querySelector('.adb-shell-cmd')
+  var cmdToRefresh = tr.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')
   
   if (cmdType === 'refresh-cmd') {
     // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select
-    $tr.find('.cmdAttr[data-l1key=type]').val('action');
-    $tr.find('.cmdAttr[data-l1key=subType]').val('other');
-    jeedom.cmd.changeType($tr, 'other');
-    $type.add($subType).add($adbShellCmd).hide();
-    $cmdToRefresh.show();
+    tr.querySelector('.cmdAttr[data-l1key=type]').value = 'action'
+    tr.querySelector('.cmdAttr[data-l1key=subType]').value = 'other'
+    jeedom.cmd.changeType(tr, 'other');
+    [type, subType, adbShellCmd].forEach(el => { if (el) el.unseen() })
+    cmdToRefresh?.seen()
   } else if (cmdType === 'adb-shell') {
     // ADB Shell mode: set action/other for new commands, keep existing type otherwise
-    var isNewCommand = !$tr.attr('data-cmd_id') || $tr.attr('data-cmd_id') === '';
+    var isNewCommand = !tr.getAttribute('data-cmd_id') || tr.getAttribute('data-cmd_id') === ''
     if (isNewCommand) {
-      $tr.find('.cmdAttr[data-l1key=type]').val('action');
-      $tr.find('.cmdAttr[data-l1key=subType]').val('other');
-      jeedom.cmd.changeType($tr, 'other');
+      tr.querySelector('.cmdAttr[data-l1key=type]').value = 'action'
+      tr.querySelector('.cmdAttr[data-l1key=subType]').value = 'other'
+      jeedom.cmd.changeType(tr, 'other')
     } else {
-      jeedom.cmd.changeType($tr, $tr.find('.cmdAttr[data-l1key=subType]').val());
+      jeedom.cmd.changeType(tr, tr.querySelector('.cmdAttr[data-l1key=subType]').value)
     }
-    $type.add($subType).add($adbShellCmd).show();
-    $cmdToRefresh.hide();
+    [type, subType, adbShellCmd].forEach(el => { if (el) el.seen() })
+    cmdToRefresh?.unseen()
   } else {
     // Plugin/Standard mode: show type/subtype, hide custom fields
-    $type.add($subType).show();
-    $adbShellCmd.add($cmdToRefresh).hide();
+    [type, subType].forEach(el => { if (el) el.seen() });
+    [adbShellCmd, cmdToRefresh].forEach(el => { if (el) el.unseen() })
   }
-});
+})
 
 function printEqLogic(_eqLogic) {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
   if (typeof _eqLogic.configuration.use_adb === 'undefined') {
-    $('.eqLogicAttr[data-l2key="use_adb"]').prop('checked', false);
+    var useAdbCheckbox = document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')
+    if (useAdbCheckbox) useAdbCheckbox.checked = false
   }
 }
 
-$('.pluginAction[data-action=openLocation]').on('click', function () {
-	window.open($(this).attr("data-location"), "_blank", null);
-});
+document.querySelectorAll('.pluginAction[data-action=openLocation]').forEach(function(element) {
+  element.addEventListener('click', function() {
+    window.open(this.getAttribute('data-location'), '_blank', null)
+  })
+})
 
-$('.customclass-beginpairing').on('click', function () {
-  var _hostAddr = $('#hostAddr').val()
-  var _macAddr = $('#macAddr').val()
-  var _portNum = $('#portNum').val()
-  $.ajax({
-      type: "POST",
-      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+document.querySelectorAll('.customclass-beginpairing').forEach(function(element) {
+  element.addEventListener('click', function() {
+    var hostAddr = document.getElementById('hostAddr').value
+    var macAddr = document.getElementById('macAddr').value
+    var portNum = document.getElementById('portNum').value
+    domUtils.ajax({
+      type: 'POST',
+      url: 'plugins/tvremote/core/ajax/tvremote.ajax.php',
       data: {
-          action: "beginPairing",
-          mac: _macAddr,
-          host: _hostAddr,
-          port: _portNum,
+        action: 'beginPairing',
+        mac: macAddr,
+        host: hostAddr,
+        port: portNum
       },
       dataType: 'json',
-      error: function (request, status, error) {
-          handleAjaxError(request, status, error);
+      error: function(request, status, error) {
+        handleAjaxError(request, status, error)
       },
-      success: function (data) {
-          if (data.state != 'ok') {
-              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
-              return;
-          }
-          $('#div_alert').showAlert({ message: '{{Lancement Appairage (Actif pendant 5min)}} :: ' + data.result, level: 'warning' });
+      success: function(data) {
+        if (data.state != 'ok') {
+          jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+          return
+        }
+        jeedomUtils.showAlert({ message: '{{Lancement Appairage (Actif pendant 5min)}} :: ' + data.result, level: 'warning' })
       }
-  });
-});
+    })
+  })
+})
 
-$('.customclass-sendpaircode').on('click', function () {
-  var _pairCode = $('#pairCode').val()
-  var _hostAddr = $('#hostAddr').val()
-  var _macAddr = $('#macAddr').val()
-  var _portNum = $('#portNum').val()
-  $.ajax({
-      type: "POST",
-      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+document.querySelectorAll('.customclass-sendpaircode').forEach(function(element) {
+  element.addEventListener('click', function() {
+    var pairCode = document.getElementById('pairCode').value
+    var hostAddr = document.getElementById('hostAddr').value
+    var macAddr = document.getElementById('macAddr').value
+    var portNum = document.getElementById('portNum').value
+    domUtils.ajax({
+      type: 'POST',
+      url: 'plugins/tvremote/core/ajax/tvremote.ajax.php',
       data: {
-          action: "sendPairCode",
-          mac: _macAddr,
-          host: _hostAddr,
-          port: _portNum,
-          paircode: _pairCode
+        action: 'sendPairCode',
+        mac: macAddr,
+        host: hostAddr,
+        port: portNum,
+        paircode: pairCode
       },
       dataType: 'json',
-      error: function (request, status, error) {
-          handleAjaxError(request, status, error);
+      error: function(request, status, error) {
+        handleAjaxError(request, status, error)
       },
-      success: function (data) {
-          if (data.state != 'ok') {
-              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
-              return;
-          }
-          $('#div_alert').showAlert({ message: '{{Envoi Code Appairage}} :: ' + data.result, level: 'success' });
+      success: function(data) {
+        if (data.state != 'ok') {
+          jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+          return
+        }
+        jeedomUtils.showAlert({ message: '{{Envoi Code Appairage}} :: ' + data.result, level: 'success' })
       }
-  });
-});
+    })
+  })
+})
 
-$('.customclass-beginpairingadb').on('click', function () {
-  var _hostAddr = $('#hostAddr').val()
-  var _macAddr = $('#macAddr').val()
-  $.ajax({
-      type: "POST",
-      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
+document.querySelectorAll('.customclass-beginpairingadb').forEach(function(element) {
+  element.addEventListener('click', function() {
+    var hostAddr = document.getElementById('hostAddr').value
+    var macAddr = document.getElementById('macAddr').value
+    domUtils.ajax({
+      type: 'POST',
+      url: 'plugins/tvremote/core/ajax/tvremote.ajax.php',
       data: {
-          action: "beginPairingAdb",
-          mac: _macAddr,
-          host: _hostAddr
+        action: 'beginPairingAdb',
+        mac: macAddr,
+        host: hostAddr
       },
       dataType: 'json',
-      error: function (request, status, error) {
-          handleAjaxError(request, status, error);
+      error: function(request, status, error) {
+        handleAjaxError(request, status, error)
       },
-      success: function (data) {
-          if (data.state != 'ok') {
-              $('#div_alert').showAlert({ message: data.result, level: 'danger' });
-              return;
-          }
-          $('#div_alert').showAlert({ message: '{{Appairage ADB lancé. Veuillez vérifier votre TV et ACCEPTER la demande d\'autorisation ADB qui s\'affiche à l\'écran.}}', level: 'warning' });
+      success: function(data) {
+        if (data.state != 'ok') {
+          jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+          return
+        }
+        jeedomUtils.showAlert({ message: '{{Appairage ADB lancé. Veuillez vérifier votre TV et ACCEPTER la demande d\'autorisation ADB qui s\'affiche à l\'écran.}}', level: 'warning' })
       }
-  });
-});
+    })
+  })
+})
 
-$('.customclass-scanState').on('click', function () {
-	var scanState = $(this).attr('data-scanState');
-	changeScanState(scanState);
-});
+document.querySelectorAll('.customclass-scanState').forEach(function(element) {
+  element.addEventListener('click', function() {
+    var scanState = this.getAttribute('data-scanState')
+    changeScanState(scanState)
+  })
+})
 
 function changeScanState(_scanState) {
-  $.ajax({
-    type: "POST",
-      url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
-      data: {
-          action: "changeScanState",
-          scanState: _scanState,
-      },
-      dataType: 'json',
-      error: function (request, status, error) {
-          handleAjaxError(request, status, error);
-      },
-      success: function (data) {
-          if (data.state != 'ok') {
-              $('#div_alert').showAlert({message: data.result, level: 'danger'});
-              return;
-          }
+  domUtils.ajax({
+    type: 'POST',
+    url: 'plugins/tvremote/core/ajax/tvremote.ajax.php',
+    data: {
+      action: 'changeScanState',
+      scanState: _scanState
+    },
+    dataType: 'json',
+    error: function(request, status, error) {
+      handleAjaxError(request, status, error)
+    },
+    success: function(data) {
+      if (data.state != 'ok') {
+        jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+        return
       }
-  });
+    }
+  })
 }
 
-$('body').on('tvremote::scanResult', function (_event, _option) {
+document.body.addEventListener('tvremote::scanResult', function(event) {
+  var _option = event.detail || event._option
   if (_option && _option['friendly_name'] && _option['isNew'] === 1) {
-    $('#div_alert').showAlert({message: "[SCAN] TVRemote AJOUTE :: " + _option['friendly_name'], level: 'success'});
+    jeedomUtils.showAlert({ message: '[SCAN] TVRemote AJOUTE :: ' + _option['friendly_name'], level: 'success' })
   } else if (_option && _option['friendly_name'] && _option['isNew'] === 0) {
-    $('#div_alert').showAlert({message: "[SCAN] TVRemote MAJ :: " + _option['friendly_name'], level: 'warning'});
+    jeedomUtils.showAlert({ message: '[SCAN] TVRemote MAJ :: ' + _option['friendly_name'], level: 'warning' })
   }
-});
+})
 
-$('body').on('tvremote::adbPairingResult', function (_event, _option) {
+document.body.addEventListener('tvremote::adbPairingResult', function(event) {
+  var _option = event.detail || event._option
   if (_option && _option['adb_paired'] === 1) {
-    var deviceName = _option['friendly_name'] || _option['mac'];
+    var deviceName = _option['friendly_name'] || _option['mac']
     // Only show alert if it's not an auto-detection
     if (!_option['auto_detected']) {
-      $('#div_alert').showAlert({message: '{{Appairage ADB réussi pour}} ' + deviceName, level: 'success'});
+      jeedomUtils.showAlert({ message: '{{Appairage ADB réussi pour}} ' + deviceName, level: 'success' })
     }
     // Update status indicator
-    $('#adb-pairing-status').removeClass('label-danger').addClass('label-success');
-    $('#adb-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
+    var adbStatus = document.getElementById('adb-pairing-status')
+    if (adbStatus) {
+      adbStatus.removeClass('label-danger').addClass('label-success')
+      adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+    }
   } else if (_option && _option['adb_paired'] === 0) {
-    var deviceName = _option['friendly_name'] || _option['mac'];
-    $('#div_alert').showAlert({message: '{{Échec de l\'appairage ADB pour}} ' + deviceName + ' : ' + (_option['message'] || '{{Erreur inconnue}}'), level: 'danger'});
+    var deviceName = _option['friendly_name'] || _option['mac']
+    jeedomUtils.showAlert({ message: '{{Échec de l\'appairage ADB pour}} ' + deviceName + ' : ' + (_option['message'] || '{{Erreur inconnue}}'), level: 'danger' })
     // Update status indicator
-    $('#adb-pairing-status').removeClass('label-success').addClass('label-danger');
-    $('#adb-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
+    var adbStatus = document.getElementById('adb-pairing-status')
+    if (adbStatus) {
+      adbStatus.removeClass('label-success').addClass('label-danger')
+      adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+    }
   }
-});
+})
 
-$('body').on('tvremote::tvremotePairingResult', function (_event, _option) {
+document.body.addEventListener('tvremote::tvremotePairingResult', function(event) {
+  var _option = event.detail || event._option
   if (_option && _option['tvremote_paired'] === 1) {
-    var deviceName = _option['friendly_name'] || _option['mac'];
+    var deviceName = _option['friendly_name'] || _option['mac']
     // Only show alert if it's not an auto-detection
     if (!_option['auto_detected']) {
-      $('#div_alert').showAlert({message: '{{Appairage TVRemote réussi pour}} ' + deviceName, level: 'success'});
+      jeedomUtils.showAlert({ message: '{{Appairage TVRemote réussi pour}} ' + deviceName, level: 'success' })
     }
     // Update status indicator
-    $('#tvremote-pairing-status').removeClass('label-danger').addClass('label-success');
-    $('#tvremote-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
+    var tvremoteStatus = document.getElementById('tvremote-pairing-status')
+    if (tvremoteStatus) {
+      tvremoteStatus.removeClass('label-danger').addClass('label-success')
+      tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+    }
   } else if (_option && _option['tvremote_paired'] === 0) {
-    var deviceName = _option['friendly_name'] || _option['mac'];
-    $('#div_alert').showAlert({message: '{{Échec de l\'appairage TVRemote pour}} ' + deviceName + ' : ' + (_option['message'] || '{{Erreur inconnue}}'), level: 'danger'});
+    var deviceName = _option['friendly_name'] || _option['mac']
+    jeedomUtils.showAlert({ message: '{{Échec de l\'appairage TVRemote pour}} ' + deviceName + ' : ' + (_option['message'] || '{{Erreur inconnue}}'), level: 'danger' })
     // Update status indicator
-    $('#tvremote-pairing-status').removeClass('label-success').addClass('label-danger');
-    $('#tvremote-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
+    var tvremoteStatus = document.getElementById('tvremote-pairing-status')
+    if (tvremoteStatus) {
+      tvremoteStatus.removeClass('label-success').addClass('label-danger')
+      tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+    }
   }
-});
+})
 
-$('body').on('tvremote::scanState', function (_event, _options) {
-  // console.log('[TVRemote] scanState event received:', _options);
+document.body.addEventListener('tvremote::scanState', function(event) {
+  var _options = event.detail || event._options
   
-  if (_options['scanState'] === "scanOn") {
-    // console.log('[TVRemote] Activating scan mode');
-    $.hideAlert();
-    $('.customclass-scanState').attr('data-scanState', 'scanOff');
-    $('.customclass-scanState').removeClass('logoPrimary').addClass('logoSecondary');
-    $('.customicon-scanState').addClass('icon_red');
-    $('.customtext-scanState').text('{{Stop Scan}}');
-    $('#div_alert').showAlert({message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning'});
-  } else if (_options['scanState'] === "scanOff") {
-    // console.log('[TVRemote] Deactivating scan mode');
-    $.hideAlert();
-    $('.customclass-scanState').attr('data-scanState', 'scanOn');
-    $('.customclass-scanState').removeClass('logoSecondary').addClass('logoPrimary');
-    $('.customicon-scanState').removeClass('icon_red');
-    $('.customtext-scanState').text('{{Scan}}');
-    window.location.reload();
+  if (_options['scanState'] === 'scanOn') {
+    jeedomUtils.hideAlert()
+    document.querySelectorAll('.customclass-scanState').forEach(el => {
+      el.setAttribute('data-scanState', 'scanOff')
+      el.removeClass('logoPrimary').addClass('logoSecondary')
+    })
+    document.querySelectorAll('.customicon-scanState').addClass('icon_red')
+    document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Stop Scan}}')
+    jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
+  } else if (_options['scanState'] === 'scanOff') {
+    jeedomUtils.hideAlert()
+    document.querySelectorAll('.customclass-scanState').forEach(el => {
+      el.setAttribute('data-scanState', 'scanOn')
+      el.removeClass('logoSecondary').addClass('logoPrimary')
+    })
+    document.querySelectorAll('.customicon-scanState').removeClass('icon_red')
+    document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Scan}}')
+    window.location.reload()
   }
-});
+})
 
 // Update pairing status badges when configuration changes
-$('.eqLogicAttr[data-l2key="tvremote_paired_status"]').on('change', function() {
-  var status = $(this).val();
-  if (status == 1) {
-    $('#tvremote-pairing-status').removeClass('label-danger').addClass('label-success');
-    $('#tvremote-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
-  } else {
-    $('#tvremote-pairing-status').removeClass('label-success').addClass('label-danger');
-    $('#tvremote-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
-  }
-  $('#tvremote-pairing-status').show();
-});
+document.querySelectorAll('.eqLogicAttr[data-l2key="tvremote_paired_status"]').forEach(function(element) {
+  element.addEventListener('change', function() {
+    var status = this.value
+    var statusElement = document.getElementById('tvremote-pairing-status')
+    if (statusElement) {
+      if (status == 1) {
+        statusElement.removeClass('label-danger').addClass('label-success')
+        statusElement.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+      } else {
+        statusElement.removeClass('label-success').addClass('label-danger')
+        statusElement.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+      }
+      statusElement.seen()
+    }
+  })
+})
 
-$('.eqLogicAttr[data-l2key="adb_paired_status"]').on('change', function() {
-  var status = $(this).val();
-  if (status == 1) {
-    $('#adb-pairing-status').removeClass('label-danger').addClass('label-success');
-    $('#adb-pairing-status').html('<i class="fas fa-check-circle"></i> {{Appairé}}');
-  } else {
-    $('#adb-pairing-status').removeClass('label-success').addClass('label-danger');
-    $('#adb-pairing-status').html('<i class="fas fa-times-circle"></i> {{Non appairé}}');
-  }
-  $('#adb-pairing-status').show();
-});
+document.querySelectorAll('.eqLogicAttr[data-l2key="adb_paired_status"]').forEach(function(element) {
+  element.addEventListener('change', function() {
+    var status = this.value
+    var statusElement = document.getElementById('adb-pairing-status')
+    if (statusElement) {
+      if (status == 1) {
+        statusElement.removeClass('label-danger').addClass('label-success')
+        statusElement.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+      } else {
+        statusElement.removeClass('label-success').addClass('label-danger')
+        statusElement.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+      }
+      statusElement.seen()
+    }
+  })
+})
