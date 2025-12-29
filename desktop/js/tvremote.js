@@ -17,23 +17,23 @@
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
-    var _cmd = { configuration: {} }
+    _cmd = { configuration: {} }
   }
   if (!isset(_cmd.configuration)) {
     _cmd.configuration = {}
   }
 
   // Build HTML using array for better performance
-  var html = [];
+  let html = [];
   html.push('<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">');
   html.push('<option value="adb-shell" selected>{{ADB Shell}}</option>');
   html.push('<option value="refresh-cmd">{{Refresh Cmd}}</option>');
   html.push('<option value="plugin" style="display:none;">{{Plugin}}</option>');
   html.push('</select>');
-  var selCmdType = html.join('');
+  const selCmdType = html.join('');
 
   html = [];
-  html.push('<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">');
+  html.push(`<tr class="cmd" data-cmd_id="${init(_cmd.id)}">`);
   html.push('<td class="hidden-xs"><span class="cmdAttr" data-l1key="id"></span></td>');
   html.push('<td>');
   html.push('<div class="input-group">');
@@ -47,33 +47,36 @@ function addCmdToTable(_cmd) {
   html.push('</td>');
   
   // Calculate initial display conditions
-  var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
-  var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
-  var cmdType = init(_cmd.configuration.cmdType)
-  var isRefreshCmd = cmdType === 'refresh-cmd'
-  var isAdbShellCmd = cmdType === 'adb-shell'
-  var isPluginCmd = cmdType === 'plugin'
+  const cmdType = init(_cmd.configuration.cmdType)
+  const isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
+  const isNewCmd = !isset(_cmd.id) || _cmd.id === ''
+  const isRefreshCmd = cmdType === 'refresh-cmd'
+  const isAdbShellCmd = cmdType === 'adb-shell'
+  const isPluginCmd = cmdType === 'plugin'
   
   // Type Cmd column - show for new commands or custom commands, hide for plugin/global refresh
-  var displayCmdType = (isGlobalRefresh || isPluginCmd) ? 'none' : ((isNewCmd || isAdbShellCmd || isRefreshCmd) ? 'block' : 'none')
+  const displayCmdType = (isGlobalRefresh || isPluginCmd) ? 'none' : ((isNewCmd || isAdbShellCmd || isRefreshCmd) ? 'block' : 'none')
   
   // Type/SubType - hidden for refresh-cmd and global refresh
-  var displayTypeSubType = (isGlobalRefresh || isRefreshCmd) ? 'none' : 'block'
+  const displayTypeSubType = (isGlobalRefresh || isRefreshCmd) ? 'none' : 'block'
   
   // ADB Shell textarea - show ONLY for adb-shell commands
-  var displayAdbCmd = isAdbShellCmd ? 'block' : 'none';
+  const displayAdbCmd = isAdbShellCmd ? 'block' : 'none'
+  
+  // Refresh select - show ONLY for refresh-cmd commands
+  const displayRefreshCmd = isRefreshCmd ? 'block' : 'none'
   
   // Continue building HTML with array
-  html.push('<td><span class="cmdType" style="display:' + displayCmdType + ';" type="' + cmdType + '">' + selCmdType + '</span></td>');
+  html.push(`<td><span class="cmdType" style="display:${displayCmdType};" type="${init(cmdType)}">${selCmdType}</span></td>`);
   html.push('<td>');
-  html.push('<span class="type" style="display:' + displayTypeSubType + ';" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>');
-  html.push('<span class="subType" style="display:' + displayTypeSubType + ';" subType="' + init(_cmd.subType) + '"></span>');
+  html.push(`<span class="type" style="display:${displayTypeSubType};" type="${init(_cmd.type)}">${jeedom.cmd.availableType()}</span>`);
+  html.push(`<span class="subType" style="display:${displayTypeSubType};" subType="${init(_cmd.subType)}"></span>`);
   html.push('</td>');
   
   // Cmd ADB Shell / Refresh column
   html.push('<td>');
-  html.push('<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>');
-  html.push('<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">');
+  html.push(`<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:${displayAdbCmd};"></textarea>`);
+  html.push(`<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:${displayRefreshCmd};margin-top:5px;" title="{{Commande info à rafraîchir}}">`);
   html.push('<option value="">{{Aucune}}</option>');
   html.push('</select>');
   html.push('</td>');
@@ -95,36 +98,60 @@ function addCmdToTable(_cmd) {
   html.push('<i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i></td>');
   html.push('</tr>');
   
-  let newRow = document.createElement('tr')
+  const newRow = document.createElement('tr')
   newRow.innerHTML = html.join('')
   newRow.classList.add('cmd')
   newRow.setAttribute('data-cmd_id', init(_cmd.id))
   document.getElementById('table_cmd').querySelector('tbody').appendChild(newRow)
   
-  jeedom.eqLogic.buildSelectCmd({
-    id: document.querySelector('.eqLogicAttr[data-l1key=id]').jeeValue(),
-    filter: { type: 'info' },
-    error: function (error) {
+  // Cache eqLogic ID to avoid multiple DOM queries
+  const eqLogicId = document.querySelector('.eqLogicAttr[data-l1key=id]').jeeValue()
+  
+  // Single optimized call to get all commands
+  jeedom.eqLogic.getCmd({
+    id: eqLogicId,
+    error: (error) => {
       jeedomUtils.showAlert({ message: error.message, level: 'danger' })
     },
-    success: function (result) {
-      newRow.querySelector('.cmdAttr[data-l1key=value]')?.insertAdjacentHTML('beforeend', result)
-      newRow.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')?.insertAdjacentHTML('beforeend', result)
+    success: (cmds) => {
+      // Filter info commands once
+      const infoCmds = cmds.filter(cmd => cmd.type === 'info')
+      
+      // Build select for "value" field (all info commands)
+      const allInfoOptions = infoCmds.map(cmd => 
+        `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`
+      ).join('')
+      
+      const valueSelect = newRow.querySelector('.cmdAttr[data-l1key=value]')
+      if (valueSelect) valueSelect.insertAdjacentHTML('beforeend', allInfoOptions)
+      
+      // Build select for "cmdToRefresh" field (only ADB shell info commands)
+      const adbShellOptions = infoCmds
+        .filter(cmd => 
+          cmd.configuration && 
+          (cmd.configuration.cmdType === 'adb-shell' || 
+           (cmd.configuration['adb-shell-command'] && cmd.configuration['adb-shell-command'] !== ''))
+        )
+        .map(cmd => 
+          `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`
+        )
+        .join('')
+      
+      const refreshSelect = newRow.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')
+      if (refreshSelect) refreshSelect.insertAdjacentHTML('beforeend', adbShellOptions)
+      
+      // Set values and update display after both selects are populated
       newRow.setJeeValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(newRow, init(_cmd.subType))
       
-      // Global refresh command: hide all custom fields
-      var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
+      // Global refresh command: already handled in initial display, just exit
       if (isGlobalRefresh) {
-        newRow.querySelectorAll('.cmdType, .type, .subType, .cmdAttr[data-l1key=value], .adb-shell-cmd').unseen()
-        newRow.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')?.unseen()
         return
       }
       
       // Auto-detect cmdType for existing commands without explicit configuration
-      var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
-      var cmdTypeSelect = newRow.querySelector('.cmdAttr[data-l2key=cmdType]')
-      if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
+      const cmdTypeSelect = newRow.querySelector('.cmdAttr[data-l2key=cmdType]')
+      if (cmdTypeSelect && (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '')) {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
           cmdTypeSelect.value = 'adb-shell'
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
@@ -136,9 +163,11 @@ function addCmdToTable(_cmd) {
       }
       
       // Trigger change event for detected custom commands
-      var detectedCmdType = cmdTypeSelect.value
-      if (detectedCmdType && detectedCmdType !== 'plugin') {
-        cmdTypeSelect.triggerEvent('change')
+      if (cmdTypeSelect) {
+        const detectedCmdType = cmdTypeSelect.value
+        if (detectedCmdType && detectedCmdType !== 'plugin') {
+          cmdTypeSelect.triggerEvent('change')
+        }
       }
     }
   })
@@ -146,42 +175,50 @@ function addCmdToTable(_cmd) {
 
 
 
-// Handle cmdType change with event delegation
-document.getElementById('table_cmd').addEventListener('change', function(event) {
-  if (!event.target.matches('.cmdAttr[data-l2key=cmdType]')) return
-  
-  var tr = event.target.closest('tr')
-  var cmdType = event.target.value
-  var type = tr.querySelector('.type')
-  var subType = tr.querySelector('.subType')
-  var adbShellCmd = tr.querySelector('.adb-shell-cmd')
-  var cmdToRefresh = tr.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')
-  
-  if (cmdType === 'refresh-cmd') {
-    // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select
-    tr.querySelector('.cmdAttr[data-l1key=type]').value = 'action'
-    tr.querySelector('.cmdAttr[data-l1key=subType]').value = 'other'
-    jeedom.cmd.changeType(tr, 'other');
-    [type, subType, adbShellCmd].forEach(el => { if (el) el.unseen() })
-    cmdToRefresh?.seen()
-  } else if (cmdType === 'adb-shell') {
-    // ADB Shell mode: set action/other for new commands, keep existing type otherwise
-    var isNewCommand = !tr.getAttribute('data-cmd_id') || tr.getAttribute('data-cmd_id') === ''
-    if (isNewCommand) {
-      tr.querySelector('.cmdAttr[data-l1key=type]').value = 'action'
-      tr.querySelector('.cmdAttr[data-l1key=subType]').value = 'other'
-      jeedom.cmd.changeType(tr, 'other')
-    } else {
-      jeedom.cmd.changeType(tr, tr.querySelector('.cmdAttr[data-l1key=subType]').value)
-    }
-    [type, subType, adbShellCmd].forEach(el => { if (el) el.seen() })
-    cmdToRefresh?.unseen()
-  } else {
-    // Plugin/Standard mode: show type/subtype, hide custom fields
-    [type, subType].forEach(el => { if (el) el.seen() });
-    [adbShellCmd, cmdToRefresh].forEach(el => { if (el) el.unseen() })
+// Handle cmdType change with event delegation (only attach once)
+(() => {
+  const tableCmdElement = document.getElementById('table_cmd')
+  if (tableCmdElement && !tableCmdElement._cmdTypeListenerAttached) {
+    tableCmdElement.addEventListener('change', (event) => {
+      if (!event.target.matches('.cmdAttr[data-l2key=cmdType]')) return
+      
+      const tr = event.target.closest('tr')
+      const cmdType = event.target.value
+      const type = tr.querySelector('.type')
+      const subType = tr.querySelector('.subType')
+      const adbShellCmd = tr.querySelector('.adb-shell-cmd')
+      const cmdToRefresh = tr.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')
+      
+      if (cmdType === 'refresh-cmd') {
+        // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select
+        tr.querySelector('.cmdAttr[data-l1key=type]').value = 'action'
+        tr.querySelector('.cmdAttr[data-l1key=subType]').value = 'other'
+        jeedom.cmd.changeType(tr, 'other')
+        ;[type, subType, adbShellCmd].forEach(el => el?.unseen())
+        cmdToRefresh?.seen()
+      } else if (cmdType === 'adb-shell') {
+        // ADB Shell mode: set action/other for new commands, keep existing type otherwise
+        const cmdId = tr.getAttribute('data-cmd_id')
+        const isNewCommand = !cmdId || cmdId === '' || cmdId === 'null' || cmdId === 'undefined'
+        if (isNewCommand) {
+          tr.querySelector('.cmdAttr[data-l1key=type]').value = 'action'
+          tr.querySelector('.cmdAttr[data-l1key=subType]').value = 'other'
+          jeedom.cmd.changeType(tr, 'other')
+        } else {
+          jeedom.cmd.changeType(tr, tr.querySelector('.cmdAttr[data-l1key=subType]').value)
+        }
+        ;[type, subType, adbShellCmd].forEach(el => el?.seen())
+        cmdToRefresh?.unseen()
+      } else {
+        // Plugin/Standard mode: show type/subtype, hide custom fields
+        ;[type, subType].forEach(el => el?.seen())
+        ;[adbShellCmd, cmdToRefresh].forEach(el => el?.unseen())
+      }
+    })
+    tableCmdElement._cmdTypeListenerAttached = true
   }
-})
+})()
+
 
 function printEqLogic(_eqLogic) {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
