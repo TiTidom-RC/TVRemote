@@ -64,8 +64,13 @@ function addCmdToTable(_cmd) {
   tr += '<span class="type" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
   tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
+  
+  // Cmd ADB Shell / Refresh column - show textarea only if adb-shell-command exists
+  var hasAdbCmd = isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== ''
+  var displayAdbCmd = hasAdbCmd ? 'block' : 'none'
+  
   tr += '<td>'
-  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}"></textarea>'
+  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>'
   tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">'
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
@@ -106,15 +111,12 @@ function addCmdToTable(_cmd) {
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
       
-      // Force hide adb fields by default (in case jeedom.cmd.changeType shows them)
-      tr.find('.adb-shell-cmd').hide()
-      tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-      
       // Auto-detect cmdType based on configuration
       if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
           tr.find('.cmdType').show()
+          tr.find('.adb-shell-cmd').show()
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh-cmd')
           tr.find('.cmdType').show()
