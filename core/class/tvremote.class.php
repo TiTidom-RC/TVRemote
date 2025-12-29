@@ -443,9 +443,16 @@ class tvremote extends eqLogic {
         foreach(self::byType('tvremote') as $eqLogic) {
             if ($eqLogic->getIsEnable()) {
                 $eqLogic->enableTVRemoteToDaemon();
+                
+                // Also enable ADB if use_adb option is enabled
+                $use_adb = $eqLogic->getConfiguration('use_adb', 0);
+                if ($use_adb == 1) {
+                    $eqLogic->enableADBToDaemon();
+                }
             }
             else {
                 $eqLogic->disableTVRemoteToDaemon();
+                $eqLogic->disableADBToDaemon();
             }   
         }
     }
@@ -465,6 +472,19 @@ class tvremote extends eqLogic {
 
     }
 
+    public function enableADBToDaemon()
+    {
+        if ($this->getLogicalId() !== '') {
+            $value_adb = array(
+                'cmd' => 'addtvremote_adb',
+                'mac' => $this->getLogicalId(),
+                'host' => $this->getConfiguration('host'),
+                'friendly_name' => $this->getConfiguration('friendly_name')
+            );
+            self::sendToDaemon($value_adb);
+        }
+    }
+
     public function disableTVRemoteToDaemon()
     {
         if ($this->getLogicalId() !== '') {
@@ -476,6 +496,19 @@ class tvremote extends eqLogic {
                 'friendly_name' => $this->getConfiguration('friendly_name')
             );
             self::sendToDaemon($value);
+        }
+    }
+
+    public function disableADBToDaemon()
+    {
+        if ($this->getLogicalId() !== '') {
+            $value_adb = array(
+                'cmd' => 'removetvremote_adb',
+                'mac' => $this->getLogicalId(),
+                'host' => $this->getConfiguration('host'),
+                'friendly_name' => $this->getConfiguration('friendly_name')
+            );
+            self::sendToDaemon($value_adb);
         }
     }
 
@@ -1812,14 +1845,24 @@ class tvremote extends eqLogic {
 
         if ($this->getIsEnable()) {
             $this->enableTVRemoteToDaemon();
+            
+            // Manage ADB based on use_adb option
+            $use_adb = $this->getConfiguration('use_adb', 0);
+            if ($use_adb == 1) {
+                $this->enableADBToDaemon();
+            } else {
+                $this->disableADBToDaemon();
+            }
         } else {
             $this->disableTVRemoteToDaemon();
+            $this->disableADBToDaemon();
         }
     }
 
     // Fonction exécutée automatiquement avant la suppression de l'équipement
     public function preRemove() {
         $this->disableTVRemoteToDaemon();
+        $this->disableADBToDaemon();
     }
 }
 
