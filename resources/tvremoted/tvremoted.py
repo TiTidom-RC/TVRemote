@@ -14,7 +14,6 @@ import functools
 import time
 import traceback
 import ipaddress
-import shlex
 
 from config import Config
 from jeedom.utils import Utils
@@ -410,7 +409,7 @@ class EQRemoteADB(object):
             self._logger.error("[EQRemoteADB][REMOVE] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
     
-    async def send_command(self, action: str | None = None, value: str | None = None, raw_mode: bool = False) -> None:
+    async def send_command(self, action: str | None = None, value: str | None = None) -> None:
         """Call it to send ADB command to EQRemoteADB"""
         try:
             if self._adb is None or not self._connected:
@@ -420,27 +419,7 @@ class EQRemoteADB(object):
             if action == 'shell':
                 # Execute shell command
                 if value is not None:
-                    # Si raw_mode est activé, ne pas échapper
-                    if raw_mode:
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell RAW Mode] %s", value)
-                    else:
-                        # Détecter si la commande contient des opérateurs shell complexes
-                        shell_operators = ['|', '>', '<', '>>', '<<', '&&', '||', ';', '&', '$(', '`']
-                        has_shell_operators = any(op in value for op in shell_operators)
-                        
-                        if not has_shell_operators:
-                            # Pas d'opérateurs complexes : échapper automatiquement les arguments
-                            parts = value.split(None, 1)  # Séparer commande et arguments
-                            if len(parts) == 2:
-                                cmd, args = parts
-                                # Échapper les arguments avec shlex.quote pour protection automatique
-                                value = f"{cmd} {shlex.quote(args)}"
-                                self._logger.debug("[EQRemoteADB][SendCmd - Shell Auto-Escaped] %s", value)
-                            else:
-                                self._logger.debug("[EQRemoteADB][SendCmd - Shell Simple] %s", value)
-                        else:
-                            # Commande avancée : l'utilisateur sait ce qu'il fait
-                            self._logger.debug("[EQRemoteADB][SendCmd - Shell Advanced] %s", value)
+                    self._logger.debug("[EQRemoteADB][SendCmd - Shell] %s", value)
                     
                     result = await self._adb.shell(value)
                     if len(result) > 500:
@@ -560,7 +539,6 @@ class TVRemoted:
                         
                         # Parse options field if present (format: "key1":"value1","key2":"value2")
                         protocol = None
-                        raw_mode = False
                         if 'options' in message and message['options'] is not None:
                             try:
                                 import json
@@ -568,7 +546,6 @@ class TVRemoted:
                                 protocol = options_json.get('protocol', None)
                                 if protocol:
                                     protocol = protocol.lower()
-                                raw_mode = options_json.get('raw', False)
                                 self._logger.debug('[DAEMON][SOCKET] Options parsed :: %s', str(options_json))
                             except (ValueError, json.JSONDecodeError) as e:
                                 self._logger.warning('[DAEMON][SOCKET] Options mal formatées (Json KO) :: %s', e)
@@ -577,7 +554,7 @@ class TVRemoted:
                         if protocol:
                             if protocol == 'adb':
                                 if message['mac'] in self._config.remote_mac_adb:
-                                    await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'], raw_mode)
+                                    await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'])
                                 else:
                                     self._logger.warning('[DAEMON][SOCKET] ADB device not found :: %s', message['mac'])
                             elif protocol == 'tvremote':
@@ -592,7 +569,7 @@ class TVRemoted:
                             if message['mac'] in self._config.remote_mac:
                                 await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
                             elif message['mac'] in self._config.remote_mac_adb:
-                                await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'], raw_mode)
+                                await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'])
                             else:
                                 self._logger.warning('[DAEMON][SOCKET] Device not found :: %s', message['mac'])
                     else:

@@ -656,7 +656,7 @@ class tvremote extends eqLogic {
             }
 
             # Options
-            $optionKeys = ['protocol', 'raw'];
+            $optionKeys = ['protocol'];
             foreach ($optionKeys as $key) {
                 if (array_key_exists($key, $data)) {
                     $resOptions[$key] = $data[$key];
