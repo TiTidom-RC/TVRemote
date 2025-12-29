@@ -65,7 +65,7 @@ function addCmdToTable(_cmd) {
   tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
   tr += '<td>'
-  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:none;"></textarea>'
+  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}"></textarea>'
   tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">'
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
