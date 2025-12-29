@@ -34,6 +34,7 @@ function addCmdToTable(_cmd) {
   }
 
   var selCmdType = '<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">'
+  selCmdType += '<option value="plugin" style="display:none;">{{Plugin}}</option>'
   selCmdType += '<option value="adb-shell">{{ADB Shell}}</option>'
   selCmdType += '<option value="refresh-cmd">{{Refresh Cmd}}</option>'
   selCmdType += '</select>'
@@ -139,9 +140,9 @@ function addCmdToTable(_cmd) {
         }
       }
       
-      // Trigger cmdType change event if cmdType is set
-      var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
-      if (isset(cmdType) && cmdType !== '') {
+      // Trigger cmdType change event ONLY if cmdType is really configured
+      var hasCmdTypeConfigured = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== ''
+      if (hasCmdTypeConfigured && !isGlobalRefresh) {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       } else {
         // For standard commands without cmdType, show/hide auto-refresh based on type
