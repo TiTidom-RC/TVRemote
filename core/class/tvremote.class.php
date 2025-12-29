@@ -651,6 +651,7 @@ class tvremote extends eqLogic {
             if (array_key_exists('action', $data)) {
                 $resAction = $data['action'];
             }
+            // Value is optional - only add if present
             if (array_key_exists('value', $data)) {
                 $resCmd['message'] = $data['value'];
             }
@@ -663,8 +664,11 @@ class tvremote extends eqLogic {
                 }
             }
 
-            $resCmd['title'] = substr(json_encode($resOptions), 1, -1);
-            log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Title :: ' . $resCmd['title']);
+            // Only add title if there are options
+            if (!empty($resOptions)) {
+                $resCmd['title'] = substr(json_encode($resOptions), 1, -1);
+                log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Title :: ' . $resCmd['title']);
+            }
             return [$resAction, $resCmd];
         }
         catch (Exception $e) {
@@ -1885,11 +1889,18 @@ class tvremoteCmd extends cmd {
             if (in_array($logicalId, ["customcmd"])) {
                 if (isset($_options['message'])) {
                     log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
-                    [$logicalId, $_options] = tvremote::customCmdDecoder($_options['message']);
-                    log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' (Custom Decoded Message) :: ' . json_encode($_options));
+                    $decoded = tvremote::customCmdDecoder($_options['message']);
+                    if ($decoded !== null) {
+                        [$logicalId, $_options] = $decoded;
+                        log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' (Custom Decoded Message) :: ' . json_encode($_options));
+                    } else {
+                        log::add('tvremote', 'error', '[CMD] Échec du décodage de customcmd');
+                        return false;
+                    }
                 }
                 else {
                     log::add('tvremote', 'debug', '[CMD] Il manque un paramètre pour lancer la commande '. $logicalId);
+                    return false;
                 }
             }
             
@@ -1919,11 +1930,20 @@ class tvremoteCmd extends cmd {
                 else {
                     log::add('tvremote', 'debug', '[CMD - Key/App Code] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "appletv", "orangetv", "molotov", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero", "media_next", "media_stop", "media_pause", "media_play", "media_rewind", "media_forward", "media_previous"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "appletv", "orangetv", "molotov", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero", "media_next", "media_stop", "media_pause", "media_play", "media_rewind", "media_forward", "media_previous", "shell"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
-                    tvremote::actionTVRemote($deviceMAC, $logicalId, null, $options);
+                    // Pour shell, le message est requis
+                    if ($logicalId === "shell") {
+                        if (isset($message)) {
+                            tvremote::actionTVRemote($deviceMAC, $logicalId, $message, $options);
+                        } else {
+                            log::add('tvremote', 'debug', '[CMD - Shell] Il manque le paramètre message pour la commande shell');
+                        }
+                    } else {
+                        tvremote::actionTVRemote($deviceMAC, $logicalId, null, $options);
+                    }
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
