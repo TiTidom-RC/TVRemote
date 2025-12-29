@@ -106,6 +106,10 @@ function addCmdToTable(_cmd) {
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
       
+      // Force hide adb fields by default (in case jeedom.cmd.changeType shows them)
+      tr.find('.adb-shell-cmd').hide()
+      tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
+      
       // Auto-detect cmdType based on configuration
       if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
@@ -122,10 +126,7 @@ function addCmdToTable(_cmd) {
       if (isset(cmdType) && cmdType !== '') {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       } else {
-        // For standard commands without cmdType, ensure adb fields are hidden
-        tr.find('.adb-shell-cmd').hide()
-        tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-        // Show/hide auto-refresh based on type
+        // For standard commands without cmdType, show/hide auto-refresh based on type
         if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
           tr.find('.cmdOptionAutoRefresh').show()
         } else {
