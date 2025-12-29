@@ -411,7 +411,7 @@ class EQRemoteADB(object):
             self._logger.error("[EQRemoteADB][REMOVE] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
     
-    async def send_command(self, action: str | None = None, value: str | None = None) -> None:
+    async def send_command(self, action: str | None = None, value: str | None = None, cmd_id: str | None = None) -> None:
         """Call it to send ADB command to EQRemoteADB"""
         try:
             if self._adb is None or not self._connected:
@@ -428,11 +428,14 @@ class EQRemoteADB(object):
                         self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
                     else:
                         self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
-                    # Envoyer le résultat à Jeedom
+                    # Envoyer le résultat à Jeedom avec cmd_id si fourni
                     data = {
                         'adb_shell_output_mac': self._macAddr,
                         'adb_shell_output_value': result
                     }
+                    if cmd_id:
+                        data['adb_shell_output_cmd_id'] = cmd_id
+                        self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
                     await self._jeedom_publisher.send_to_jeedom(data)
             elif action == 'keycode':
                 # Send keycode via ADB
@@ -546,6 +549,7 @@ class TVRemoted:
                                 import json
                                 options_json = json.loads("{" + message['options'] + "}")
                                 protocol = options_json.get('protocol', None)
+                                cmd_id = options_json.get('cmd_id', None)
                                 if protocol:
                                     protocol = protocol.lower()
                                 self._logger.debug('[DAEMON][SOCKET] Options parsed :: %s', str(options_json))
@@ -556,7 +560,7 @@ class TVRemoted:
                         if protocol:
                             if protocol == 'adb':
                                 if message['mac'] in self._config.remote_mac_adb:
-                                    await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'])
+                                    await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'], cmd_id)
                                 else:
                                     self._logger.warning('[DAEMON][SOCKET] ADB device not found :: %s', message['mac'])
                             elif protocol == 'tvremote':

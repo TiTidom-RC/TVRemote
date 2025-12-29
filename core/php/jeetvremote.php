@@ -94,10 +94,22 @@ try {
         log::add('tvremote', 'debug', '[CALLBACK][ADB Shell Output] MAC :: ' . $result['adb_shell_output_mac']);
         $tv_remote = tvremote::byLogicalId($result['adb_shell_output_mac'], 'tvremote');
         if (is_object($tv_remote)) {
-            $cmd = $tv_remote->getCmd('info', 'adb_shell_output');
-            if (is_object($cmd)) {
-                $cmd->event($result['adb_shell_output_value']);
-                log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated for ' . $tv_remote->getName() . ' [:100] :: ' . substr($result['adb_shell_output_value'], 0, 100));
+            // Check if a specific cmd_id is provided (for custom ADB Shell info commands)
+            if (isset($result['adb_shell_output_cmd_id'])) {
+                $cmd = cmd::byId($result['adb_shell_output_cmd_id']);
+                if (is_object($cmd)) {
+                    $tv_remote->checkAndUpdateCmd($cmd, $result['adb_shell_output_value']);
+                    log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated cmd #' . $result['adb_shell_output_cmd_id'] . ' for ' . $tv_remote->getName() . ' [:100] :: ' . substr($result['adb_shell_output_value'], 0, 100));
+                } else {
+                    log::add('tvremote', 'warning', '[CALLBACK][ADB Shell Output] Command not found :: cmd_id=' . $result['adb_shell_output_cmd_id']);
+                }
+            } else {
+                // Fallback to default adb_shell_output command
+                $cmd = $tv_remote->getCmd('info', 'adb_shell_output');
+                if (is_object($cmd)) {
+                    $cmd->event($result['adb_shell_output_value']);
+                    log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated for ' . $tv_remote->getName() . ' [:100] :: ' . substr($result['adb_shell_output_value'], 0, 100));
+                }
             }
         }
     } elseif (isset($result['devicesRT'])) {

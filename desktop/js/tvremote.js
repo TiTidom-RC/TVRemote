@@ -52,6 +52,18 @@ function addCmdToTable(_cmd) {
   tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
   tr += '<td>'
+  tr += '<div class="adb-shell-cmd-container">'
+  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell (optionnel)}}"></textarea>'
+  tr += '<a class="btn btn-xs btn-default btn-toggle-refresh-mode" style="margin-top:3px;"><i class="fas fa-sync"></i> {{Mode Refresh Info}}</a>'
+  tr += '</div>'
+  tr += '<div class="cmd-refresh-container" style="display:none;">'
+  tr += '<select class="cmdAttr form-control input-sm cmd-refresh-select" data-l1key="configuration" data-l2key="cmdToRefresh" title="{{Commande info à rafraîchir}}">'
+  tr += '<option value="">{{Aucune}}</option>'
+  tr += '</select>'
+  tr += '<a class="btn btn-xs btn-default btn-toggle-refresh-mode" style="margin-top:3px;"><i class="fas fa-terminal"></i> {{Mode Commande ADB}}</a>'
+  tr += '</div>'
+  tr += '</td>'
+  tr += '<td>'
   tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/>{{Afficher}}</label> '
   tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized" checked/>{{Historiser}}</label> '
   tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> '
@@ -81,11 +93,43 @@ function addCmdToTable(_cmd) {
     },
     success: function (result) {
       tr.find('.cmdAttr[data-l1key=value]').append(result)
+      tr.find('.cmd-refresh-select').append(result)
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
+      
+      // Show correct container based on configuration
+      if (init(_cmd.configuration.cmdToRefresh)) {
+        tr.find('.adb-shell-cmd-container').hide()
+        tr.find('.cmd-refresh-container').show()
+      } else {
+        tr.find('.adb-shell-cmd-container').show()
+        tr.find('.cmd-refresh-container').hide()
+      }
     }
   })
 }
+
+// Toggle between ADB Shell Command and Refresh Info mode
+$('#table_cmd').on('click', '.btn-toggle-refresh-mode', function() {
+  var tr = $(this).closest('tr')
+  var adbContainer = tr.find('.adb-shell-cmd-container')
+  var refreshContainer = tr.find('.cmd-refresh-container')
+  
+  if (adbContainer.is(':visible')) {
+    // Switch to refresh mode: clear adb command and show refresh select
+    tr.find('.adb-shell-cmd').val('')
+    adbContainer.hide()
+    refreshContainer.show()
+  } else {
+    // Switch to ADB mode: clear refresh select and show adb command
+    tr.find('.cmd-refresh-select').val('')
+    refreshContainer.hide()
+    adbContainer.show()
+  }
+  
+  // Trigger change to save
+  tr.find('.cmdAttr').first().trigger('change')
+})
 
 function printEqLogic(_eqLogic) {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage

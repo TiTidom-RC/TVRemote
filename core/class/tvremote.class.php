@@ -1885,6 +1885,43 @@ class tvremoteCmd extends cmd {
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
         if ( $this->getType() === "action" ) {
+            // Check if this is a custom ADB Shell command
+            $adbShellCommand = $this->getConfiguration('adb-shell-command', '');
+            if (!empty(trim($adbShellCommand))) {
+                log::add('tvremote', 'debug', '[CMD] Custom ADB Shell Command :: ' . $adbShellCommand);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC)) {
+                    // Force protocol to ADB for custom shell commands
+                    $options = '"protocol":"adb"';
+                    tvremote::actionTVRemote($deviceMAC, 'shell', $adbShellCommand, $options);
+                    return true;
+                }
+            }
+            
+            // Check if this is a refresh command for a specific info command
+            $cmdToRefresh = $this->getConfiguration('cmdToRefresh', '');
+            if (!empty($cmdToRefresh)) {
+                log::add('tvremote', 'debug', '[CMD] Refresh specific command :: ' . $cmdToRefresh);
+                $cmd = cmd::byId($cmdToRefresh);
+                if (is_object($cmd)) {
+                    $cmdAdbShellCommand = $cmd->getConfiguration('adb-shell-command', '');
+                    if (!empty(trim($cmdAdbShellCommand))) {
+                        log::add('tvremote', 'debug', '[CMD-REFRESH] Refreshing ADB Shell Info :: ' . $cmd->getName() . ' :: ' . $cmdAdbShellCommand);
+                        $deviceMAC = $eqLogic->getLogicalId();
+                        if (isset($deviceMAC)) {
+                            $options = '"protocol":"adb","cmd_id":"' . $cmd->getId() . '"';
+                            tvremote::actionTVRemote($deviceMAC, 'shell', $cmdAdbShellCommand, $options);
+                            return true;
+                        }
+                    } else {
+                        log::add('tvremote', 'warning', '[CMD-REFRESH] Command to refresh has no ADB Shell command :: ' . $cmd->getName());
+                    }
+                } else {
+                    log::add('tvremote', 'warning', '[CMD-REFRESH] Command to refresh not found :: ' . $cmdToRefresh);
+                }
+                return true;
+            }
+            
             // Gestion de customcmd en premier
             if (in_array($logicalId, ["customcmd"])) {
                 if (isset($_options['message'])) {
@@ -1947,6 +1984,18 @@ class tvremoteCmd extends cmd {
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                // Refresh all info commands with custom ADB Shell commands
+                foreach ($eqLogic->getCmd('info') as $cmd) {
+                    $adbShellCommand = $cmd->getConfiguration('adb-shell-command', '');
+                    if (!empty(trim($adbShellCommand))) {
+                        log::add('tvremote', 'debug', '[CMD-REFRESH] Refreshing ADB Shell Info :: ' . $cmd->getName() . ' :: ' . $adbShellCommand);
+                        $deviceMAC = $eqLogic->getLogicalId();
+                        if (isset($deviceMAC)) {
+                            $options = '"protocol":"adb","cmd_id":"' . $cmd->getId() . '"';
+                            tvremote::actionTVRemote($deviceMAC, 'shell', $adbShellCommand, $options);
+                        }
+                    }
+                }
             }
             else {
                 throw new Exception(__('Commande Action non implémentée actuellement', __FILE__));    
