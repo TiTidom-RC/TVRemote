@@ -68,11 +68,7 @@ function addCmdToTable(_cmd) {
   var displayTypeSubType = (isGlobalRefresh || isRefreshCmd) ? 'none' : 'block'
   
   // Textarea ADB Shell - show ONLY for adb-shell commands
-  // For existing commands: show if cmdType is adb-shell OR if has adb-shell-command (will be auto-detected as adb-shell)
-  // For new commands: hide (will be shown when user selects adb-shell in dropdown)
-  var displayAdbCmd = (isGlobalRefresh || isRefreshCmd) ? 'none' : 
-                      (isAdbShellCmd ? 'block' : 
-                      (hasAdbCmd && !isNewCmd ? 'block' : 'none'))
+  var displayAdbCmd = (isGlobalRefresh || isRefreshCmd || !isAdbShellCmd) ? 'none' : 'block'
   
   tr += '<td>'
   tr += '<span class="cmdType" style="display:' + displayCmdType + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
@@ -138,11 +134,8 @@ function addCmdToTable(_cmd) {
       if (!isGlobalRefresh && (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '')) {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
-          tr.find('.cmdType').show()
-          tr.find('.adb-shell-cmd').show()
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh-cmd')
-          tr.find('.cmdType').show()
         }
       }
       
