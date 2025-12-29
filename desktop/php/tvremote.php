@@ -307,8 +307,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <tr>
                                 <th class="hidden-xs" style="min-width:50px;width:70px;">ID</th>
                                 <th style="min-width:200px;width:350px;">{{Nom}}</th>
+                                <th style="min-width:120px;width:140px;">{{Type Cmd}}</th>
                                 <th style="min-width:100px;width:150px;">{{Type}}</th>
-                                <th style="min-width:200px;width:400px;">{{Commande ADB Shell}}</th>
+                                <th style="min-width:200px;width:400px;">{{Commande ADB Shell / Refresh}}</th>
                                 <th style="min-width:100px;">{{Options}}</th>
                                 <th style="min-width:150px;">{{Etat}}</th>
                                 <th style="min-width:130px;width:150px;">{{Actions}}</th>

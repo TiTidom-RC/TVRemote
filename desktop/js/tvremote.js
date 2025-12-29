@@ -33,7 +33,13 @@ function addCmdToTable(_cmd) {
     _cmd.configuration = {}
   }
 
-  var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
+  var selCmdType = '<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">'
+  selCmdType += '<option value="standard">{{Standard}}</option>'
+  selCmdType += '<option value="adb-shell">{{ADB Shell}}</option>'
+  selCmdType += '<option value="refresh">{{Refresh}}</option>'
+  selCmdType += '</select>'
+
+  var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '>'
   tr += '<td class="hidden-xs">'
   tr += '<span class="cmdAttr" data-l1key="id"></span>'
   tr += '</td>'
@@ -47,23 +53,24 @@ function addCmdToTable(_cmd) {
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
   tr += '</td>'
+  
+  var displayRefresh = init(_cmd.logicalId) != 'refresh' ? 'block' : 'none'
+  
   tr += '<td>'
-  tr += '<span class="type" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
-  tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
+  tr += '<span class="cmdType" style="display:' + displayRefresh + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
   tr += '</td>'
   tr += '<td>'
-  tr += '<div class="adb-shell-cmd-container">'
-  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell (optionnel)}}"></textarea>'
-  tr += '<a class="btn btn-xs btn-default btn-toggle-refresh-mode" style="margin-top:3px;"><i class="fas fa-sync"></i> {{Mode Refresh Info}}</a>'
-  tr += '</div>'
-  tr += '<div class="cmd-refresh-container" style="display:none;">'
-  tr += '<select class="cmdAttr form-control input-sm cmd-refresh-select" data-l1key="configuration" data-l2key="cmdToRefresh" title="{{Commande info à rafraîchir}}">'
+  tr += '<span class="type" style="display:' + displayRefresh + ';" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
+  tr += '<span class="subType" style="display:' + displayRefresh + ';" subType="' + init(_cmd.subType) + '"></span>'
+  tr += '</td>'
+  tr += '<td>'
+  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}"></textarea>'
+  tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">'
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
-  tr += '<a class="btn btn-xs btn-default btn-toggle-refresh-mode" style="margin-top:3px;"><i class="fas fa-terminal"></i> {{Mode Commande ADB}}</a>'
-  tr += '</div>'
   tr += '</td>'
   tr += '<td>'
+  tr += '<div class="cmdOptionAutoRefresh">'
   tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/>{{Afficher}}</label> '
   tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized" checked/>{{Historiser}}</label> '
   tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> '
@@ -71,6 +78,7 @@ function addCmdToTable(_cmd) {
   tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
   tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
   tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
+  tr += '</div>'
   tr += '</div>'
   tr += '</td>'
   tr += '<td>';
@@ -93,42 +101,69 @@ function addCmdToTable(_cmd) {
     },
     success: function (result) {
       tr.find('.cmdAttr[data-l1key=value]').append(result)
-      tr.find('.cmd-refresh-select').append(result)
+      tr.find('.cmdAttr[data-l2key=cmdToRefresh]').append(result)
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
       
-      // Show correct container based on configuration
-      if (init(_cmd.configuration.cmdToRefresh)) {
-        tr.find('.adb-shell-cmd-container').hide()
-        tr.find('.cmd-refresh-container').show()
-      } else {
-        tr.find('.adb-shell-cmd-container').show()
-        tr.find('.cmd-refresh-container').hide()
+      // Trigger cmdType change event to show/hide appropriate fields
+      if (isset(_cmd.configuration.cmdType)) {
+        tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       }
     }
   })
 }
 
-// Toggle between ADB Shell Command and Refresh Info mode
-$('#table_cmd').on('click', '.btn-toggle-refresh-mode', function() {
+// Handle cmdType change
+$('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
   var tr = $(this).closest('tr')
-  var adbContainer = tr.find('.adb-shell-cmd-container')
-  var refreshContainer = tr.find('.cmd-refresh-container')
+  var cmdType = $(this).val()
   
-  if (adbContainer.is(':visible')) {
-    // Switch to refresh mode: clear adb command and show refresh select
-    tr.find('.adb-shell-cmd').val('')
-    adbContainer.hide()
-    refreshContainer.show()
+  if (cmdType === 'refresh') {
+    // Refresh mode: force action type, hide type/subtype, show cmdToRefresh select, hide adb command
+    tr.find('.cmdAttr[data-l1key=type]').val('action').trigger('change')
+    tr.find('.type').hide()
+    tr.find('.subType').hide()
+    tr.find('.cmdOptionAutoRefresh').hide()
+    tr.find('.adb-shell-cmd').hide()
+    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').show()
+  } else if (cmdType === 'adb-shell') {
+    // ADB Shell mode: show type/subtype, show adb command, hide cmdToRefresh
+    tr.find('.type').show()
+    tr.find('.subType').show()
+    tr.find('.adb-shell-cmd').show()
+    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
+    // Show/hide auto-refresh based on type
+    if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
+      tr.find('.cmdOptionAutoRefresh').show()
+    } else {
+      tr.find('.cmdOptionAutoRefresh').hide()
+    }
   } else {
-    // Switch to ADB mode: clear refresh select and show adb command
-    tr.find('.cmd-refresh-select').val('')
-    refreshContainer.hide()
-    adbContainer.show()
+    // Standard mode: show type/subtype, hide both adb command and cmdToRefresh
+    tr.find('.type').show()
+    tr.find('.subType').show()
+    tr.find('.adb-shell-cmd').hide()
+    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
+    // Show/hide auto-refresh based on type
+    if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
+      tr.find('.cmdOptionAutoRefresh').show()
+    } else {
+      tr.find('.cmdOptionAutoRefresh').hide()
+    }
   }
+})
+
+// Handle type change to show/hide auto-refresh option
+$('#table_cmd').on('change', '.cmdAttr[data-l1key=type]', function() {
+  var tr = $(this).closest('tr')
+  var type = $(this).val()
+  var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
   
-  // Trigger change to save
-  tr.find('.cmdAttr').first().trigger('change')
+  if (type === 'info' && cmdType !== 'refresh') {
+    tr.find('.cmdOptionAutoRefresh').show()
+  } else {
+    tr.find('.cmdOptionAutoRefresh').hide()
+  }
 })
 
 function printEqLogic(_eqLogic) {
