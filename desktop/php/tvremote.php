@@ -17,7 +17,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 <!-- Boutons de gestion du plugin -->
                 <div class="eqLogicThumbnailContainer">
                     <?php
-                    if (config::byKey('scanState', 'tvremote', '0') == "scanOn") {
+                    if (config::byKey('scanState', 'tvremote', '0') === "scanOn") {
                     ?>
                         <div class="cursor eqLogicAction logoSecondary customclass-scanState" data-scanState="scanOff" data-action="scan">
                             <i class="fas fa-search-plus icon_red customicon-scanState"></i>
@@ -215,18 +215,81 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
                                 </div>
                             </div>
-                            <legend><i class="fas fa-play-circle"></i> {{Procédure Appairage TV}}</legend>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">{{(Re)Lancer Apparairage}}</label>
-                                <div class="col-lg-2">
-                                    <a class="btn btn-success customclass-beginpairing"><i class="fas fa-play-circle"></i> {{Appairage}}</a>
+                            <legend><i class="fas fa-link"></i> {{TVRemote}}</legend>
+                            <div id="tvremote-pairing-section">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure d'Appairage}}</strong>
+                                    <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
+                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
+                                        <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
+                                        <li>{{Un code apparaît sur votre TV (Ex: A2C10E)}}</li>
+                                        <li>{{Entrez ce code dans le champ Code et cliquez sur Envoyer}}</li>
+                                    </ol>
+                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
+                                        {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Statut}}</label>
+                                    <div class="col-lg-3">
+                                        <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="tvremote_paired_status" />
+                                        <span class="label label-danger" id="tvremote-pairing-status" style="display:none;">
+                                            <i class="fas fa-times-circle"></i> {{Non appairé}}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Action}}</label>
+                                    <div class="col-lg-2">
+                                        <a class="btn btn-success customclass-beginpairing"><i class="fas fa-play-circle"></i> {{Appairer}}</a>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Code}}</label>
+                                    <div class="input-group col-lg-3">
+                                        <input type="text" class="form-control roundedLeft" placeholder="A2C10E" id="pairCode" />
+                                        <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-paper-plane"></i> {{Envoyer}}</a></span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">{{Code Appairage}}</label>
-                                <div class="input-group col-lg-3">
-                                    <input type="text" class="form-control roundedLeft" placeholder="A2C10E" id="pairCode" />
-                                    <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-play-circle"></i> {{Envoyer}}</a></span>
+                            <legend><i class="fas fa-link"></i> {{ADB}}</legend>
+                            <div id="adb-pairing-section">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Utiliser ADB}}
+                                        <sup><i class="fas fa-question-circle tooltips" title="{{Activer pour utiliser le protocole ADB avec cet équipement}}"></i></sup>
+                                    </label>
+                                    <div class="col-sm-6">
+                                        <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="use_adb" />{{Activer ADB}}</label>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>{{Activation ADB sur la TV}}</strong>
+                                    <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
+                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
+                                        <li>{{Paramètres → À propos → Build (Appuyer 7 fois)}}</li>
+                                        <li>{{Options développeur → Débogage USB (Activer)}}</li>
+                                        <li>{{Options développeur → Débogage réseau (Activer, si disponible)}}</li>
+                                    </ol>
+                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
+                                        {{La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Statut}}</label>
+                                    <div class="col-lg-3">
+                                        <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_paired_status" />
+                                        <span class="label label-danger" id="adb-pairing-status" style="display:none;">
+                                            <i class="fas fa-times-circle"></i> {{Non appairé}}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Action}}</label>
+                                    <div class="col-lg-2">
+                                        <a class="btn btn-success customclass-beginpairingadb"><i class="fas fa-link"></i> {{Appairer}}</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -244,7 +307,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <tr>
                                 <th class="hidden-xs" style="min-width:50px;width:70px;">ID</th>
                                 <th style="min-width:200px;width:350px;">{{Nom}}</th>
+                                <th style="min-width:120px;width:140px;">{{Type Cmd}}</th>
                                 <th style="min-width:100px;width:150px;">{{Type}}</th>
+                                <th style="min-width:200px;width:400px;">{{Cmd ADB Shell / Refresh}}</th>
                                 <th style="min-width:100px;">{{Options}}</th>
                                 <th style="min-width:150px;">{{Etat}}</th>
                                 <th style="min-width:130px;width:150px;">{{Actions}}</th>

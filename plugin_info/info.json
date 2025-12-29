@@ -1,19 +1,19 @@
 {
 	"id": "tvremote",
 	"name": "TV Remote",
-	"pluginVersion": "1.2.1",
+	"pluginVersion": "1.3.1",
 	"description": {
-		"fr_FR": "Plugin pour contrôler les équipements Android de type Télévision (Sony, Nvidia Shield, Freebox TV, etc...) implémentant le service de télécommande Google. Il permet de contrôler les différentes fonctions de sa télévision (power, volume, entrées HDMI, lancement d'applications, chaînes TV, navigation dans l'interface, etc...)",
-		"en_US": "Plugin to control Android TV devices (Sony, Nvidia Shield, Freebox TV, etc...) implementing the Google remote control service. It allows you to control various functions of your TV (power, volume, HDMI inputs, launching applications, TV channels, navigating the interface, etc...)",
-		"es_ES": "Plugin para controlar dispositivos Android TV (Sony, Nvidia Shield, Freebox TV, etc.) que implementan el servicio de control remoto de Google. Permite controlar las distintas funciones del televisor (encendido, volumen, entradas HDMI, inicio de aplicaciones, canales de TV, navegación por la interfaz, etc.)",
-		"de_DE": "Plugin zur Steuerung von Android-Geräten vom Typ Fernseher (Sony, Nvidia Shield, Freebox TV, usw.), die den Google-Fernbedienungsdienst implementieren. Damit kann man die verschiedenen Funktionen seines Fernsehers steuern (Power, Lautstärke, HDMI-Eingänge, Starten von Apps, TV-Kanälen, Navigation durch die Benutzeroberfläche, usw.)",
-		"it_IT": "Plugin per il controllo di dispositivi Android TV (Sony, Nvidia Shield, Freebox TV, ecc.) che implementa il servizio di controllo remoto di Google. Consente di controllare le varie funzioni del televisore (accensione, volume, ingressi HDMI, avvio di applicazioni, canali TV, navigazione nell'interfaccia, ecc.)",
-		"pt_PT": "Plugin para controlar os dispositivos Android TV (Sony, Nvidia Shield, Freebox TV, etc.) que implementam o serviço de telecomando Google. Permite-lhe controlar as diferentes funções do seu televisor (potência, volume, entradas HDMI, lançamento de aplicações, canais de TV, navegação na interface, etc.)"
+		"fr_FR": "Plugin pour contrôler les équipements Android de type Télévision (Sony, Nvidia Shield, Freebox TV, etc...) via le service de télécommande Google (TVRemote) ou via ADB. Il permet de contrôler les différentes fonctions de sa télévision (power, volume, entrées HDMI, lancement d'applications, chaînes TV, navigation dans l'interface, etc...)",
+		"en_US": "Plugin to control Android TV devices (Sony, Nvidia Shield, Freebox TV, etc...) via Google remote control service (TVRemote) or via ADB. It allows you to control various functions of your TV (power, volume, HDMI inputs, launching applications, TV channels, navigating the interface, etc...)",
+		"es_ES": "Plugin para controlar dispositivos Android TV (Sony, Nvidia Shield, Freebox TV, etc.) a través del servicio de control remoto de Google (TVRemote) o a través de ADB. Permite controlar las distintas funciones del televisor (encendido, volumen, entradas HDMI, inicio de aplicaciones, canales de TV, navegación por la interfaz, etc.)",
+		"de_DE": "Plugin zur Steuerung von Android-Geräten vom Typ Fernseher (Sony, Nvidia Shield, Freebox TV, usw.) über den Google-Fernbedienungsdienst (TVRemote) oder über ADB. Damit kann man die verschiedenen Funktionen seines Fernsehers steuern (Power, Lautstärke, HDMI-Eingänge, Starten von Apps, TV-Kanälen, Navigation durch die Benutzeroberfläche, usw.)",
+		"it_IT": "Plugin per il controllo di dispositivi Android TV (Sony, Nvidia Shield, Freebox TV, ecc.) tramite il servizio di controllo remoto di Google (TVRemote) o tramite ADB. Consente di controllare le varie funzioni del televisore (accensione, volume, ingressi HDMI, avvio di applicazioni, canali TV, navigazione nell'interfaccia, ecc.)",
+		"pt_PT": "Plugin para controlar os dispositivos Android TV (Sony, Nvidia Shield, Freebox TV, etc.) através do serviço de telecomando Google (TVRemote) ou através do ADB. Permite-lhe controlar as diferentes funções do seu televisor (potência, volume, entradas HDMI, lançamento de aplicações, canais de TV, navegação na interface, etc.)"
 	},
-	"utilization": "Scannez les équipemments de type Android TV présents sur votre réseau (vos équipements doivent être connectés sur votre réseau en filaire ou WiFi, avoir une IP, et que le service google.remotetv soit implémenté dans votre version de Google TV), lancez la procédure d'appairage pour ensuite contrôler ces équipements à partir de Jeedom.",
+	"utilization": "Scannez les équipements de type Android TV présents sur votre réseau (vos équipements doivent être connectés sur votre réseau en filaire ou WiFi, avoir une IP). Lancez la procédure d'appairage TVRemote (si le service google.remotetv est implémenté) et/ou la procédure d'appairage ADB (si le débogage ADB est activé) pour ensuite contrôler ces équipements à partir de Jeedom. Les deux protocoles peuvent être utilisés simultanément selon les besoins.",
 	"licence": "AGPL",
 	"author": "TiTidom",
-	"require": "4.2.0",
+	"require": "4.4.2",
 	"category": "multimedia",
 	"hasDependency": true,
 	"hasOwnDeamon": true,

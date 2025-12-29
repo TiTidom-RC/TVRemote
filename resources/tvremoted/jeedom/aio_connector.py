@@ -2,25 +2,25 @@ import logging
 import json
 import asyncio
 from typing import Callable, Awaitable
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 import aiohttp
 
 
 class Listener():
-    """This class allow to create an asyncio task that will open a socket server and listen to it until task is canceled. `on_message` call_back will be call with the message as a list as argument"""
+    """This class allow to create an asyncio task that will open a socket server and listen to it until task is canceled. `on_message` call_back will be call with the message as a dict as argument"""
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
             cls.instance = super().__new__(cls)
         return cls.instance
 
-    def __init__(self, socket_host: str, socket_port: int, on_message: Callable[[list], Awaitable[None]]) -> None:
+    def __init__(self, socket_host: str, socket_port: int, on_message: Callable[[dict], Awaitable[None]]) -> None:
         self._socket_host = socket_host
         self._socket_port = socket_port
         self._on_message = on_message
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
-    def create_listen_task(socket_host: str, socket_port: int, on_message: Callable[[list], Awaitable[None]]):
+    def create_listen_task(socket_host: str, socket_port: int, on_message: Callable[[dict], Awaitable[None]]):
         """ Helper function to create the listen task"""
         listener = Listener(socket_host, socket_port, on_message)
         return asyncio.create_task(listener.listen())
@@ -129,10 +129,10 @@ class Publisher():
         else:
             self.__changes[key] = value
 
-    async def __merge_dict(self, dic1: dict, dic2: dict):
+    async def __merge_dict(self, dic1: dict | MutableMapping, dic2: dict | Mapping) -> None:
         for key, val2 in dic2.items():
             val1 = dic1.get(key)  # returns None if v1 has no value for this key
-            if isinstance(val1, Mapping) and isinstance(val2, Mapping):
+            if isinstance(val1, MutableMapping) and isinstance(val2, Mapping):
                 await self.__merge_dict(val1, val2)
             else:
                 dic1[key] = val2

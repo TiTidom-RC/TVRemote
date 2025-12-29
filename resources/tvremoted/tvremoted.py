@@ -1,7 +1,11 @@
 import datetime
 import logging
 import argparse
-import resource
+try:
+    import resource
+    HAS_RESOURCE = True
+except ImportError:
+    HAS_RESOURCE = False
 import sys
 import os
 import signal
@@ -27,9 +31,19 @@ except ImportError as e:
 
 # Import pour AndroidTVRemote2
 try:
-    from androidtvremote2 import AndroidTVRemote, CannotConnect, ConnectionClosed, InvalidAuth
+    from androidtvremote2 import AndroidTVRemote, CannotConnect, ConnectionClosed, InvalidAuth, VolumeInfo
 except ImportError as e: 
     print("[DAEMON][IMPORT] Exception Error: importing module AndroidTVRemote2 ::", e)
+    sys.exit(1)
+
+# Import pour ADB Shell
+try:
+    from adb_shell.adb_device_async import AdbDeviceTcpAsync
+    from adb_shell.auth.sign_pythonrsa import PythonRSASigner
+    from adb_shell.auth.keygen import keygen
+    from adb_shell.exceptions import TcpTimeoutException, InvalidResponseError, DeviceAuthError
+except ImportError as e: 
+    print("[DAEMON][IMPORT] Exception Error: importing module adb_shell ::", e)
     sys.exit(1)
           
 class EQRemote(object):
@@ -45,7 +59,7 @@ class EQRemote(object):
         self._jeedom_publisher = _jeedom_publisher
         self._loop = asyncio.get_running_loop()
 
-    async def main(self):
+    async def main(self) -> None:
         """
         The is the entry point of your class EQRemote.
         You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
@@ -102,7 +116,7 @@ class EQRemote(object):
                 currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")    
                 
                 _isOn = 1 if self._remote.is_on else 0
-                if all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
+                if self._remote.volume_info is not None and all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
                     _volume_level = self._remote.volume_info['level']
                     _volume_muted = 1 if self._remote.volume_info['muted'] else 0
                     _volume_max = self._remote.volume_info['max']
@@ -194,7 +208,7 @@ class EQRemote(object):
                     self._logger.error('[EQRemote][Current_App] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
 
-            def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
+            def volume_info_updated(volume_info: VolumeInfo) -> None:
                 self._logger.info("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
                 try:
                     # UpdateLastTime
@@ -226,20 +240,25 @@ class EQRemote(object):
             self._remote.add_volume_info_updated_callback(volume_info_updated)
         
         except asyncio.CancelledError:
-            self._logger.debug("[EQRemote] Stop Main")
+            self._logger.debug("[EQRemote] Stop Main for device %s (%s)", self._macAddr, self._host)
         except Exception as e: 
             self._logger.error("[EQRemote][MAIN] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
         
-    async def remove(self):
+    async def remove(self) -> None:
         """Call it to disconnect from a EQRemote"""
-        self._remote.disconnect()
+        self._logger.debug("[EQRemote] Removing device %s (%s)", self._macAddr, self._host)
+        if self._remote is not None:
+            self._remote.disconnect()
         await asyncio.sleep(1)
         self._remote = None
     
-    async def send_command(self, action: str = None, value: str = None) -> None:
+    async def send_command(self, action: str | None = None, value: str | None = None) -> None:
         """Call it to send command to EQRemote"""
         try:
+            if self._remote is None:
+                self._logger.error("[EQRemote][SendCommand] Remote is None")
+                return
             if action in ('keycode', 'appcode'):
                 self._logger.debug("[EQRemote][SendCmd - Key/App Code] %s :: %s", action, value)
                 if value is not None:
@@ -264,6 +283,188 @@ class EQRemote(object):
         except Exception as e:
             self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
+
+class EQRemoteADB(object):
+    """This is the Remote Device class using ADB"""
+
+    def __init__(self, _mac, _host, _config: Config, _jeedom_publisher) -> None:
+        # Standard Init of class
+        self._config = _config
+        self._adb = None
+        self._macAddr = _mac
+        self._host = _host
+        self._port = 5555
+        self._logger = logging.getLogger(__name__)
+        self._jeedom_publisher = _jeedom_publisher
+        self._loop = asyncio.get_running_loop()
+        self._signer = None
+        self._connected = False
+
+    async def _load_signer(self) -> bool:
+        """Load the ADB signer from key file"""
+        try:
+            if os.path.exists(self._config.adb_key_file):
+                with open(self._config.adb_key_file, 'r') as f:
+                    priv = f.read()
+                with open(self._config.adb_pub_file, 'r') as f:
+                    pub = f.read()
+                self._signer = PythonRSASigner(pub, priv)
+                self._logger.debug("[EQRemoteADB][%s] ADB signer loaded", self._macAddr)
+                return True
+            else:
+                self._logger.error("[EQRemoteADB][%s] ADB key file not found :: %s", self._macAddr, self._config.adb_key_file)
+                return False
+        except Exception as e:
+            self._logger.error("[EQRemoteADB][%s] Error loading ADB signer :: %s", self._macAddr, e)
+            self._logger.debug(traceback.format_exc())
+            return False
+
+    async def main(self) -> None:
+        """
+        The is the entry point of your class EQRemoteADB.
+        You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemoteADB.main())`
+        """
+        try:
+            self._logger.debug("[EQRemoteADB][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
+            
+            # Note: Keys are now managed globally by TVRemoted, not per device
+            # Load signer (keys must already exist)
+            if not await self._load_signer():
+                self._logger.error("[EQRemoteADB][MAIN][%s] Failed to load ADB signer", self._macAddr)
+                return
+            
+            # Create ADB device
+            self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
+            
+            if self._adb is None:
+                self._logger.error("[EQRemoteADB][MAIN][%s] ADB Device is None", self._macAddr)
+                return
+            
+            while not self._config.is_ending:
+                try:
+                    if not self._connected:
+                        self._logger.debug("[EQRemoteADB][MAIN][%s] Connecting to ADB...", self._macAddr)
+                        await self._adb.connect(rsa_keys=[self._signer], auth_timeout_s=self._config.adb_auth_timeout)
+                        self._connected = True
+                        self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB", self._macAddr)
+                        
+                        # Send connection status to Jeedom
+                        currentTime = int(time.time())
+                        currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                        data = {
+                            'mac': self._macAddr,
+                            'online': 1,
+                            'adb_connected': 1,
+                            'updatelasttime': currentTimeStr,
+                            'updatelasttimets': currentTime,
+                            'realtime': 1
+                        }
+                        await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
+                    
+                    # Keep connection alive with polling (ADB has no event callbacks like AndroidTVRemote2)
+                    await asyncio.sleep(5)
+                    
+                except (TcpTimeoutException, InvalidResponseError, DeviceAuthError) as e:
+                    self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
+                    self._connected = False
+                    
+                    # Send disconnection status to Jeedom
+                    currentTime = int(time.time())
+                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    data = {
+                        'mac': self._macAddr,
+                        'online': 0,
+                        'adb_connected': 0,
+                        'updatelasttime': currentTimeStr,
+                        'updatelasttimets': currentTime,
+                        'realtime': 1
+                    }
+                    await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
+                    
+                    # If it's an authorization error, notify that pairing was revoked
+                    if isinstance(e, DeviceAuthError):
+                        self._logger.warning("[EQRemoteADB][MAIN][%s] Authorization revoked - ADB access denied by device", self._macAddr)
+                        revoke_data = {
+                            'mac': self._macAddr,
+                            'adb_auth_revoked': 1
+                        }
+                        await self._jeedom_publisher.send_to_jeedom(revoke_data)
+                    
+                    await asyncio.sleep(10)  # Wait before retry
+                    
+        except asyncio.CancelledError:
+            self._logger.debug("[EQRemoteADB] Stop Main for device %s (%s)", self._macAddr, self._host)
+        except Exception as e: 
+            self._logger.error("[EQRemoteADB][MAIN] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
+    
+    async def remove(self) -> None:
+        """Call it to disconnect from a EQRemoteADB"""
+        self._logger.debug("[EQRemoteADB] Removing device %s (%s)", self._macAddr, self._host)
+        try:
+            if self._adb is not None and self._connected:
+                await self._adb.close()
+                self._connected = False
+            await asyncio.sleep(1)
+            self._adb = None
+        except Exception as e:
+            self._logger.error("[EQRemoteADB][REMOVE] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
+    
+    async def send_command(self, action: str | None = None, value: str | None = None, cmd_id: str | None = None) -> None:
+        """Call it to send ADB command to EQRemoteADB"""
+        try:
+            if self._adb is None or not self._connected:
+                self._logger.error("[EQRemoteADB][SendCommand] ADB not connected")
+                return
+            
+            if action == 'shell':
+                # Execute shell command
+                if value is not None:
+                    self._logger.debug("[EQRemoteADB][SendCmd - Shell] %s", value)
+                    
+                    result = await self._adb.shell(value)
+                    if len(result) > 500:
+                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
+                    else:
+                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
+                    # Envoyer le résultat à Jeedom avec cmd_id si fourni
+                    data = {
+                        'adb_shell_output_mac': self._macAddr,
+                        'adb_shell_output_value': result
+                    }
+                    if cmd_id:
+                        data['adb_shell_output_cmd_id'] = cmd_id
+                        self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
+                    await self._jeedom_publisher.send_to_jeedom(data)
+            elif action == 'keycode':
+                # Send keycode via ADB
+                if value is not None:
+                    self._logger.debug("[EQRemoteADB][SendCmd - Keycode] %s", value)
+                    await self._adb.shell(f"input keyevent {value}")
+            elif action == 'appcode':
+                # Launch app via ADB
+                if value is not None:
+                    self._logger.debug("[EQRemoteADB][SendCmd - Launch App] %s", value)
+                    await self._adb.shell(f"monkey -p {value} 1")
+            elif action in self._config.key_mapping:
+                self._logger.debug("[EQRemoteADB][SendCommand] %s :: %s", action, self._config.key_mapping[action])
+                keycode = self._config.key_mapping[action]
+                if action in ('oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'):
+                    # Launch app
+                    await self._adb.shell(f"monkey -p {keycode} 1")
+                else:
+                    # Send keycode
+                    await self._adb.shell(f"input keyevent {keycode}")
+            else:
+                self._logger.error("[EQRemoteADB][SendCommand] Command Mapping :: %s :: Unknown Key !", action)
+        except (TcpTimeoutException, InvalidResponseError) as e:
+            self._logger.error("[EQRemoteADB][SendCommand] Connection error :: %s", e)
+            self._connected = False
+            self._logger.debug(traceback.format_exc())
+        except Exception as e:
+            self._logger.error("[EQRemoteADB][SendCommand] Exception :: %s", e)
+            self._logger.debug(traceback.format_exc())
             
 class TVRemoted:
     """This is the main class of you daemon"""
@@ -281,7 +482,7 @@ class TVRemoted:
         # self._tvhosts_task = None
         # self._search_task = None
 
-    async def main(self):
+    async def main(self) -> None:
         """
         The is the entry point of your daemon.
         You should start the asyncio loop with this function like this: `asyncio.run(daemon.main())`
@@ -309,22 +510,22 @@ class TVRemoted:
         self._logger.info("[MAIN] Ready")
         
         # Informer Jeedom que le démon est démarré
-        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': '1'})
+        await self._jeedom_publisher.send_to_jeedom({'daemonStarted': 1})
         self._logger.info("[MAINLOOP] DaemonStarted Info :: OK")
         
         # ensure that the loop continues to run until all tasks are completed or canceled, you must list here all tasks previously created
         self._config.tasks = [self._listen_task, self._send_task, self._main_task]
         await asyncio.gather(*self._config.tasks)
         
-    async def __add_signal_handler(self):
+    async def __add_signal_handler(self) -> None:
         """
-        This function register signal handler to interupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
+        This function register signal handler to interrupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
         """
         loop = asyncio.get_running_loop()
         loop.add_signal_handler(signal.SIGINT, functools.partial(self._ask_exit, signal.SIGINT))
         loop.add_signal_handler(signal.SIGTERM, functools.partial(self._ask_exit, signal.SIGTERM))
 
-    async def _on_socket_message(self, message: list):
+    async def _on_socket_message(self, message: dict) -> None:
         """
         This function will be called by the "listen task" once a message is received from Jeedom.
         You must implement the different actions that your daemon can handle.
@@ -338,24 +539,64 @@ class TVRemoted:
                 self._logger.debug('[DAEMON][SOCKET] Action')
                 if 'cmd_action' in message:
                     # Traitement des actions (inclus les CustomCmd)
-                    if (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off', 'power_on', 'power_off', 'back', 'home', 'menu', 'tv', 'channel_up', 'channel_down', 'info', 'settings', 'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4', 'oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero', 'keycode', 'appcode', 'media_next', 'media_stop', 'media_pause', 'media_play', 'media_rewind', 'media_previous', 'media_forward') and 'mac' in message):
+                    if (message['cmd_action'] in ('volumeup', 'volumedown', 'up', 'down', 'left', 'right', 'center', 'mute_on', 'mute_off', 'power_on', 'power_off', 'back', 'home', 'menu', 'tv', 'channel_up', 'channel_down', 'info', 'settings', 'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4', 'oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero', 'keycode', 'appcode', 'shell', 'media_next', 'media_stop', 'media_pause', 'media_play', 'media_rewind', 'media_previous', 'media_forward') and 'mac' in message):
                         self._logger.debug('[DAEMON][SOCKET] Action :: %s @ %s (%s)', message['cmd_action'], message['mac'], message['value'])
-                        if message['mac'] in self._config.remote_mac:
-                            await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
+                        
+                        # Parse options field if present (format: "key1":"value1","key2":"value2")
+                        protocol = None
+                        if 'options' in message and message['options'] is not None:
+                            try:
+                                import json
+                                options_json = json.loads("{" + message['options'] + "}")
+                                protocol = options_json.get('protocol', None)
+                                cmd_id = options_json.get('cmd_id', None)
+                                if protocol:
+                                    protocol = protocol.lower()
+                                self._logger.debug('[DAEMON][SOCKET] Options parsed :: %s', str(options_json))
+                            except (ValueError, json.JSONDecodeError) as e:
+                                self._logger.warning('[DAEMON][SOCKET] Options mal formatées (Json KO) :: %s', e)
+                        
+                        # Check if protocol is explicitly specified via options
+                        if protocol:
+                            if protocol == 'adb':
+                                if message['mac'] in self._config.remote_mac_adb:
+                                    await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'], cmd_id)
+                                else:
+                                    self._logger.warning('[DAEMON][SOCKET] ADB device not found :: %s', message['mac'])
+                            elif protocol == 'tvremote':
+                                if message['mac'] in self._config.remote_mac:
+                                    await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
+                                else:
+                                    self._logger.warning('[DAEMON][SOCKET] TVRemote device not found :: %s', message['mac'])
+                            else:
+                                self._logger.error('[DAEMON][SOCKET] Unknown protocol :: %s', protocol)
+                        else:
+                            # Protocol not specified, use default logic (priority to AndroidTVRemote2)
+                            if message['mac'] in self._config.remote_mac:
+                                await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
+                            elif message['mac'] in self._config.remote_mac_adb:
+                                await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'])
+                            else:
+                                self._logger.warning('[DAEMON][SOCKET] Device not found :: %s', message['mac'])
                     else:
                         self._logger.warning('[DAEMON][SOCKET] Unknown Action :: %s', message['cmd_action'])
             elif message['cmd'] == "scanOn":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn') 
                 self._config.scanmode = True
                 self._config.scanmode_start = int(time.time())
-                await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
+                if self._jeedom_publisher is not None:
+                    await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
             elif message['cmd'] == "scanOff":
                 self._logger.debug('[DAEMON][SOCKET] ScanState = scanOff')
                 self._config.scanmode = False
-                await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
+                if self._jeedom_publisher is not None:
+                    await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
                 self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s / %s', message['mac'], message['host'], message['port'])
                 await self._pairing(message['mac'], message['host'], message['port'])
+            elif message['cmd'] == "sendBeginPairingAdb":
+                self._logger.debug('[DAEMON][SOCKET] Begin ADB Pairing for (Mac :: %s) :: %s', message['mac'], message['host'])
+                await self._pairing_adb(message['mac'], message['host'])
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
@@ -364,13 +605,13 @@ class TVRemoted:
                     self._logger.debug('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
                     if message['host'] not in self._config.known_hosts:
                         self._config.known_hosts.append(message['host'])
-                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to KNOWN Devices :: %s', str(self._config.known_hosts))
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to KNOWN Devices :: %s', str(self._config.known_hosts))
                     if message['friendly_name'] not in self._config.remote_names:
                         self._config.remote_names.append(message['friendly_name'])
-                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote Names :: %s', str(self._config.remote_names))
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote Names :: %s', str(self._config.remote_names))
                     if message['mac'] not in self._config.remote_mac:
                         self._config.remote_mac.append(message['mac'])
-                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote to Remote MAC :: %s', str(self._config.remote_mac))
+                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote MAC :: %s', str(self._config.remote_mac))
                         self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
                         await self._config.remote_devices[message['mac']].main()
             elif message['cmd'] == "removetvremote":
@@ -378,15 +619,45 @@ class TVRemoted:
                     self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
                     if message['host'] in self._config.known_hosts:
                         self._config.known_hosts.remove(message['host'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.known_hosts))
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from KNOWN Devices :: %s', str(self._config.known_hosts))
                     if message['friendly_name'] in self._config.remote_names:
                         self._config.remote_names.remove(message['friendly_name'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from Remote Names :: %s', str(self._config.remote_names))
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from Remote Names :: %s', str(self._config.remote_names))
                     if message['mac'] in self._config.remote_mac:
                         self._config.remote_mac.remove(message['mac'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote from KNOWN Devices :: %s', str(self._config.remote_mac))
+                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from Remote MAC :: %s', str(self._config.remote_mac))
                         await self._config.remote_devices[message['mac']].remove()
                         del self._config.remote_devices[message['mac']]
+            elif message['cmd'] == "addtvremote_adb":
+                if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
+                    self._logger.debug('[DAEMON][SOCKET] Add ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
+                    # Ensure ADB keys exist before adding device
+                    await self.ensure_adb_keys(notify_jeedom=False)
+                    if message['host'] not in self._config.known_hosts_adb:
+                        self._config.known_hosts_adb.append(message['host'])
+                        self._logger.debug('[DAEMON][SOCKET] Add ADB to KNOWN Devices :: %s', str(self._config.known_hosts_adb))
+                    if message['friendly_name'] not in self._config.remote_names_adb:
+                        self._config.remote_names_adb.append(message['friendly_name'])
+                        self._logger.debug('[DAEMON][SOCKET] Add ADB to Remote Names :: %s', str(self._config.remote_names_adb))
+                    if message['mac'] not in self._config.remote_mac_adb:
+                        self._config.remote_mac_adb.append(message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Add ADB to Remote MAC :: %s', str(self._config.remote_mac_adb))
+                        self._config.remote_devices_adb[message['mac']] = EQRemoteADB(message['mac'], message['host'], self._config, self._jeedom_publisher)
+                        await self._config.remote_devices_adb[message['mac']].main()
+            elif message['cmd'] == "removetvremote_adb":
+                if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
+                    self._logger.debug('[DAEMON][SOCKET] Remove ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
+                    if message['host'] in self._config.known_hosts_adb:
+                        self._config.known_hosts_adb.remove(message['host'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove ADB from KNOWN Devices :: %s', str(self._config.known_hosts_adb))
+                    if message['friendly_name'] in self._config.remote_names_adb:
+                        self._config.remote_names_adb.remove(message['friendly_name'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove ADB from Remote Names :: %s', str(self._config.remote_names_adb))
+                    if message['mac'] in self._config.remote_mac_adb:
+                        self._config.remote_mac_adb.remove(message['mac'])
+                        self._logger.debug('[DAEMON][SOCKET] Remove ADB from Remote MAC :: %s', str(self._config.remote_mac_adb))
+                        await self._config.remote_devices_adb[message['mac']].remove()
+                        del self._config.remote_devices_adb[message['mac']]
                         
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
@@ -400,6 +671,10 @@ class TVRemoted:
         
         if self._config.scanmode:
             self._logger.error("[PAIRING] TV ScanMode in Progress. Stop Scan before trying to Pair.")
+            return
+        
+        if _host is None:
+            self._logger.error("[PAIRING] Host is None")
             return
         
         self._config.pairing_code = None
@@ -432,7 +707,19 @@ class TVRemoted:
                         return
                 try:
                     self._logger.debug("[PAIRING][%s] Trying to Pair with Code :: %s", _mac, str(self._config.pairing_code))
-                    return await remote.async_finish_pairing(self._config.pairing_code)
+                    if self._config.pairing_code is not None:
+                        result = await remote.async_finish_pairing(self._config.pairing_code)
+                        if result:
+                            self._logger.info("[PAIRING][%s] Pairing successful", _mac)
+                            # Inform Jeedom about successful pairing
+                            if self._jeedom_publisher is not None:
+                                data = {
+                                    'mac': _mac,
+                                    'tvremote_paired': 1,
+                                    'message': 'TVRemote pairing successful'
+                                }
+                                await self._jeedom_publisher.send_to_jeedom(data)
+                        return result
                 except InvalidAuth as exc:
                     self._logger.error("[PAIRING][%s] Invalid Pairing Code. Try to send another one. Error :: %s", _mac, exc)
                     # TODO : Informer le Plugin du mauvais code de Pairing
@@ -450,6 +737,117 @@ class TVRemoted:
         self._logger.debug("[PAIRING][%s] End Function...", _mac)
         # Libération de la mémoire
         remote = None
+
+    async def ensure_adb_keys(self, notify_jeedom: bool = True) -> bool:
+        """Ensure ADB keys exist, generate them if missing (shared method for all devices)
+        
+        Args:
+            notify_jeedom: Whether to send notification to Jeedom
+            
+        Returns:
+            True if keys were generated, False if they already existed
+        """
+        try:
+            if not os.path.exists(self._config.adb_key_file):
+                self._logger.info("[ADB] Generating ADB keys...")
+                keygen(self._config.adb_key_file)
+                self._logger.info("[ADB] ADB keys generated :: %s", self._config.adb_key_file)
+                
+                # Inform Jeedom that keys were generated
+                if notify_jeedom and self._jeedom_publisher is not None:
+                    data = {
+                        'adb_keys_generated': 1,
+                        'adb_key_file': self._config.adb_key_file,
+                        'adb_pub_file': self._config.adb_pub_file
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
+                return True
+            else:
+                self._logger.debug("[ADB] ADB keys already exist :: %s", self._config.adb_key_file)
+                # Inform Jeedom only if explicitly requested
+                if notify_jeedom and self._jeedom_publisher is not None:
+                    data = {
+                        'adb_keys_exist': 1,
+                        'adb_key_file': self._config.adb_key_file,
+                        'adb_pub_file': self._config.adb_pub_file
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
+                return False
+        except Exception as e:
+            self._logger.error("[ADB] Error generating ADB keys :: %s", e)
+            self._logger.debug(traceback.format_exc())
+            if notify_jeedom and self._jeedom_publisher is not None:
+                await self._jeedom_publisher.send_to_jeedom({'adb_keys_error': str(e)})
+            return False
+
+    async def _pairing_adb(self, _mac=None, _host=None) -> None:
+        """Function to pair with TV using ADB"""
+        
+        if self._config.scanmode:
+            self._logger.error("[PAIRING_ADB] TV ScanMode in Progress. Stop Scan before trying to Pair.")
+            return
+        
+        if _host is None:
+            self._logger.error("[PAIRING_ADB] Host is None")
+            return
+        
+        try:
+            # Ensure keys exist (shared across all devices)
+            await self.ensure_adb_keys(notify_jeedom=False)
+            
+            # Load signer
+            with open(self._config.adb_key_file, 'r') as f:
+                priv = f.read()
+            with open(self._config.adb_pub_file, 'r') as f:
+                pub = f.read()
+            signer = PythonRSASigner(pub, priv)
+            
+            # Create ADB device
+            adb = AdbDeviceTcpAsync(_host, 5555, default_transport_timeout_s=self._config.adb_timeout)
+            
+            self._logger.debug("[PAIRING_ADB][START][%s] Start ADB Pairing...", _mac)
+            
+            try:
+                # Try to connect
+                await adb.connect(rsa_keys=[signer], auth_timeout_s=self._config.adb_auth_timeout)
+                self._logger.info("[PAIRING_ADB][%s] ADB connection successful", _mac)
+                
+                # Inform Jeedom
+                if self._jeedom_publisher is not None:
+                    data = {
+                        'mac': _mac,
+                        'adb_paired': 1,
+                        'message': 'ADB pairing successful'
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
+                
+                # Close connection
+                await adb.close()
+                
+            except DeviceAuthError as e:
+                self._logger.error("[PAIRING_ADB][%s] Device not authorized. Please check TV screen for authorization prompt :: %s", _mac, e)
+                if self._jeedom_publisher is not None:
+                    data = {
+                        'mac': _mac,
+                        'adb_paired': 0,
+                        'message': 'Device not authorized. Please check TV screen for authorization prompt.'
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
+            except (TcpTimeoutException, InvalidResponseError) as e:
+                self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
+                if self._jeedom_publisher is not None:
+                    data = {
+                        'mac': _mac,
+                        'adb_paired': 0,
+                        'message': f'Connection error: {str(e)}'
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(data)
+            
+        except Exception as e:
+            self._logger.error("[PAIRING_ADB][%s] Exception :: %s", _mac, e)
+            self._logger.debug(traceback.format_exc())
+            if self._jeedom_publisher is not None:
+                await self._jeedom_publisher.send_to_jeedom({'adb_pairing_error': str(e), 'mac': _mac})
 
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
@@ -509,7 +907,8 @@ class TVRemoted:
                     'scanmode': 1
                 }
                 # Envoi vers Jeedom
-                await self._jeedom_publisher.add_change('devices::' + data['name'], data)
+                if self._jeedom_publisher is not None:
+                    await self._jeedom_publisher.add_change('devices::' + data['name'], data)
                 
                 # Libération de la mémoire
                 remote = None
@@ -532,7 +931,7 @@ class TVRemoted:
         await zc.async_close()
         self._logger.info("[TVHOSTS] TV Browser :: STOP")
 
-    async def _mainLoop(self, cycle=2.0):
+    async def _mainLoop(self, cycle: float = 2.0) -> None:
         # Main Loop for Daemon
         self._logger.debug("[MAINLOOP] Start MainLoop")
         try:
@@ -545,11 +944,13 @@ class TVRemoted:
                     if (self._config.scanmode and (self._config.scanmode_start + self._config.scanmode_timeout) <= currentTime):
                         self._config.scanmode = False
                         self._logger.info('[MAINLOOP] ScanMode :: END')
-                        await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
+                        if self._jeedom_publisher is not None:
+                            await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})                    
                     # Heartbeat du démon
                     if ((self._config.heartbeat_lasttime + self._config.heartbeat_frequency) <= currentTime):
                         self._logger.info('[MAINLOOP] Heartbeat = 1')
-                        await self._jeedom_publisher.send_to_jeedom({'heartbeat': '1'})
+                        if self._jeedom_publisher is not None:
+                            await self._jeedom_publisher.send_to_jeedom({'heartbeat': 1})
                         self._config.heartbeat_lasttime = currentTime
                         await self._getResourcesUsage()
                     # Scan New TVRemote
@@ -580,9 +981,11 @@ class TVRemoted:
             self._logger.error("[MAINLOOP] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
             
-    async def _getResourcesUsage(self):
+    async def _getResourcesUsage(self) -> None:
+        if not HAS_RESOURCE:
+            return
         if (self._logger.isEnabledFor(logging.INFO)):
-            resourcesUse = resource.getrusage(resource.RUSAGE_SELF)
+            resourcesUse = resource.getrusage(resource.RUSAGE_SELF)  # type: ignore[attr-defined]
             try:
                 uTime = getattr(resourcesUse, 'ru_utime')
                 sTime = getattr(resourcesUse, 'ru_stime')
@@ -597,34 +1000,37 @@ class TVRemoted:
             except Exception:
                 pass
     
-    async def _is_ipv4(self, ip: str):
+    async def _is_ipv4(self, ip: str) -> bool:
         try:
             ipaddress.IPv4Address(ip)
             return True
         except ValueError:
             return False
             
-    def _ask_exit(self, sig):
+    def _ask_exit(self, sig: int) -> None:
         """
         This function will be called in case a signal is received, see `__add_signal_handler`. You don't need to change anything here
         """
         self._logger.info("[ASKEXIT] Signal %i caught, exiting...", sig)
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """
         This function can be called from outside to stop the daemon if needed`
         You need to close your remote connexions and cancel background tasks if any here.
         """
         self._logger.debug('[CLOSE] Cancel all tasks')
         # self._search_task.cancel()  # don't forget to cancel your background task
-        self._main_task.cancel()
-        self._listen_task.cancel()
-        self._send_task.cancel()
+        if self._main_task is not None:
+            self._main_task.cancel()
+        if self._listen_task is not None:
+            self._listen_task.cancel()
+        if self._send_task is not None:
+            self._send_task.cancel()
 
 # ----------------------------------------------------------------------------
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
     parser.add_argument("--pluginversion", help="Plugin Version", type=str)
@@ -637,7 +1043,7 @@ def get_args():
 
     return parser.parse_args()
 
-def shutdown():
+def shutdown() -> None:
     _LOGGER.info("[SHUTDOWN] Shuting down")
     config.is_ending = True
 
@@ -686,8 +1092,11 @@ try:
     asyncio.run(daemon.main())
 except Exception as e:
     exception_type, exception_object, exception_traceback = sys.exc_info()
-    filename = exception_traceback.tb_frame.f_code.co_filename
-    line_number = exception_traceback.tb_lineno
-    _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+    if exception_traceback is not None:
+        filename = exception_traceback.tb_frame.f_code.co_filename
+        line_number = exception_traceback.tb_lineno
+        _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+    else:
+        _LOGGER.error('[DAEMON] Fatal error: %s(%s)', e, exception_type)
     _LOGGER.debug(traceback.format_exc())
 shutdown()
