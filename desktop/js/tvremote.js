@@ -39,7 +39,7 @@ function addCmdToTable(_cmd) {
   selCmdType += '<option value="refresh">{{Refresh}}</option>'
   selCmdType += '</select>'
 
-  var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '>'
+  var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
   tr += '<td class="hidden-xs">'
   tr += '<span class="cmdAttr" data-l1key="id"></span>'
   tr += '</td>'
@@ -107,8 +107,20 @@ function addCmdToTable(_cmd) {
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
       
-      // Trigger cmdType change event only if cmdType is set
-      if (isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== '') {
+      // Auto-detect cmdType based on configuration
+      if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
+        if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
+          tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
+          tr.find('.cmdType').show()
+        } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
+          tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh')
+          tr.find('.cmdType').show()
+        }
+      }
+      
+      // Trigger cmdType change event if cmdType is set
+      var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
+      if (isset(cmdType) && cmdType !== '' && cmdType !== 'standard') {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       } else {
         // For standard commands without cmdType, show/hide auto-refresh based on type
