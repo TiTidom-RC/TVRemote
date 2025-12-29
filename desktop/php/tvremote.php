@@ -259,8 +259,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="col-sm-4 control-label">{{Utiliser ADB}}
                                         <sup><i class="fas fa-question-circle tooltips" title="{{Activer pour utiliser le protocole ADB avec cet équipement}}"></i></sup>
                                     </label>
-                                    <div class="col-sm-2">
-                                        <input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="use_adb" />
+                                    <div class="col-sm-6">
+                                        <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="use_adb" />{{Activer ADB}}</label>
                                     </div>
                                 </div>
                                 <div class="alert alert-info">
