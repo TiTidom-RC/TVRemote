@@ -138,13 +138,22 @@ function addCmdToTable(_cmd) {
       }
       
       // Auto-detect cmdType based on configuration (but not for global refresh)
+      var isNativePluginCmd = false
       if (!isGlobalRefresh && (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '')) {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh-cmd')
+        } else {
+          // Native plugin command - no cmdType configuration
+          isNativePluginCmd = true
         }
-        // Don't set 'plugin' - leave empty for native commands
+      }
+      
+      // Hide Type Cmd and ADB command textarea for native plugin commands
+      if (isNativePluginCmd) {
+        tr.find('.cmdType').hide()
+        tr.find('.adb-shell-cmd').hide()
       }
       
       // Trigger cmdType change event ONLY if cmdType was detected or configured
