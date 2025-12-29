@@ -240,7 +240,7 @@ class EQRemote(object):
             self._remote.add_volume_info_updated_callback(volume_info_updated)
         
         except asyncio.CancelledError:
-            self._logger.debug("[EQRemote] Stop Main")
+            self._logger.debug("[EQRemote] Stop Main for device %s (%s)", self._macAddr, self._host)
         except Exception as e: 
             self._logger.error("[EQRemote][MAIN] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
@@ -392,7 +392,7 @@ class EQRemoteADB(object):
                     await asyncio.sleep(10)  # Wait before retry
                     
         except asyncio.CancelledError:
-            self._logger.debug("[EQRemoteADB] Stop Main")
+            self._logger.debug("[EQRemoteADB] Stop Main for device %s (%s)", self._macAddr, self._host)
         except Exception as e: 
             self._logger.error("[EQRemoteADB][MAIN] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
