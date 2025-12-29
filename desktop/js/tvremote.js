@@ -66,7 +66,7 @@ function addCmdToTable(_cmd) {
   tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
   tr += '<td>'
-  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}"></textarea>'
+  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:none;"></textarea>'
   tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">'
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
@@ -110,6 +110,13 @@ function addCmdToTable(_cmd) {
       // Trigger cmdType change event only if cmdType is set
       if (isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== '') {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
+      } else {
+        // For standard commands without cmdType, show/hide auto-refresh based on type
+        if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
+          tr.find('.cmdOptionAutoRefresh').show()
+        } else {
+          tr.find('.cmdOptionAutoRefresh').hide()
+        }
       }
     }
   })
