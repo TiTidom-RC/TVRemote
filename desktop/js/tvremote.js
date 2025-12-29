@@ -15,6 +15,7 @@
 */
 
 /* Permet la réorganisation des commandes dans l'équipement */
+/* Note: Sortable is now handled natively by Jeedom Core
 $("#table_cmd").sortable({
   axis: "y",
   cursor: "move",
@@ -23,6 +24,7 @@ $("#table_cmd").sortable({
   tolerance: "intersect",
   forcePlaceholderSize: true
 })
+*/
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
