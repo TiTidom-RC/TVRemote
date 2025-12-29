@@ -247,6 +247,7 @@ class EQRemote(object):
         
     async def remove(self) -> None:
         """Call it to disconnect from a EQRemote"""
+        self._logger.debug("[EQRemote] Removing device %s (%s)", self._macAddr, self._host)
         if self._remote is not None:
             self._remote.disconnect()
         await asyncio.sleep(1)
@@ -360,7 +361,7 @@ class EQRemoteADB(object):
                         }
                         await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
                     
-                    # Keep connection alive
+                    # Keep connection alive with polling (ADB has no event callbacks like AndroidTVRemote2)
                     await asyncio.sleep(5)
                     
                 except (TcpTimeoutException, InvalidResponseError, DeviceAuthError) as e:
@@ -399,6 +400,7 @@ class EQRemoteADB(object):
     
     async def remove(self) -> None:
         """Call it to disconnect from a EQRemoteADB"""
+        self._logger.debug("[EQRemoteADB] Removing device %s (%s)", self._macAddr, self._host)
         try:
             if self._adb is not None and self._connected:
                 await self._adb.close()
