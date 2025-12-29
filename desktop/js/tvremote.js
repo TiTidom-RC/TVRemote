@@ -33,84 +33,80 @@ function addCmdToTable(_cmd) {
     _cmd.configuration = {}
   }
 
-  var selCmdType = '<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">'
-  selCmdType += '<option value="adb-shell" selected>{{ADB Shell}}</option>'
-  selCmdType += '<option value="refresh-cmd">{{Refresh Cmd}}</option>'
-  selCmdType += '<option value="plugin" style="display:none;">{{Plugin}}</option>'
-  selCmdType += '</select>'
+  // Build HTML using array for better performance
+  var html = [];
+  html.push('<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">');
+  html.push('<option value="adb-shell" selected>{{ADB Shell}}</option>');
+  html.push('<option value="refresh-cmd">{{Refresh Cmd}}</option>');
+  html.push('<option value="plugin" style="display:none;">{{Plugin}}</option>');
+  html.push('</select>');
+  var selCmdType = html.join('');
 
-  var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
-  tr += '<td class="hidden-xs">'
-  tr += '<span class="cmdAttr" data-l1key="id"></span>'
-  tr += '</td>'
-  tr += '<td>'
-  tr += '<div class="input-group">'
-  tr += '<input class="cmdAttr form-control input-sm roundedLeft" data-l1key="name" placeholder="{{Nom de la commande}}">'
-  tr += '<span class="input-group-btn"><a class="cmdAction btn btn-sm btn-default" data-l1key="chooseIcon" title="{{Choisir une icône}}"><i class="fas fa-icons"></i></a></span>'
-  tr += '<span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>'
-  tr += '</div>'
-  tr += '<select class="cmdAttr form-control input-sm" data-l1key="value" style="display:none;margin-top:5px;" title="{{Commande info liée}}">'
-  tr += '<option value="">{{Aucune}}</option>'
-  tr += '</select>'
-  tr += '</td>'
+  html = [];
+  html.push('<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">');
+  html.push('<td class="hidden-xs"><span class="cmdAttr" data-l1key="id"></span></td>');
+  html.push('<td>');
+  html.push('<div class="input-group">');
+  html.push('<input class="cmdAttr form-control input-sm roundedLeft" data-l1key="name" placeholder="{{Nom de la commande}}">');
+  html.push('<span class="input-group-btn"><a class="cmdAction btn btn-sm btn-default" data-l1key="chooseIcon" title="{{Choisir une icône}}"><i class="fas fa-icons"></i></a></span>');
+  html.push('<span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>');
+  html.push('</div>');
+  html.push('<select class="cmdAttr form-control input-sm" data-l1key="value" style="display:none;margin-top:5px;" title="{{Commande info liée}}">');
+  html.push('<option value="">{{Aucune}}</option>');
+  html.push('</select>');
+  html.push('</td>');
   
-  // Calculate all display conditions once (like SSH-Manager)
+  // Calculate initial display conditions
   var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
   var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
-  var hasCmdType = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== ''
-  var isRefreshCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'refresh-cmd'
-  var isAdbShellCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'adb-shell'
-  var isPluginCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'plugin'
-  var hasAdbCmd = isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== ''
+  var cmdType = init(_cmd.configuration.cmdType)
+  var isRefreshCmd = cmdType === 'refresh-cmd'
+  var isAdbShellCmd = cmdType === 'adb-shell'
+  var isPluginCmd = cmdType === 'plugin'
   
-  // Type Cmd column - show for new commands or custom commands (adb-shell/refresh-cmd), hide for plugin/global refresh
+  // Type Cmd column - show for new commands or custom commands, hide for plugin/global refresh
   var displayCmdType = (isGlobalRefresh || isPluginCmd) ? 'none' : ((isNewCmd || isAdbShellCmd || isRefreshCmd) ? 'block' : 'none')
   
-  // Type/SubType should be hidden for refresh-cmd commands and global refresh command
+  // Type/SubType - hidden for refresh-cmd and global refresh
   var displayTypeSubType = (isGlobalRefresh || isRefreshCmd) ? 'none' : 'block'
   
-  // Textarea ADB Shell - show ONLY for adb-shell commands
-  var displayAdbCmd = (isGlobalRefresh || isRefreshCmd || !isAdbShellCmd) ? 'none' : 'block'
+  // ADB Shell textarea - show ONLY for adb-shell commands
+  var displayAdbCmd = isAdbShellCmd ? 'block' : 'none';
   
-  tr += '<td>'
-  tr += '<span class="cmdType" style="display:' + displayCmdType + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
-  tr += '</td>'
-  tr += '<td>'
-  tr += '<span class="type" style="display:' + displayTypeSubType + ';" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
-  tr += '<span class="subType" style="display:' + displayTypeSubType + ';" subType="' + init(_cmd.subType) + '"></span>'
-  tr += '</td>'
+  // Continue building HTML with array
+  html.push('<td><span class="cmdType" style="display:' + displayCmdType + ';" type="' + cmdType + '">' + selCmdType + '</span></td>');
+  html.push('<td>');
+  html.push('<span class="type" style="display:' + displayTypeSubType + ';" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>');
+  html.push('<span class="subType" style="display:' + displayTypeSubType + ';" subType="' + init(_cmd.subType) + '"></span>');
+  html.push('</td>');
   
   // Cmd ADB Shell / Refresh column
-  tr += '<td>'
-  tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>'
-  tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">'
-  tr += '<option value="">{{Aucune}}</option>'
-  tr += '</select>'
-  tr += '</td>'
-  tr += '<td>'
-  tr += '<div class="cmdOptionAutoRefresh">'
-  tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/>{{Afficher}}</label> '
-  tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized" checked/>{{Historiser}}</label> '
-  tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> '
-  tr += '<div style="margin-top:7px;">'
-  tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
-  tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
-  tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
-  tr += '</div>'
-  tr += '</div>'
-  tr += '</td>'
-  tr += '<td>';
-  tr += '<span class="cmdAttr" data-l1key="htmlstate"></span>';
-  tr += '</td>';
-  tr += '<td>'
+  html.push('<td>');
+  html.push('<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>');
+  html.push('<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">');
+  html.push('<option value="">{{Aucune}}</option>');
+  html.push('</select>');
+  html.push('</td>');
+  html.push('<td><div class="cmdInfoOptions">');
+  html.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible"/>{{Afficher}}</label> ');
+  html.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized"/>{{Historiser}}</label> ');
+  html.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> ');
+  html.push('<div style="margin-top:7px;">');
+  html.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">');
+  html.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">');
+  html.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">');
+  html.push('</div></div></td>');
+  html.push('<td><span class="cmdAttr" data-l1key="htmlstate"></span></td>');
+  html.push('<td>');
   if (is_numeric(_cmd.id)) {
-    tr += '<a class="btn btn-default btn-xs cmdAction" data-action="configure"><i class="fas fa-cogs"></i></a> '
-    tr += '<a class="btn btn-default btn-xs cmdAction" data-action="test"><i class="fas fa-rss"></i> {{Tester}}</a>'
+    html.push('<a class="btn btn-default btn-xs cmdAction" data-action="configure"><i class="fas fa-cogs"></i></a> ');
+    html.push('<a class="btn btn-default btn-xs cmdAction" data-action="test"><i class="fas fa-rss"></i> {{Tester}}</a>');
   }
-  tr += '<i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i></td>'
-  tr += '</tr>'
-  $('#table_cmd tbody').append(tr)
-  var tr = $('#table_cmd tbody tr').last()
+  html.push('<i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i></td>');
+  html.push('</tr>');
+  
+  $('#table_cmd tbody').append(html.join(''));
+  var $tr = $('#table_cmd tbody tr').last();
   jeedom.eqLogic.buildSelectCmd({
     id: $('.eqLogicAttr[data-l1key=id]').value(),
     filter: { type: 'info' },
@@ -118,122 +114,101 @@ function addCmdToTable(_cmd) {
       $('#div_alert').showAlert({ message: error.message, level: 'danger' })
     },
     success: function (result) {
-      tr.find('.cmdAttr[data-l1key=value]').append(result)
-      tr.find('.cmdAttr[data-l2key=cmdToRefresh]').append(result)
-      tr.setValues(_cmd, '.cmdAttr')
-      jeedom.cmd.changeType(tr, init(_cmd.subType))
+      var $cmdValue = $tr.find('.cmdAttr[data-l1key=value]');
+      var $cmdToRefresh = $tr.find('.cmdAttr[data-l2key=cmdToRefresh]');
+      var $cmdTypeSelect = $tr.find('.cmdAttr[data-l2key=cmdType]');
       
-      // Check if this is the global refresh command
-      var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
+      $cmdValue.append(result);
+      $cmdToRefresh.append(result);
+      $tr.setValues(_cmd, '.cmdAttr');
+      jeedom.cmd.changeType($tr, init(_cmd.subType));
+      
+      // Global refresh command: hide all custom fields
+      var isGlobalRefresh = init(_cmd.logicalId) === 'refresh';
       if (isGlobalRefresh) {
-        // Hide Type Cmd, Type and SubType for global refresh command
-        tr.find('.cmdType').hide()
-        tr.find('.type').hide()
-        tr.find('.subType').hide()
-        // Hide "Commande info liée" select as it's not needed for global refresh
-        tr.find('.cmdAttr[data-l1key=value]').hide()
-        // Hide ADB Shell textarea and cmdToRefresh select
-        tr.find('.adb-shell-cmd').hide()
-        tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
+        $tr.find('.cmdType, .type, .subType, .cmdAttr[data-l1key=value], .adb-shell-cmd').hide();
+        $cmdToRefresh.hide();
+        return;
       }
       
-      // Auto-detect cmdType based on configuration (but not for global refresh)
-      var isNativePluginCmd = false
-      var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
-      if (!isGlobalRefresh && (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '')) {
+      // Auto-detect cmdType for existing commands without explicit configuration
+      var isNewCmd = !isset(_cmd.id) || _cmd.id === '';
+      if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
-          tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
+          $cmdTypeSelect.val('adb-shell');
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
-          tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh-cmd')
+          $cmdTypeSelect.val('refresh-cmd');
         } else if (!isNewCmd) {
-          // Native plugin command - no cmdType configuration (but not a new command)
-          isNativePluginCmd = true
+          // Native plugin command: hide custom fields
+          $tr.find('.cmdType, .adb-shell-cmd').hide();
         }
       }
       
-      // Hide Type Cmd and ADB command textarea for native plugin commands (not for new commands)
-      if (isNativePluginCmd) {
-        tr.find('.cmdType').hide()
-        tr.find('.adb-shell-cmd').hide()
-      }
-      
-      // Trigger cmdType change event ONLY if cmdType was detected or configured
-      var cmdTypeAfterDetection = tr.find('.cmdAttr[data-l2key=cmdType]').val()
-      if (cmdTypeAfterDetection && cmdTypeAfterDetection !== 'plugin' && !isGlobalRefresh) {
-        tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
+      // Trigger change event for detected custom commands
+      var detectedCmdType = $cmdTypeSelect.val();
+      if (detectedCmdType && detectedCmdType !== 'plugin') {
+        $cmdTypeSelect.trigger('change');
       } else {
-        // For native plugin commands without cmdType, show/hide auto-refresh based on type
-        updateAutoRefreshVisibility(tr)
+        // Standard/native commands: update info options visibility
+        updateInfoOptionsVisibility($tr);
       }
     }
   })
 }
 
-// Helper function to update auto-refresh visibility
-function updateAutoRefreshVisibility(tr) {
-  var type = tr.find('.cmdAttr[data-l1key=type]').val()
-  var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
+// Helper function to update info options visibility
+function updateInfoOptionsVisibility($tr) {
+  var type = $tr.find('.cmdAttr[data-l1key=type]').val();
+  var cmdType = $tr.find('.cmdAttr[data-l2key=cmdType]').val();
   
   if (type === 'info' && cmdType !== 'refresh-cmd') {
-    tr.find('.cmdOptionAutoRefresh').show()
+    $tr.find('.cmdInfoOptions').show();
   } else {
-    tr.find('.cmdOptionAutoRefresh').hide()
+    $tr.find('.cmdInfoOptions').hide();
   }
 }
 
 // Handle cmdType change
 $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
-  var tr = $(this).closest('tr')
-  var cmdType = $(this).val()
+  var $tr = $(this).closest('tr');
+  var cmdType = $(this).val();
+  var $type = $tr.find('.type');
+  var $subType = $tr.find('.subType');
+  var $adbShellCmd = $tr.find('.adb-shell-cmd');
+  var $cmdToRefresh = $tr.find('.cmdAttr[data-l2key=cmdToRefresh]');
+  var $cmdInfoOptions = $tr.find('.cmdInfoOptions');
   
   if (cmdType === 'refresh-cmd') {
-    // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select, hide adb command
-    tr.find('.cmdAttr[data-l1key=type]').val('action')
-    tr.find('.cmdAttr[data-l1key=subType]').val('other')
-    jeedom.cmd.changeType(tr, 'other')
-    tr.find('.type').hide()
-    tr.find('.subType').hide()
-    tr.find('.adb-shell-cmd').hide()
-    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').show()
-    tr.find('.cmdOptionAutoRefresh').hide()
+    // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select
+    $tr.find('.cmdAttr[data-l1key=type]').val('action');
+    $tr.find('.cmdAttr[data-l1key=subType]').val('other');
+    jeedom.cmd.changeType($tr, 'other');
+    $type.add($subType).add($adbShellCmd).add($cmdInfoOptions).hide();
+    $cmdToRefresh.show();
   } else if (cmdType === 'adb-shell') {
-    // ADB Shell mode: suggest action/default type by default for new commands, show type/subtype, show adb command, hide cmdToRefresh
-    // For new commands or when switching to adb-shell, set action/other as default
-    var isNewCommand = !tr.attr('data-cmd_id') || tr.attr('data-cmd_id') === ''
+    // ADB Shell mode: set action/other for new commands, keep existing type otherwise
+    var isNewCommand = !$tr.attr('data-cmd_id') || $tr.attr('data-cmd_id') === '';
     if (isNewCommand) {
-      // Force action/other for new commands
-      tr.find('.cmdAttr[data-l1key=type]').val('action')
-      tr.find('.cmdAttr[data-l1key=subType]').val('other')
-      jeedom.cmd.changeType(tr, 'other')
+      $tr.find('.cmdAttr[data-l1key=type]').val('action');
+      $tr.find('.cmdAttr[data-l1key=subType]').val('other');
+      jeedom.cmd.changeType($tr, 'other');
     } else {
-      // Keep existing type for existing commands and update UI accordingly
-      jeedom.cmd.changeType(tr, tr.find('.cmdAttr[data-l1key=subType]').val())
+      jeedom.cmd.changeType($tr, $tr.find('.cmdAttr[data-l1key=subType]').val());
     }
-    tr.find('.type').show()
-    tr.find('.subType').show()
-    tr.find('.adb-shell-cmd').show()
-    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-    updateAutoRefreshVisibility(tr)
-  } else if (cmdType === 'plugin') {
-    // Plugin mode: show type/subtype, hide both adb command and cmdToRefresh
-    tr.find('.type').show()
-    tr.find('.subType').show()
-    tr.find('.adb-shell-cmd').hide()
-    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-    updateAutoRefreshVisibility(tr)
+    $type.add($subType).add($adbShellCmd).show();
+    $cmdToRefresh.hide();
+    updateInfoOptionsVisibility($tr);
   } else {
-    // Standard mode (should not happen with current setup): show type/subtype, hide both adb command and cmdToRefresh
-    tr.find('.type').show()
-    tr.find('.subType').show()
-    tr.find('.adb-shell-cmd').hide()
-    tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-    updateAutoRefreshVisibility(tr)
+    // Plugin/Standard mode: show type/subtype, hide custom fields
+    $type.add($subType).show();
+    $adbShellCmd.add($cmdToRefresh).hide();
+    updateInfoOptionsVisibility($tr);
   }
-})
+});
 
-// Handle type change to show/hide auto-refresh option
+// Handle type change to show/hide info options
 $('#table_cmd').on('change', '.cmdAttr[data-l1key=type]', function() {
-  updateAutoRefreshVisibility($(this).closest('tr'))
+  updateInfoOptionsVisibility($(this).closest('tr'))
 })
 
 function printEqLogic(_eqLogic) {
