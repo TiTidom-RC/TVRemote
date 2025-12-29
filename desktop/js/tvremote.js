@@ -87,7 +87,7 @@ function addCmdToTable(_cmd) {
   html.push('<option value="">{{Aucune}}</option>');
   html.push('</select>');
   html.push('</td>');
-  html.push('<td><div class="cmdInfoOptions">');
+  html.push('<td>');
   html.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible"/>{{Afficher}}</label> ');
   html.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized"/>{{Historiser}}</label> ');
   html.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> ');
@@ -95,7 +95,7 @@ function addCmdToTable(_cmd) {
   html.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">');
   html.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">');
   html.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">');
-  html.push('</div></div></td>');
+  html.push('</div></td>');
   html.push('<td><span class="cmdAttr" data-l1key="htmlstate"></span></td>');
   html.push('<td>');
   if (is_numeric(_cmd.id)) {
@@ -148,25 +148,12 @@ function addCmdToTable(_cmd) {
       var detectedCmdType = $cmdTypeSelect.val();
       if (detectedCmdType && detectedCmdType !== 'plugin') {
         $cmdTypeSelect.trigger('change');
-      } else {
-        // Standard/native commands: update info options visibility
-        updateInfoOptionsVisibility($tr);
       }
     }
   })
 }
 
-// Helper function to update info options visibility
-function updateInfoOptionsVisibility($tr) {
-  var type = $tr.find('.cmdAttr[data-l1key=type]').val();
-  var cmdType = $tr.find('.cmdAttr[data-l2key=cmdType]').val();
-  
-  if (type === 'info' && cmdType !== 'refresh-cmd') {
-    $tr.find('.cmdInfoOptions').show();
-  } else {
-    $tr.find('.cmdInfoOptions').hide();
-  }
-}
+
 
 // Handle cmdType change
 $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
@@ -176,14 +163,13 @@ $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
   var $subType = $tr.find('.subType');
   var $adbShellCmd = $tr.find('.adb-shell-cmd');
   var $cmdToRefresh = $tr.find('.cmdAttr[data-l2key=cmdToRefresh]');
-  var $cmdInfoOptions = $tr.find('.cmdInfoOptions');
   
   if (cmdType === 'refresh-cmd') {
     // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select
     $tr.find('.cmdAttr[data-l1key=type]').val('action');
     $tr.find('.cmdAttr[data-l1key=subType]').val('other');
     jeedom.cmd.changeType($tr, 'other');
-    $type.add($subType).add($adbShellCmd).add($cmdInfoOptions).hide();
+    $type.add($subType).add($adbShellCmd).hide();
     $cmdToRefresh.show();
   } else if (cmdType === 'adb-shell') {
     // ADB Shell mode: set action/other for new commands, keep existing type otherwise
@@ -197,19 +183,12 @@ $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
     }
     $type.add($subType).add($adbShellCmd).show();
     $cmdToRefresh.hide();
-    updateInfoOptionsVisibility($tr);
   } else {
     // Plugin/Standard mode: show type/subtype, hide custom fields
     $type.add($subType).show();
     $adbShellCmd.add($cmdToRefresh).hide();
-    updateInfoOptionsVisibility($tr);
   }
 });
-
-// Handle type change to show/hide info options
-$('#table_cmd').on('change', '.cmdAttr[data-l1key=type]', function() {
-  updateInfoOptionsVisibility($(this).closest('tr'))
-})
 
 function printEqLogic(_eqLogic) {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
