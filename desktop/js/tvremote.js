@@ -197,7 +197,17 @@ $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
     tr.find('.cmdAttr[data-l2key=cmdToRefresh]').show()
     tr.find('.cmdOptionAutoRefresh').hide()
   } else if (cmdType === 'adb-shell') {
-    // ADB Shell mode: show type/subtype, show adb command, hide cmdToRefresh
+    // ADB Shell mode: suggest action/default type by default for new commands, show type/subtype, show adb command, hide cmdToRefresh
+    // Only set default values if type is not defined (new command)
+    var currentType = tr.find('.cmdAttr[data-l1key=type]').val()
+    if (!currentType) {
+      tr.find('.cmdAttr[data-l1key=type]').val('action')
+      tr.find('.cmdAttr[data-l1key=subType]').val('other')
+      jeedom.cmd.changeType(tr, 'other')
+    } else {
+      // Keep existing type and update UI accordingly
+      jeedom.cmd.changeType(tr, tr.find('.cmdAttr[data-l1key=subType]').val())
+    }
     tr.find('.type').show()
     tr.find('.subType').show()
     tr.find('.adb-shell-cmd').show()
