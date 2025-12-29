@@ -34,9 +34,8 @@ function addCmdToTable(_cmd) {
   }
 
   var selCmdType = '<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">'
-  selCmdType += '<option value="standard">{{Standard}}</option>'
   selCmdType += '<option value="adb-shell">{{ADB Shell}}</option>'
-  selCmdType += '<option value="refresh">{{Refresh}}</option>'
+  selCmdType += '<option value="refresh-cmd">{{Refresh Cmd}}</option>'
   selCmdType += '</select>'
 
   var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
@@ -113,14 +112,14 @@ function addCmdToTable(_cmd) {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
           tr.find('.cmdType').show()
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
-          tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh')
+          tr.find('.cmdAttr[data-l2key=cmdType]').val('refresh-cmd')
           tr.find('.cmdType').show()
         }
       }
       
       // Trigger cmdType change event if cmdType is set
       var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
-      if (isset(cmdType) && cmdType !== '' && cmdType !== 'standard') {
+      if (isset(cmdType) && cmdType !== '') {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       } else {
         // For standard commands without cmdType, show/hide auto-refresh based on type
@@ -139,7 +138,7 @@ $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
   var tr = $(this).closest('tr')
   var cmdType = $(this).val()
   
-  if (cmdType === 'refresh') {
+  if (cmdType === 'refresh-cmd') {
     // Refresh mode: force action type, hide type/subtype, show cmdToRefresh select, hide adb command
     tr.find('.cmdAttr[data-l1key=type]').val('action').trigger('change')
     tr.find('.type').hide()
@@ -180,7 +179,7 @@ $('#table_cmd').on('change', '.cmdAttr[data-l1key=type]', function() {
   var type = $(this).val()
   var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
   
-  if (type === 'info' && cmdType !== 'refresh') {
+  if (type === 'info' && cmdType !== 'refresh-cmd') {
     tr.find('.cmdOptionAutoRefresh').show()
   } else {
     tr.find('.cmdOptionAutoRefresh').hide()
