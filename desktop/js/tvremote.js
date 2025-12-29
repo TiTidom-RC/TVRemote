@@ -132,6 +132,9 @@ function addCmdToTable(_cmd) {
         tr.find('.subType').hide()
         // Hide "Commande info liée" select as it's not needed for global refresh
         tr.find('.cmdAttr[data-l1key=value]').hide()
+        // Hide ADB Shell textarea and cmdToRefresh select
+        tr.find('.adb-shell-cmd').hide()
+        tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
       }
       
       // Auto-detect cmdType based on configuration (but not for global refresh)
