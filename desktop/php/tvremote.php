@@ -215,10 +215,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
                                 </div>
                             </div>
-                            <legend><i class="fas fa-link"></i> {{Appairage TVRemote}}</legend>
+                            <legend><i class="fas fa-link"></i> {{TVRemote}}</legend>
                             <div id="tvremote-pairing-section">
                                 <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure}}</strong>
+                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure d'Appairage}}</strong>
                                     <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
                                     <ol style="margin-top: 10px; margin-bottom: 5px;">
                                         <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
@@ -253,7 +253,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     </div>
                                 </div>
                             </div>
-                            <legend><i class="fas fa-link"></i> {{Appairage ADB}}</legend>
+                            <legend><i class="fas fa-link"></i> {{ADB}}</legend>
                             <div id="adb-pairing-section">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Utiliser ADB}}
