@@ -122,7 +122,10 @@ function addCmdToTable(_cmd) {
       if (isset(cmdType) && cmdType !== '') {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       } else {
-        // For standard commands without cmdType, show/hide auto-refresh based on type
+        // For standard commands without cmdType, ensure adb fields are hidden
+        tr.find('.adb-shell-cmd').hide()
+        tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
+        // Show/hide auto-refresh based on type
         if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
           tr.find('.cmdOptionAutoRefresh').show()
         } else {
