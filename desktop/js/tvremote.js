@@ -87,6 +87,13 @@ function addCmdToTable(_cmd) {
   })
 }
 
+function printEqLogic(_eqLogic) {
+  // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
+  if (typeof _eqLogic.configuration.use_adb === 'undefined') {
+    $('.eqLogicAttr[data-l2key="use_adb"]').prop('checked', false);
+  }
+}
+
 $('.pluginAction[data-action=openLocation]').on('click', function () {
 	window.open($(this).attr("data-location"), "_blank", null);
 });
