@@ -34,9 +34,9 @@ function addCmdToTable(_cmd) {
   }
 
   var selCmdType = '<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">'
-  selCmdType += '<option value="plugin" style="display:none;">{{Plugin}}</option>'
-  selCmdType += '<option value="adb-shell">{{ADB Shell}}</option>'
+  selCmdType += '<option value="adb-shell" selected>{{ADB Shell}}</option>'
   selCmdType += '<option value="refresh-cmd">{{Refresh Cmd}}</option>'
+  selCmdType += '<option value="plugin" style="display:none;">{{Plugin}}</option>'
   selCmdType += '</select>'
 
   var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
