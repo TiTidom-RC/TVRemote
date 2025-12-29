@@ -58,18 +58,24 @@ function addCmdToTable(_cmd) {
   var hasCmdType = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== ''
   var displayCmdType = (isNewCmd || hasCmdType) ? 'block' : 'none'
   
+  // Type/SubType should be hidden for refresh-cmd commands
+  var isRefreshCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'refresh-cmd'
+  var displayTypeSubType = isRefreshCmd ? 'none' : 'block'
+  
   tr += '<td>'
   tr += '<span class="cmdType" style="display:' + displayCmdType + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
   tr += '</td>'
   tr += '<td>'
-  tr += '<span class="type" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
-  tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
+  tr += '<span class="type" style="display:' + displayTypeSubType + ';" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
+  tr += '<span class="subType" style="display:' + displayTypeSubType + ';" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
   
-  // Cmd ADB Shell / Refresh column - show textarea for new commands or if adb-shell-command exists
+  // Cmd ADB Shell / Refresh column
+  // Show textarea for new commands or if adb-shell-command exists, BUT hide for refresh-cmd
   var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
   var hasAdbCmd = isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== ''
-  var displayAdbCmd = (isNewCmd || hasAdbCmd) ? 'block' : 'none'
+  var isRefreshCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'refresh-cmd'
+  var displayAdbCmd = isRefreshCmd ? 'none' : ((isNewCmd || hasAdbCmd) ? 'block' : 'none')
   
   tr += '<td>'
   tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>'
