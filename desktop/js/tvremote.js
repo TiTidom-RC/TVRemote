@@ -147,8 +147,10 @@ $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
   var cmdType = $(this).val()
   
   if (cmdType === 'refresh-cmd') {
-    // Refresh mode: force action type, hide type/subtype, show cmdToRefresh select, hide adb command
-    tr.find('.cmdAttr[data-l1key=type]').val('action').trigger('change')
+    // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select, hide adb command
+    tr.find('.cmdAttr[data-l1key=type]').val('action')
+    tr.find('.cmdAttr[data-l1key=subType]').val('other')
+    jeedom.cmd.changeType(tr, 'other')
     tr.find('.type').hide()
     tr.find('.subType').hide()
     tr.find('.cmdOptionAutoRefresh').hide()
