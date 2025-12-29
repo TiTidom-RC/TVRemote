@@ -53,17 +53,26 @@ function addCmdToTable(_cmd) {
   tr += '</select>'
   tr += '</td>'
   
-  // Hide Type Cmd, Type, SubType for the global 'refresh' command (like SSH-Manager)
+  // Calculate all display conditions once (like SSH-Manager)
   var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
-  
-  // Type Cmd column - show for new commands (no id) or commands with cmdType, but hide for global refresh
   var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
   var hasCmdType = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== ''
+  var isRefreshCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'refresh-cmd'
+  var isAdbShellCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'adb-shell'
+  var hasAdbCmd = isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== ''
+  
+  // Type Cmd column - show for new commands or commands with cmdType, but hide for global refresh
   var displayCmdType = isGlobalRefresh ? 'none' : ((isNewCmd || hasCmdType) ? 'block' : 'none')
   
   // Type/SubType should be hidden for refresh-cmd commands and global refresh command
-  var isRefreshCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'refresh-cmd'
   var displayTypeSubType = (isGlobalRefresh || isRefreshCmd) ? 'none' : 'block'
+  
+  // Textarea ADB Shell - show ONLY for adb-shell commands
+  // For existing commands: show if cmdType is adb-shell OR if has adb-shell-command (will be auto-detected as adb-shell)
+  // For new commands: hide (will be shown when user selects adb-shell in dropdown)
+  var displayAdbCmd = (isGlobalRefresh || isRefreshCmd) ? 'none' : 
+                      (isAdbShellCmd ? 'block' : 
+                      (hasAdbCmd && !isNewCmd ? 'block' : 'none'))
   
   tr += '<td>'
   tr += '<span class="cmdType" style="display:' + displayCmdType + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
@@ -74,13 +83,6 @@ function addCmdToTable(_cmd) {
   tr += '</td>'
   
   // Cmd ADB Shell / Refresh column
-  // Show textarea ONLY for adb-shell commands (new or existing with adb-shell-command)
-  // Hide for: refresh-cmd, global refresh, and standard commands
-  var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
-  var hasAdbCmd = isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== ''
-  var isAdbShellCmd = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType === 'adb-shell'
-  var displayAdbCmd = (isGlobalRefresh || isRefreshCmd) ? 'none' : ((isAdbShellCmd || hasAdbCmd) ? 'block' : 'none')
-  
   tr += '<td>'
   tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>'
   tr += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:none;margin-top:5px;" title="{{Commande info à rafraîchir}}">'
@@ -123,8 +125,17 @@ function addCmdToTable(_cmd) {
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
       
-      // Auto-detect cmdType based on configuration
-      if (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '') {
+      // Check if this is the global refresh command
+      var isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
+      if (isGlobalRefresh) {
+        // Hide Type Cmd, Type and SubType for global refresh command
+        tr.find('.cmdType').hide()
+        tr.find('.type').hide()
+        tr.find('.subType').hide()
+      }
+      
+      // Auto-detect cmdType based on configuration (but not for global refresh)
+      if (!isGlobalRefresh && (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '')) {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
           tr.find('.cmdAttr[data-l2key=cmdType]').val('adb-shell')
           tr.find('.cmdType').show()
@@ -141,14 +152,22 @@ function addCmdToTable(_cmd) {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       } else {
         // For standard commands without cmdType, show/hide auto-refresh based on type
-        if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
-          tr.find('.cmdOptionAutoRefresh').show()
-        } else {
-          tr.find('.cmdOptionAutoRefresh').hide()
-        }
+        updateAutoRefreshVisibility(tr)
       }
     }
   })
+}
+
+// Helper function to update auto-refresh visibility
+function updateAutoRefreshVisibility(tr) {
+  var type = tr.find('.cmdAttr[data-l1key=type]').val()
+  var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
+  
+  if (type === 'info' && cmdType !== 'refresh-cmd') {
+    tr.find('.cmdOptionAutoRefresh').show()
+  } else {
+    tr.find('.cmdOptionAutoRefresh').hide()
+  }
 }
 
 // Handle cmdType change
@@ -163,47 +182,29 @@ $('#table_cmd').on('change', '.cmdAttr[data-l2key=cmdType]', function() {
     jeedom.cmd.changeType(tr, 'other')
     tr.find('.type').hide()
     tr.find('.subType').hide()
-    tr.find('.cmdOptionAutoRefresh').hide()
     tr.find('.adb-shell-cmd').hide()
     tr.find('.cmdAttr[data-l2key=cmdToRefresh]').show()
+    tr.find('.cmdOptionAutoRefresh').hide()
   } else if (cmdType === 'adb-shell') {
     // ADB Shell mode: show type/subtype, show adb command, hide cmdToRefresh
     tr.find('.type').show()
     tr.find('.subType').show()
     tr.find('.adb-shell-cmd').show()
     tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-    // Show/hide auto-refresh based on type
-    if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
-      tr.find('.cmdOptionAutoRefresh').show()
-    } else {
-      tr.find('.cmdOptionAutoRefresh').hide()
-    }
+    updateAutoRefreshVisibility(tr)
   } else {
     // Standard mode: show type/subtype, hide both adb command and cmdToRefresh
     tr.find('.type').show()
     tr.find('.subType').show()
     tr.find('.adb-shell-cmd').hide()
     tr.find('.cmdAttr[data-l2key=cmdToRefresh]').hide()
-    // Show/hide auto-refresh based on type
-    if (tr.find('.cmdAttr[data-l1key=type]').val() === 'info') {
-      tr.find('.cmdOptionAutoRefresh').show()
-    } else {
-      tr.find('.cmdOptionAutoRefresh').hide()
-    }
+    updateAutoRefreshVisibility(tr)
   }
 })
 
 // Handle type change to show/hide auto-refresh option
 $('#table_cmd').on('change', '.cmdAttr[data-l1key=type]', function() {
-  var tr = $(this).closest('tr')
-  var type = $(this).val()
-  var cmdType = tr.find('.cmdAttr[data-l2key=cmdType]').val()
-  
-  if (type === 'info' && cmdType !== 'refresh-cmd') {
-    tr.find('.cmdOptionAutoRefresh').show()
-  } else {
-    tr.find('.cmdOptionAutoRefresh').hide()
-  }
+  updateAutoRefreshVisibility($(this).closest('tr'))
 })
 
 function printEqLogic(_eqLogic) {
