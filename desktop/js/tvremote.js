@@ -54,14 +54,16 @@ function addCmdToTable(_cmd) {
   tr += '</select>'
   tr += '</td>'
   
-  var displayRefresh = init(_cmd.logicalId) != 'refresh' ? 'block' : 'none'
+  // Type Cmd column - show only for adb-shell and refresh commands
+  var hasCmdType = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== ''
+  var displayCmdType = hasCmdType ? 'block' : 'none'
   
   tr += '<td>'
-  tr += '<span class="cmdType" style="display:' + displayRefresh + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
+  tr += '<span class="cmdType" style="display:' + displayCmdType + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
   tr += '</td>'
   tr += '<td>'
-  tr += '<span class="type" style="display:' + displayRefresh + ';" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
-  tr += '<span class="subType" style="display:' + displayRefresh + ';" subType="' + init(_cmd.subType) + '"></span>'
+  tr += '<span class="type" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>'
+  tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
   tr += '<td>'
   tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}"></textarea>'
@@ -105,8 +107,8 @@ function addCmdToTable(_cmd) {
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
       
-      // Trigger cmdType change event to show/hide appropriate fields
-      if (isset(_cmd.configuration.cmdType)) {
+      // Trigger cmdType change event only if cmdType is set
+      if (isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== '') {
         tr.find('.cmdAttr[data-l2key=cmdType]').trigger('change')
       }
     }
