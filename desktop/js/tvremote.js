@@ -53,9 +53,10 @@ function addCmdToTable(_cmd) {
   tr += '</select>'
   tr += '</td>'
   
-  // Type Cmd column - show only for adb-shell and refresh commands
+  // Type Cmd column - show for new commands (no id) or commands with cmdType
+  var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
   var hasCmdType = isset(_cmd.configuration.cmdType) && _cmd.configuration.cmdType !== ''
-  var displayCmdType = hasCmdType ? 'block' : 'none'
+  var displayCmdType = (isNewCmd || hasCmdType) ? 'block' : 'none'
   
   tr += '<td>'
   tr += '<span class="cmdType" style="display:' + displayCmdType + ';" type="' + init(_cmd.configuration.cmdType) + '">' + selCmdType + '</span>'
@@ -65,9 +66,10 @@ function addCmdToTable(_cmd) {
   tr += '<span class="subType" subType="' + init(_cmd.subType) + '"></span>'
   tr += '</td>'
   
-  // Cmd ADB Shell / Refresh column - show textarea only if adb-shell-command exists
+  // Cmd ADB Shell / Refresh column - show textarea for new commands or if adb-shell-command exists
+  var isNewCmd = !isset(_cmd.id) || _cmd.id === ''
   var hasAdbCmd = isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== ''
-  var displayAdbCmd = hasAdbCmd ? 'block' : 'none'
+  var displayAdbCmd = (isNewCmd || hasAdbCmd) ? 'block' : 'none'
   
   tr += '<td>'
   tr += '<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:' + displayAdbCmd + ';"></textarea>'
