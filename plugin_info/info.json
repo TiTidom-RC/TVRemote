@@ -13,7 +13,7 @@
 	"utilization": "Scannez les équipements de type Android TV présents sur votre réseau (vos équipements doivent être connectés sur votre réseau en filaire ou WiFi, avoir une IP). Lancez la procédure d'appairage TVRemote (si le service google.remotetv est implémenté) et/ou la procédure d'appairage ADB (si le débogage ADB est activé) pour ensuite contrôler ces équipements à partir de Jeedom. Les deux protocoles peuvent être utilisés simultanément selon les besoins.",
 	"licence": "AGPL",
 	"author": "TiTidom",
-	"require": "4.2.0",
+	"require": "4.4.2",
 	"category": "multimedia",
 	"hasDependency": true,
 	"hasOwnDeamon": true,
