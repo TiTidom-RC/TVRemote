@@ -762,6 +762,21 @@ class tvremote extends eqLogic {
             $orderCmd++;
         }
 
+        $cmd = $this->getCmd(null, 'adb_connected');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Connexion ADB', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('adb_connected');
+            $cmd->setType('info');
+            $cmd->setSubType('binary');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
         $cmd = $this->getCmd(null, 'is_on');
         if (!is_object($cmd)) {
 	        $cmd = new tvremoteCmd();
