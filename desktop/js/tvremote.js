@@ -17,20 +17,6 @@
 // Constants for better maintainability
 const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
 
-// Ensure Jeedom event polling is started for this page
-if (typeof jeedom !== 'undefined' && typeof jeedom.event !== 'undefined') {
-  console.log('[tvremote] Initializing Jeedom event polling...')
-  if (typeof jeedom.event.changes === 'function') {
-    // Force event polling to start if not already running
-    jeedom.event.changes('', '', function() {
-      // Polling callback - events will be dispatched automatically
-    })
-    console.log('[tvremote] Event polling initialized')
-  }
-} else {
-  console.error('[tvremote] Jeedom event system not available!')
-}
-
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -378,109 +364,112 @@ function changeScanState(_scanState) {
   })
 }
 
-document.body.addEventListener('tvremote::scanResult', (event) => {
-  const _option = event.detail || event._option
-  if (_option?.friendly_name) {
-    if (_option.isNew === 1) {
-      jeedomUtils.showAlert({ message: `[SCAN] TVRemote AJOUTE :: ${_option.friendly_name}`, level: 'success' })
-    } else if (_option.isNew === 0) {
-      jeedomUtils.showAlert({ message: `[SCAN] TVRemote MAJ :: ${_option.friendly_name}`, level: 'warning' })
+// Wait for Jeedom to be fully loaded before registering event listeners
+domUtils(() => {
+  console.log('[tvremote] Registering event listeners after Jeedom initialization')
+  console.log('[tvremote] Jeedom event system:', typeof jeedom !== 'undefined' && typeof jeedom.event !== 'undefined' ? 'Available' : 'NOT AVAILABLE')
+  
+  document.body.addEventListener('tvremote::scanResult', (event) => {
+    const _option = event.detail || event._option
+    if (_option?.friendly_name) {
+      if (_option.isNew === 1) {
+        jeedomUtils.showAlert({ message: `[SCAN] TVRemote AJOUTE :: ${_option.friendly_name}`, level: 'success' })
+      } else if (_option.isNew === 0) {
+        jeedomUtils.showAlert({ message: `[SCAN] TVRemote MAJ :: ${_option.friendly_name}`, level: 'warning' })
+      }
     }
-  }
-})
+  })
 
-document.body.addEventListener('tvremote::adbPairingResult', (event) => {
-  const _option = event.detail || event._option
-  if (!_option) return
-  
-  const deviceName = _option.friendly_name || _option.mac
-  const adbStatus = document.getElementById('adb-pairing-status')
-  
-  if (_option.adb_paired === 1) {
-    // Only show alert if it's not an auto-detection
-    if (!_option.auto_detected) {
-      jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
+  document.body.addEventListener('tvremote::adbPairingResult', (event) => {
+    const _option = event.detail || event._option
+    if (!_option) return
+    
+    const deviceName = _option.friendly_name || _option.mac
+    const adbStatus = document.getElementById('adb-pairing-status')
+    
+    if (_option.adb_paired === 1) {
+      // Only show alert if it's not an auto-detection
+      if (!_option.auto_detected) {
+        jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
+      }
+      // Update status indicator
+      if (adbStatus) {
+        adbStatus.removeClass('label-danger').addClass('label-success')
+        adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+      }
+    } else if (_option.adb_paired === 0) {
+      const errorMsg = _option.message || '{{Erreur inconnue}}'
+      jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${errorMsg}`, level: 'danger' })
+      // Update status indicator
+      if (adbStatus) {
+        adbStatus.removeClass('label-success').addClass('label-danger')
+        adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+      }
     }
-    // Update status indicator
-    if (adbStatus) {
-      adbStatus.removeClass('label-danger').addClass('label-success')
-      adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-    }
-  } else if (_option.adb_paired === 0) {
-    const errorMsg = _option.message || '{{Erreur inconnue}}'
-    jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${errorMsg}`, level: 'danger' })
-    // Update status indicator
-    if (adbStatus) {
-      adbStatus.removeClass('label-success').addClass('label-danger')
-      adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-    }
-  }
-})
+  })
 
-document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
-  const _option = event.detail || event._option
-  if (!_option) return
-  
-  const deviceName = _option.friendly_name || _option.mac
-  const tvremoteStatus = document.getElementById('tvremote-pairing-status')
-  
-  if (_option.tvremote_paired === 1) {
-    // Only show alert if it's not an auto-detection
-    if (!_option.auto_detected) {
-      jeedomUtils.showAlert({ message: `{{Appairage TVRemote réussi pour}} ${deviceName}`, level: 'success' })
+  document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
+    const _option = event.detail || event._option
+    if (!_option) return
+    
+    const deviceName = _option.friendly_name || _option.mac
+    const tvremoteStatus = document.getElementById('tvremote-pairing-status')
+    
+    if (_option.tvremote_paired === 1) {
+      // Only show alert if it's not an auto-detection
+      if (!_option.auto_detected) {
+        jeedomUtils.showAlert({ message: `{{Appairage TVRemote réussi pour}} ${deviceName}`, level: 'success' })
+      }
+      // Update status indicator
+      if (tvremoteStatus) {
+        tvremoteStatus.removeClass('label-danger').addClass('label-success')
+        tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+      }
+    } else if (_option.tvremote_paired === 0) {
+      const errorMsg = _option.message || '{{Erreur inconnue}}'
+      jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${errorMsg}`, level: 'danger' })
+      // Update status indicator
+      if (tvremoteStatus) {
+        tvremoteStatus.removeClass('label-success').addClass('label-danger')
+        tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+      }
     }
-    // Update status indicator
-    if (tvremoteStatus) {
-      tvremoteStatus.removeClass('label-danger').addClass('label-success')
-      tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+  })
+
+  // Test if event polling is working at all
+  document.body.addEventListener('cmd::update', (event) => {
+    console.log('[DEBUG] Generic Jeedom event received:', event.type, event.detail)
+  })
+
+  document.body.addEventListener('tvremote::scanState', (event) => {
+    const _options = event.detail
+    const scanState = _options?.scanState
+    
+    console.log('[tvremote] Event scanState received:', scanState, 'full detail:', _options)
+    
+    if (scanState === 'scanOn') {
+      console.log('[tvremote] Updating UI for scanOn')
+      jeedomUtils.hideAlert()
+      document.querySelectorAll('.customclass-scanState').forEach(el => {
+        el.setAttribute('data-scanState', 'scanOff')
+        el.removeClass('logoPrimary').addClass('logoSecondary')
+      })
+      document.querySelectorAll('.customicon-scanState').forEach(el => el.addClass('icon_red'))
+      document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Stop Scan}}')
+      jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
+    } else if (scanState === 'scanOff') {
+      console.log('[tvremote] Updating UI for scanOff')
+      jeedomUtils.hideAlert()
+      document.querySelectorAll('.customclass-scanState').forEach(el => {
+        el.setAttribute('data-scanState', 'scanOn')
+        el.removeClass('logoSecondary').addClass('logoPrimary')
+      })
+      document.querySelectorAll('.customicon-scanState').forEach(el => el.removeClass('icon_red'))
+      document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Scan}}')
+      window.location.reload()
     }
-  } else if (_option.tvremote_paired === 0) {
-    const errorMsg = _option.message || '{{Erreur inconnue}}'
-    jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${errorMsg}`, level: 'danger' })
-    // Update status indicator
-    if (tvremoteStatus) {
-      tvremoteStatus.removeClass('label-success').addClass('label-danger')
-      tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-    }
-  }
+  })
 })
-
-// Test if event polling is working at all
-document.body.addEventListener('cmd::update', (event) => {
-  console.log('[DEBUG] Generic Jeedom event received:', event.type, event.detail)
-})
-
-document.body.addEventListener('tvremote::scanState', (event) => {
-  const _options = event.detail
-  const scanState = _options?.scanState
-  
-  console.log('[tvremote] Event scanState received:', scanState, 'full detail:', _options)
-  
-  if (scanState === 'scanOn') {
-    console.log('[tvremote] Updating UI for scanOn')
-    jeedomUtils.hideAlert()
-    document.querySelectorAll('.customclass-scanState').forEach(el => {
-      el.setAttribute('data-scanState', 'scanOff')
-      el.removeClass('logoPrimary').addClass('logoSecondary')
-    })
-    document.querySelectorAll('.customicon-scanState').forEach(el => el.addClass('icon_red'))
-    document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Stop Scan}}')
-    jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
-  } else if (scanState === 'scanOff') {
-    console.log('[tvremote] Updating UI for scanOff')
-    jeedomUtils.hideAlert()
-    document.querySelectorAll('.customclass-scanState').forEach(el => {
-      el.setAttribute('data-scanState', 'scanOn')
-      el.removeClass('logoSecondary').addClass('logoPrimary')
-    })
-    document.querySelectorAll('.customicon-scanState').forEach(el => el.removeClass('icon_red'))
-    document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Scan}}')
-    window.location.reload()
-  }
-})
-
-// Check if event system is initialized
-console.log('[DEBUG] Jeedom event system:', typeof jeedom !== 'undefined' && typeof jeedom.event !== 'undefined' ? 'Available' : 'NOT AVAILABLE')
 
 // Helper function to update pairing status badge
 const updatePairingStatusBadge = (statusElement, isPaired) => {
