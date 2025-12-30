@@ -549,6 +549,10 @@ class tvremote extends eqLogic {
             log::add('tvremote', 'error', '[REALTIME][REMOTE] Information manquante (MAC) pour mettre à jour l\'équipement');
             return false;
         }
+        
+        // Debug: log all keys received in $_data
+        log::add('tvremote', 'debug', '[REALTIME][REMOTE] Keys received in data: ' . implode(', ', array_keys($_data)));
+        
         $rtdevice = tvremote::byLogicalId($_data['mac'], 'tvremote');
         if (!is_object($rtdevice)) {
             log::add('tvremote', 'error', '[REALTIME][REMOTE] Device non existant dans Jeedom');
