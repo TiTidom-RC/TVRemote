@@ -93,8 +93,12 @@ class EQRemote(object):
                     await self._jeedom_publisher.send_to_jeedom(data)
                     await asyncio.sleep(60)
                     continue
-                except (CannotConnect, ConnectionClosed) as exc:
-                    self._logger.error("[EQRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
+                except CannotConnect as exc:
+                    self._logger.warning("[EQRemote][MAIN][%s] Cannot connect (device may be offline) :: %s", self._macAddr, exc)
+                    await asyncio.sleep(60)
+                    continue
+                except ConnectionClosed as exc:
+                    self._logger.error("[EQRemote][MAIN][%s] Connection closed unexpectedly. Exception :: %s", self._macAddr, exc)
                     await asyncio.sleep(60)
                     continue
                 except Exception as e:
@@ -278,8 +282,7 @@ class EQRemote(object):
             self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
             self._logger.debug(traceback.format_exc())
         except ConnectionClosed as e:
-            self._logger.error("[EQRemote][SendCommand] Exception (ConnectionError) :: %s", e)
-            self._logger.debug(traceback.format_exc())
+            self._logger.warning("[EQRemote][SendCommand] Connection closed (device may be offline) :: %s", e)
         except Exception as e:
             self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
@@ -364,8 +367,16 @@ class EQRemoteADB(object):
                     # Keep connection alive with polling (ADB has no event callbacks like AndroidTVRemote2)
                     await asyncio.sleep(5)
                     
-                except (TcpTimeoutException, InvalidResponseError, DeviceAuthError) as e:
-                    self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
+                except (TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
+                    # Handle connection errors gracefully (device offline, network issue, etc.)
+                    if isinstance(e, DeviceAuthError):
+                        self._logger.error("[EQRemoteADB][MAIN][%s] Authorization error :: %s", self._macAddr, e)
+                    elif isinstance(e, (OSError, ConnectionError)):
+                        # Network errors (device offline, unreachable, etc.) - use WARNING instead of ERROR
+                        self._logger.warning("[EQRemoteADB][MAIN][%s] Device unreachable :: %s", self._macAddr, e)
+                    else:
+                        self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
+                    
                     self._connected = False
                     
                     # Send disconnection status to Jeedom
@@ -395,7 +406,7 @@ class EQRemoteADB(object):
         except asyncio.CancelledError:
             self._logger.debug("[EQRemoteADB] Stop Main for device %s (%s)", self._macAddr, self._host)
         except Exception as e: 
-            self._logger.error("[EQRemoteADB][MAIN] Exception :: %s", e)
+            self._logger.error("[EQRemoteADB][MAIN] Unexpected exception :: %s", e)
             self._logger.debug(traceback.format_exc())
     
     async def remove(self) -> None:
@@ -693,8 +704,11 @@ class TVRemoted:
             try:
                 self._logger.debug("[PAIRING][START][%s] Start Pairing...", _mac)
                 await remote.async_start_pairing()
-            except (CannotConnect, ConnectionClosed) as e:
-                self._logger.error("[PAIRING][START][%s] Exception :: %s", _mac, e)
+            except CannotConnect as e:
+                self._logger.warning("[PAIRING][START][%s] Cannot connect (device may be offline) :: %s", _mac, e)
+                return
+            except ConnectionClosed as e:
+                self._logger.error("[PAIRING][START][%s] Connection closed :: %s", _mac, e)
                 return
             
             while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) > currentTime :
@@ -833,8 +847,12 @@ class TVRemoted:
                         'message': 'Device not authorized. Please check TV screen for authorization prompt.'
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
-            except (TcpTimeoutException, InvalidResponseError) as e:
-                self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
+            except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
+                # Distinguer les erreurs de connexion normales (device offline) des erreurs critiques
+                if isinstance(e, (OSError, ConnectionError)):
+                    self._logger.warning("[PAIRING_ADB][%s] Cannot connect (device may be offline) :: %s", _mac, e)
+                else:
+                    self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
                 if self._jeedom_publisher is not None:
                     data = {
                         'mac': _mac,
