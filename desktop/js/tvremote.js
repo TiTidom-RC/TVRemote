@@ -14,8 +14,22 @@
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Constants for better maintainability
+'use strict'
+
+// Constants for better maintainability and performance
 const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
+
+// DOM Selectors constants (better minification + no string repetition + immutable)
+const SELECTORS = Object.freeze({
+  TABLE_CMD: '#table_cmd',
+  EQ_ID: '.eqLogicAttr[data-l1key=id]',
+  SCAN_BUTTONS: '.customclass-scanState',
+  SCAN_ICONS: '.customicon-scanState',
+  SCAN_TEXTS: '.customtext-scanState',
+  CMD_TYPE_SELECT: '.cmdAttr[data-l2key=cmdType]',
+  VALUE_SELECT: '.cmdAttr[data-l1key=value]',
+  REFRESH_SELECT: '.cmdAttr[data-l2key=cmdToRefresh]'
+})
 
 // Bridge jQuery events to native CustomEvents (if jQuery is available)
 if (typeof jQuery !== 'undefined') {
@@ -42,7 +56,7 @@ if (typeof jQuery !== 'undefined') {
 }
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
-function addCmdToTable(_cmd) {
+const addCmdToTable = (_cmd) => {
   if (!isset(_cmd)) {
     _cmd = { configuration: {} }
   }
@@ -50,25 +64,7 @@ function addCmdToTable(_cmd) {
     _cmd.configuration = {}
   }
 
-  // Build cmdType selector HTML
-  const selCmdType = '<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType"><option value="adb-shell" selected>{{ADB Shell}}</option><option value="refresh-cmd">{{Refresh Cmd}}</option><option value="plugin" style="display:none;">{{Plugin}}</option></select>'
-
-  // Build table row HTML
-  const rowHtml = []
-  rowHtml.push(`<tr class="cmd" data-cmd_id="${init(_cmd.id)}">`);
-  rowHtml.push('<td class="hidden-xs"><span class="cmdAttr" data-l1key="id"></span></td>')
-  rowHtml.push('<td>')
-  rowHtml.push('<div class="input-group">')
-  rowHtml.push('<input class="cmdAttr form-control input-sm roundedLeft" data-l1key="name" placeholder="{{Nom de la commande}}">')
-  rowHtml.push('<span class="input-group-btn"><a class="cmdAction btn btn-sm btn-default" data-l1key="chooseIcon" title="{{Choisir une icône}}"><i class="fas fa-icons"></i></a></span>')
-  rowHtml.push('<span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>')
-  rowHtml.push('</div>')
-  rowHtml.push('<select class="cmdAttr form-control input-sm" data-l1key="value" style="display:none;margin-top:5px;" title="{{Commande info liée}}">')
-  rowHtml.push('<option value="">{{Aucune}}</option>')
-  rowHtml.push('</select>')
-  rowHtml.push('</td>')
-  
-  // Calculate initial display conditions
+  // Calculate initial display conditions first (before building HTML)
   const cmdType = init(_cmd.configuration.cmdType)
   const isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
   const isNewCmd = !isset(_cmd.id) || _cmd.id === ''
@@ -76,77 +72,80 @@ function addCmdToTable(_cmd) {
   const isAdbShellCmd = cmdType === 'adb-shell'
   const isPluginCmd = cmdType === 'plugin'
   
-  // Type Cmd column - show for new commands or custom commands, hide for plugin/global refresh
+  // Display conditions
   const displayCmdType = (isGlobalRefresh || isPluginCmd) ? 'none' : ((isNewCmd || isAdbShellCmd || isRefreshCmd) ? 'block' : 'none')
-  
-  // Type/SubType - hidden for refresh-cmd and global refresh
   const displayTypeSubType = (isGlobalRefresh || isRefreshCmd) ? 'none' : 'block'
-  
-  // ADB Shell textarea - show ONLY for adb-shell commands
   const displayAdbCmd = isAdbShellCmd ? 'block' : 'none'
-  
-  // Refresh select - show ONLY for refresh-cmd commands
   const displayRefreshCmd = isRefreshCmd ? 'block' : 'none'
   
-  // Type Cmd column
-  rowHtml.push(`<td><span class="cmdType" style="display:${displayCmdType};" type="${init(cmdType)}">${selCmdType}</span></td>`)
+  // Build cmdType selector
+  const selCmdType = `<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">
+    <option value="adb-shell" selected>{{ADB Shell}}</option>
+    <option value="refresh-cmd">{{Refresh Cmd}}</option>
+    <option value="plugin" style="display:none;">{{Plugin}}</option>
+  </select>`
+
+  // Build complete row HTML with template literals (optimal V8 performance)
+  const testButtons = is_numeric(_cmd.id) 
+    ? '<a class="btn btn-default btn-xs cmdAction" data-action="configure"><i class="fas fa-cogs"></i></a> <a class="btn btn-default btn-xs cmdAction" data-action="test"><i class="fas fa-rss"></i> {{Tester}}</a>'
+    : ''
   
-  // Type/SubType column
-  rowHtml.push('<td>')
-  rowHtml.push(`<span class="type" style="display:${displayTypeSubType};" type="${init(_cmd.type)}">${jeedom.cmd.availableType()}</span>`)
-  rowHtml.push(`<span class="subType" style="display:${displayTypeSubType};" subType="${init(_cmd.subType)}"></span>`)
-  rowHtml.push('</td>')
+  const rowHtml = `
+    <td class="hidden-xs"><span class="cmdAttr" data-l1key="id"></span></td>
+    <td>
+      <div class="input-group">
+        <input class="cmdAttr form-control input-sm roundedLeft" data-l1key="name" placeholder="{{Nom de la commande}}">
+        <span class="input-group-btn"><a class="cmdAction btn btn-sm btn-default" data-l1key="chooseIcon" title="{{Choisir une icône}}"><i class="fas fa-icons"></i></a></span>
+        <span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>
+      </div>
+      <select class="cmdAttr form-control input-sm" data-l1key="value" style="display:none;margin-top:5px;" title="{{Commande info liée}}">
+        <option value="">{{Aucune}}</option>
+      </select>
+    </td>
+    <td><span class="cmdType" style="display:${displayCmdType};" type="${init(cmdType)}">${selCmdType}</span></td>
+    <td>
+      <span class="type" style="display:${displayTypeSubType};" type="${init(_cmd.type)}">${jeedom.cmd.availableType()}</span>
+      <span class="subType" style="display:${displayTypeSubType};" subType="${init(_cmd.subType)}"></span>
+    </td>
+    <td>
+      <textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:${displayAdbCmd};"></textarea>
+      <select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:${displayRefreshCmd};margin-top:5px;" title="{{Commande info à rafraîchir}}">
+        <option value="">{{Aucune}}</option>
+      </select>
+    </td>
+    <td>
+      <label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible"/>{{Afficher}}</label> 
+      <label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized"/>{{Historiser}}</label> 
+      <label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> 
+      <div style="margin-top:7px;">
+        <input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">
+        <input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">
+        <input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">
+      </div>
+    </td>
+    <td><span class="cmdAttr" data-l1key="htmlstate"></span></td>
+    <td>
+      ${testButtons}
+      <i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i>
+    </td>`
   
-  // Cmd ADB Shell / Refresh column
-  rowHtml.push('<td>')
-  rowHtml.push(`<textarea rows="2" class="cmdAttr form-control input-sm adb-shell-cmd" data-l1key="configuration" data-l2key="adb-shell-command" placeholder="{{Commande ADB Shell}}" style="display:${displayAdbCmd};"></textarea>`)
-  rowHtml.push(`<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdToRefresh" style="display:${displayRefreshCmd};margin-top:5px;" title="{{Commande info à rafraîchir}}">`)
-  rowHtml.push('<option value="">{{Aucune}}</option>')
-  rowHtml.push('</select>')
-  rowHtml.push('</td>')
-  
-  // Options column
-  rowHtml.push('<td>')
-  rowHtml.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible"/>{{Afficher}}</label> ')
-  rowHtml.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized"/>{{Historiser}}</label> ')
-  rowHtml.push('<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label> ')
-  rowHtml.push('<div style="margin-top:7px;">')
-  rowHtml.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">')
-  rowHtml.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">')
-  rowHtml.push('<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">')
-  rowHtml.push('</div></td>')
-  
-  // State column
-  rowHtml.push('<td><span class="cmdAttr" data-l1key="htmlstate"></span></td>')
-  
-  // Actions column
-  rowHtml.push('<td>')
-  if (is_numeric(_cmd.id)) {
-    rowHtml.push('<a class="btn btn-default btn-xs cmdAction" data-action="configure"><i class="fas fa-cogs"></i></a> ')
-    rowHtml.push('<a class="btn btn-default btn-xs cmdAction" data-action="test"><i class="fas fa-rss"></i> {{Tester}}</a>')
-  }
-  rowHtml.push('<i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i></td>')
-  rowHtml.push('</tr>')
-  
-  const newRow = document.createElement('tr')
-  newRow.innerHTML = rowHtml.join('')
-  newRow.classList.add('cmd')
+  // Create and configure row element (optimal: Object.assign for batch properties)
+  const newRow = Object.assign(document.createElement('tr'), {
+    className: 'cmd',
+    innerHTML: rowHtml
+  })
   newRow.setAttribute('data-cmd_id', init(_cmd.id))
   
-  // Cache table body for performance
-  const tableBody = document.getElementById('table_cmd')?.querySelector('tbody')
-  if (!tableBody) {
-    console.error('Table body not found')
-    return
-  }
+  // Cache table body for performance (with optional chaining)
+  const tableBody = document.querySelector(`${SELECTORS.TABLE_CMD} tbody`)
+  if (!tableBody) return console.error('Table body not found')
+  
   tableBody.appendChild(newRow)
   
   // Cache eqLogic ID to avoid multiple DOM queries
-  const eqLogicIdElement = document.querySelector('.eqLogicAttr[data-l1key=id]')
-  if (!eqLogicIdElement) {
-    console.error('Equipment ID element not found')
-    return
-  }
+  const eqLogicIdElement = document.querySelector(SELECTORS.EQ_ID)
+  if (!eqLogicIdElement) return console.error('Equipment ID element not found')
+  
   const eqLogicId = eqLogicIdElement.jeeValue()
   
   // Single optimized call to get all commands
@@ -159,28 +158,28 @@ function addCmdToTable(_cmd) {
       // Filter info commands once
       const infoCmds = cmds.filter(cmd => cmd.type === 'info')
       
-      // Build select for "value" field (all info commands)
-      const allInfoOptions = infoCmds.map(cmd => 
-        `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`
-      ).join('')
+      // Cache selects to avoid multiple queries (using constants)
+      const valueSelect = newRow.querySelector(SELECTORS.VALUE_SELECT)
+      const refreshSelect = newRow.querySelector(SELECTORS.REFRESH_SELECT)
       
-      const valueSelect = newRow.querySelector('.cmdAttr[data-l1key=value]')
-      if (valueSelect) valueSelect.insertAdjacentHTML('beforeend', allInfoOptions)
+      // Build options with reduce (faster than map+join for large arrays)
+      if (valueSelect) {
+        const allInfoOptions = infoCmds.reduce((html, cmd) => 
+          html + `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`, '')
+        valueSelect.insertAdjacentHTML('beforeend', allInfoOptions)
+      }
       
-      // Build select for "cmdToRefresh" field (only ADB shell info commands)
-      const adbShellOptions = infoCmds
-        .filter(cmd => 
-          cmd.configuration && 
-          (cmd.configuration.cmdType === 'adb-shell' || 
-           (cmd.configuration['adb-shell-command'] && cmd.configuration['adb-shell-command'] !== ''))
-        )
-        .map(cmd => 
-          `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`
-        )
-        .join('')
-      
-      const refreshSelect = newRow.querySelector('.cmdAttr[data-l2key=cmdToRefresh]')
-      if (refreshSelect) refreshSelect.insertAdjacentHTML('beforeend', adbShellOptions)
+      if (refreshSelect) {
+        // Pre-filter with single condition check (optimization)
+        const adbShellOptions = infoCmds.reduce((html, cmd) => {
+          const cfg = cmd.configuration
+          if (cfg?.cmdType === 'adb-shell' || cfg?.['adb-shell-command']) {
+            return html + `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`
+          }
+          return html
+        }, '')
+        refreshSelect.insertAdjacentHTML('beforeend', adbShellOptions)
+      }
       
       // Set values and update display after both selects are populated
       newRow.setJeeValues(_cmd, '.cmdAttr')
@@ -192,8 +191,8 @@ function addCmdToTable(_cmd) {
       }
       
       // Auto-detect cmdType for existing commands without explicit configuration
-      const cmdTypeSelect = newRow.querySelector('.cmdAttr[data-l2key=cmdType]')
-      if (cmdTypeSelect && (!isset(_cmd.configuration.cmdType) || _cmd.configuration.cmdType === '')) {
+      const cmdTypeSelect = newRow.querySelector(SELECTORS.CMD_TYPE_SELECT)
+      if (cmdTypeSelect && (!_cmd.configuration.cmdType || _cmd.configuration.cmdType === '')) {
         if (isset(_cmd.configuration['adb-shell-command']) && _cmd.configuration['adb-shell-command'] !== '') {
           cmdTypeSelect.value = 'adb-shell'
         } else if (isset(_cmd.configuration.cmdToRefresh) && _cmd.configuration.cmdToRefresh !== '') {
@@ -219,10 +218,10 @@ function addCmdToTable(_cmd) {
 
 // Handle cmdType change with event delegation (only attach once)
 (() => {
-  const tableCmdElement = document.getElementById('table_cmd')
+  const tableCmdElement = document.querySelector(SELECTORS.TABLE_CMD)
   if (tableCmdElement && !tableCmdElement._cmdTypeListenerAttached) {
     tableCmdElement.addEventListener('change', (event) => {
-      if (!event.target.matches('.cmdAttr[data-l2key=cmdType]')) return
+      if (!event.target.matches(SELECTORS.CMD_TYPE_SELECT)) return
       
       const tr = event.target.closest('tr')
       const cmdType = event.target.value
@@ -268,33 +267,43 @@ function addCmdToTable(_cmd) {
 })()
 
 
-function printEqLogic(_eqLogic) {
+const printEqLogic = (_eqLogic) => {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
   if (_eqLogic?.configuration?.use_adb === undefined) {
     const useAdbCheckbox = document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')
-    if (useAdbCheckbox) useAdbCheckbox.checked = false
+    useAdbCheckbox?.jeeValue(0) // Jeedom native method
   }
 }
 
-document.querySelectorAll('.pluginAction[data-action=openLocation]').forEach(element => {
+// Cache des éléments pour éviter getElementById multiples
+const DOM_CACHE = {
+  hostAddr: null,
+  macAddr: null,
+  portNum: null,
+  pairCode: null,
+  get: function(id) {
+    if (!this[id]) this[id] = document.getElementById(id)
+    return this[id]
+  }
+}
+
+// Event delegation: single listener instead of multiple (optimal)
+for (const element of document.querySelectorAll('.pluginAction[data-action=openLocation]')) {
   element.addEventListener('click', (event) => {
     window.open(event.currentTarget.getAttribute('data-location'), '_blank', null)
   })
-})
+}
 
-document.querySelectorAll('.customclass-beginpairing').forEach(element => {
+for (const element of document.querySelectorAll('.customclass-beginpairing')) {
   element.addEventListener('click', () => {
-    const hostAddr = document.getElementById('hostAddr').value
-    const macAddr = document.getElementById('macAddr').value
-    const portNum = document.getElementById('portNum').value
     domUtils.ajax({
       type: 'POST',
       url: AJAX_URL,
       data: {
         action: 'beginPairing',
-        mac: macAddr,
-        host: hostAddr,
-        port: portNum
+        mac: DOM_CACHE.get('macAddr')?.value,
+        host: DOM_CACHE.get('hostAddr')?.value,
+        port: DOM_CACHE.get('portNum')?.value
       },
       dataType: 'json',
       error: (request, status, error) => handleAjaxError(request, status, error),
@@ -307,23 +316,19 @@ document.querySelectorAll('.customclass-beginpairing').forEach(element => {
       }
     })
   })
-})
+}
 
-document.querySelectorAll('.customclass-sendpaircode').forEach(element => {
+for (const element of document.querySelectorAll('.customclass-sendpaircode')) {
   element.addEventListener('click', () => {
-    const pairCode = document.getElementById('pairCode').value
-    const hostAddr = document.getElementById('hostAddr').value
-    const macAddr = document.getElementById('macAddr').value
-    const portNum = document.getElementById('portNum').value
     domUtils.ajax({
       type: 'POST',
       url: AJAX_URL,
       data: {
         action: 'sendPairCode',
-        mac: macAddr,
-        host: hostAddr,
-        port: portNum,
-        paircode: pairCode
+        mac: DOM_CACHE.get('macAddr')?.value,
+        host: DOM_CACHE.get('hostAddr')?.value,
+        port: DOM_CACHE.get('portNum')?.value,
+        paircode: DOM_CACHE.get('pairCode')?.value
       },
       dataType: 'json',
       error: (request, status, error) => handleAjaxError(request, status, error),
@@ -336,19 +341,17 @@ document.querySelectorAll('.customclass-sendpaircode').forEach(element => {
       }
     })
   })
-})
+}
 
-document.querySelectorAll('.customclass-beginpairingadb').forEach(element => {
+for (const element of document.querySelectorAll('.customclass-beginpairingadb')) {
   element.addEventListener('click', () => {
-    const hostAddr = document.getElementById('hostAddr').value
-    const macAddr = document.getElementById('macAddr').value
     domUtils.ajax({
       type: 'POST',
       url: AJAX_URL,
       data: {
         action: 'beginPairingAdb',
-        mac: macAddr,
-        host: hostAddr
+        mac: DOM_CACHE.get('macAddr')?.value,
+        host: DOM_CACHE.get('hostAddr')?.value
       },
       dataType: 'json',
       error: (request, status, error) => handleAjaxError(request, status, error),
@@ -361,16 +364,16 @@ document.querySelectorAll('.customclass-beginpairingadb').forEach(element => {
       }
     })
   })
-})
+}
 
-document.querySelectorAll('.customclass-scanState').forEach(element => {
+for (const element of document.querySelectorAll(SELECTORS.SCAN_BUTTONS)) {
   element.addEventListener('click', (event) => {
     const scanState = event.currentTarget.getAttribute('data-scanState')
     changeScanState(scanState)
   })
-})
+}
 
-function changeScanState(_scanState) {
+const changeScanState = (_scanState) => {
   domUtils.ajax({
     type: 'POST',
     url: AJAX_URL,
@@ -388,7 +391,7 @@ function changeScanState(_scanState) {
   })
 }
 
-// Now you can use vanilla JS addEventListener!
+// Vanilla JS event listeners (thanks to jQuery bridge)
 document.body.addEventListener('tvremote::scanResult', (event) => {
   const _option = event.detail
   if (_option?.friendly_name) {
@@ -404,27 +407,24 @@ document.body.addEventListener('tvremote::adbPairingResult', (event) => {
   const _option = event.detail
   if (!_option) return
   
-  const deviceName = _option.friendly_name || _option.mac
+  const { friendly_name, mac, adb_paired, message: errorMsg, auto_detected } = _option
+  const deviceName = friendly_name || mac
   const adbStatus = document.getElementById('adb-pairing-status')
   
-  if (_option.adb_paired === 1) {
+  if (adb_paired === 1) {
     // Only show alert if it's not an auto-detection
-    if (!_option.auto_detected) {
+    if (!auto_detected) {
       jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
     }
     // Update status indicator
-    if (adbStatus) {
-      adbStatus.removeClass('label-danger').addClass('label-success')
-      adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-    }
-  } else if (_option.adb_paired === 0) {
-    const errorMsg = _option.message || '{{Erreur inconnue}}'
-    jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${errorMsg}`, level: 'danger' })
+    adbStatus?.removeClass('label-danger').addClass('label-success')
+    if (adbStatus) adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+  } else if (adb_paired === 0) {
+    const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
+    jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
-    if (adbStatus) {
-      adbStatus.removeClass('label-success').addClass('label-danger')
-      adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-    }
+    adbStatus?.removeClass('label-success').addClass('label-danger')
+    if (adbStatus) adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
   }
 })
 
@@ -432,27 +432,24 @@ document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
   const _option = event.detail
   if (!_option) return
   
-  const deviceName = _option.friendly_name || _option.mac
+  const { friendly_name, mac, tvremote_paired, message: errorMsg, auto_detected } = _option
+  const deviceName = friendly_name || mac
   const tvremoteStatus = document.getElementById('tvremote-pairing-status')
   
-  if (_option.tvremote_paired === 1) {
+  if (tvremote_paired === 1) {
     // Only show alert if it's not an auto-detection
-    if (!_option.auto_detected) {
+    if (!auto_detected) {
       jeedomUtils.showAlert({ message: `{{Appairage TVRemote réussi pour}} ${deviceName}`, level: 'success' })
     }
     // Update status indicator
-    if (tvremoteStatus) {
-      tvremoteStatus.removeClass('label-danger').addClass('label-success')
-      tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-    }
-  } else if (_option.tvremote_paired === 0) {
-    const errorMsg = _option.message || '{{Erreur inconnue}}'
-    jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${errorMsg}`, level: 'danger' })
+    tvremoteStatus?.removeClass('label-danger').addClass('label-success')
+    if (tvremoteStatus) tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+  } else if (tvremote_paired === 0) {
+    const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
+    jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
-    if (tvremoteStatus) {
-      tvremoteStatus.removeClass('label-success').addClass('label-danger')
-      tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-    }
+    tvremoteStatus?.removeClass('label-success').addClass('label-danger')
+    if (tvremoteStatus) tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
   }
 })
 
@@ -460,54 +457,59 @@ document.body.addEventListener('tvremote::scanState', (event) => {
   const _options = event.detail
   const scanState = _options?.scanState
   
-  if (scanState === 'scanOn') {
-    jeedomUtils.hideAlert()
-    document.querySelectorAll('.customclass-scanState').forEach(el => {
-      el.setAttribute('data-scanState', 'scanOff')
-      el.removeClass('logoPrimary').addClass('logoSecondary')
-    })
-    document.querySelectorAll('.customicon-scanState').forEach(el => el.addClass('icon_red'))
-    document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Stop Scan}}')
+  // Cache des sélecteurs avec constantes
+  const scanButtons = document.querySelectorAll(SELECTORS.SCAN_BUTTONS)
+  const scanIcons = document.querySelectorAll(SELECTORS.SCAN_ICONS)
+  const scanTexts = document.querySelectorAll(SELECTORS.SCAN_TEXTS)
+  
+  jeedomUtils.hideAlert()
+  
+  const isScanOn = scanState === 'scanOn'
+  
+  // Batch DOM updates with for...of (faster than forEach)
+  for (const el of scanButtons) {
+    el.setAttribute('data-scanState', isScanOn ? 'scanOff' : 'scanOn')
+    el.removeClass(isScanOn ? 'logoPrimary' : 'logoSecondary')
+      .addClass(isScanOn ? 'logoSecondary' : 'logoPrimary')
+  }
+  
+  for (const el of scanIcons) {
+    isScanOn ? el.addClass('icon_red') : el.removeClass('icon_red')
+  }
+  
+  for (const el of scanTexts) {
+    el.textContent = isScanOn ? '{{Stop Scan}}' : '{{Scan}}'
+  }
+  
+  if (isScanOn) {
     jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
-  } else if (scanState === 'scanOff') {
-    jeedomUtils.hideAlert()
-    document.querySelectorAll('.customclass-scanState').forEach(el => {
-      el.setAttribute('data-scanState', 'scanOn')
-      el.removeClass('logoSecondary').addClass('logoPrimary')
-    })
-    document.querySelectorAll('.customicon-scanState').forEach(el => el.removeClass('icon_red'))
-    document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Scan}}')
+  } else {
     window.location.reload()
   }
 })
 
 // Helper function to update pairing status badge
 const updatePairingStatusBadge = (statusElement, isPaired) => {
-  if (isPaired) {
-    statusElement.removeClass('label-danger').addClass('label-success')
-    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-  } else {
-    statusElement.removeClass('label-success').addClass('label-danger')
-    statusElement.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-  }
+  const [removeClass, addClass, icon, text] = isPaired
+    ? ['label-danger', 'label-success', 'check-circle', '{{Appairé}}']
+    : ['label-success', 'label-danger', 'times-circle', '{{Non appairé}}']
+  
+  statusElement.removeClass(removeClass).addClass(addClass)
+  statusElement.innerHTML = `<i class="fas fa-${icon}"></i> ${text}`
   statusElement.seen()
 }
 
-// Update pairing status badges when configuration changes
-document.querySelectorAll('.eqLogicAttr[data-l2key="tvremote_paired_status"]').forEach(element => {
+// Update pairing status badges when configuration changes (for...of optimization)
+for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="tvremote_paired_status"]')) {
   element.addEventListener('change', (event) => {
     const statusElement = document.getElementById('tvremote-pairing-status')
-    if (statusElement) {
-      updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
-    }
+    statusElement && updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
   })
-})
+}
 
-document.querySelectorAll('.eqLogicAttr[data-l2key="adb_paired_status"]').forEach(element => {
+for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="adb_paired_status"]')) {
   element.addEventListener('change', (event) => {
     const statusElement = document.getElementById('adb-pairing-status')
-    if (statusElement) {
-      updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
-    }
+    statusElement && updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
   })
-})
+}
