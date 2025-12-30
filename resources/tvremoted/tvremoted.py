@@ -427,6 +427,14 @@ class EQRemoteADB(object):
         try:
             if self._adb is None or not self._connected:
                 self._logger.error("[EQRemoteADB][SendCommand] ADB not connected")
+                # Send error to Jeedom if cmd_id is provided
+                if cmd_id:
+                    error_data = {
+                        'adb_shell_output_mac': self._macAddr,
+                        'adb_shell_output_cmd_id': cmd_id,
+                        'adb_shell_error': 'Device not connected (ADB)'
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(error_data)
                 return
             
             if action == 'shell':
@@ -459,8 +467,20 @@ class EQRemoteADB(object):
                         if cmd_id:
                             error_data = {
                                 'adb_shell_output_mac': self._macAddr,
-                                'adb_shell_output_value': 'ERROR: Command timeout (device may be offline)',
-                                'adb_shell_output_cmd_id': cmd_id
+                                'adb_shell_output_cmd_id': cmd_id,
+                                'adb_shell_error': 'Command timeout'
+                            }
+                            await self._jeedom_publisher.send_to_jeedom(error_data)
+                    except (OSError, ConnectionError, InvalidResponseError) as e:
+                        self._logger.warning("[EQRemoteADB][SendCmd - Shell] Connection lost during command execution :: %s", str(e))
+                        # Mark as disconnected so main loop can reconnect
+                        self._connected = False
+                        # Send error to Jeedom if cmd_id is provided
+                        if cmd_id:
+                            error_data = {
+                                'adb_shell_output_mac': self._macAddr,
+                                'adb_shell_output_cmd_id': cmd_id,
+                                'adb_shell_error': 'Connection lost'
                             }
                             await self._jeedom_publisher.send_to_jeedom(error_data)
             elif action == 'keycode':
