@@ -21,11 +21,16 @@ const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
 if (typeof jQuery !== 'undefined') {
   const jQueryToNative = (eventName) => {
     $('body').on(eventName, function(event, data) {
-      document.body.dispatchEvent(new CustomEvent(eventName, { 
+      // Prevent infinite loop: don't re-emit if event comes from our bridge
+      if (event.originalEvent && event.originalEvent.__bridged) return
+      
+      const customEvent = new CustomEvent(eventName, { 
         detail: data,
         bubbles: true,
         cancelable: true
-      }))
+      })
+      customEvent.__bridged = true  // Mark as bridged to prevent loop
+      document.body.dispatchEvent(customEvent)
     })
   }
   
