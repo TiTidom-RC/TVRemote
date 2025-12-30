@@ -432,10 +432,13 @@ document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
 })
 
 document.body.addEventListener('tvremote::scanState', (event) => {
-  const _options = event.detail || event._options
+  const _options = event.detail
   const scanState = _options?.scanState
   
+  console.log('[tvremote] Event scanState received:', scanState, 'full detail:', _options)
+  
   if (scanState === 'scanOn') {
+    console.log('[tvremote] Updating UI for scanOn')
     jeedomUtils.hideAlert()
     document.querySelectorAll('.customclass-scanState').forEach(el => {
       el.setAttribute('data-scanState', 'scanOff')
@@ -445,6 +448,7 @@ document.body.addEventListener('tvremote::scanState', (event) => {
     document.querySelectorAll('.customtext-scanState').forEach(el => el.textContent = '{{Stop Scan}}')
     jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
   } else if (scanState === 'scanOff') {
+    console.log('[tvremote] Updating UI for scanOff')
     jeedomUtils.hideAlert()
     document.querySelectorAll('.customclass-scanState').forEach(el => {
       el.setAttribute('data-scanState', 'scanOn')
