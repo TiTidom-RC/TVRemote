@@ -48,9 +48,7 @@ if (typeof jQuery !== 'undefined') {
       if (event.originalEvent?.__bridged) return  // Prevent infinite loop
       
       const customEvent = new CustomEvent(eventName, {
-        detail: data,
-        bubbles: true,
-        cancelable: true
+        detail: data
       })
       customEvent.__bridged = true
       document.body.dispatchEvent(customEvent)
