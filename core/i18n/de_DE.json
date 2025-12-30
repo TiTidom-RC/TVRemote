@@ -24,6 +24,7 @@
         "Commande Action non implémentée actuellement": "Befehl Aktion derzeit nicht implementiert",
         "Commande Info non implémentée actuellement": "Befehl Info derzeit nicht implementiert",
         "Commande non implémentée actuellement": "Befehl derzeit nicht implementiert",
+        "Connexion ADB": "ADB-Verbindung",
         "Current App": "Aktuelle App",
         "Custom Cmd": "Custom Cmd",
         "Disney+": "Disney+",
@@ -40,7 +41,6 @@
         "Input": "Input",
         "Key Code": "Schlüsselcode",
         "Left": "Left",
-        "Media Eject": "Media Eject",
         "Media Forward": "Media Forward",
         "Media Next": "Media Next",
         "Media Pause": "Media Pause",
@@ -110,8 +110,8 @@
         "Supprimer la commande": "Befehl löschen",
         "Tester": "Testen",
         "Unité": "Einheit",
-        "Échec de l\\'appairage ADB pour": "ADB-Kopplung fehlgeschlagen für",
-        "Échec de l\\'appairage TVRemote pour": "Fehlgeschlagenes Pairing von TVRemote für"
+        "Échec de l'appairage ADB pour": "Fehler beim ADB-Pairing für",
+        "Échec de l'appairage TVRemote pour": "Fehler beim Koppeln von TVRemote für"
     },
     "plugins\/tvremote\/desktop\/php\/tvremote.php": {
         "401 - Accès non autorisé": "401 - Unberechtigter Zugriff",
@@ -152,6 +152,7 @@
         "Informations": "Informationen",
         "La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.": "Der Fernseher muss zum Koppeln eingeschaltet sein. Um Befehle senden zu können, wenn sich der Fernseher im Standby-Modus befindet, darf der Energiesparmodus das Netzwerk nicht abschalten.",
         "La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.": "Der Fernseher muss zum Koppeln eingeschaltet sein. Damit der Status aktualisiert wird, wenn sich der Fernseher im Standby-Modus befindet, darf der Energiesparmodus das Netzwerk nicht unterbrechen.",
+        "Lors de l'appairage ADB, vous disposez de 1 minute pour valider sur votre TV.": "Beim ADB-Pairing haben Sie 1 Minute Zeit, um die Verbindung auf Ihrem Fernseher zu bestätigen.",
         "Mes TVRemotes": "Meine TVRemotes",
         "Modèle": "Modell",
         "Nom": "Name",
@@ -179,7 +180,8 @@
         "Type Cmd": "Typ Cmd",
         "Un code apparaît sur votre TV (Ex: A2C10E)": "Auf Ihrem Fernseher erscheint ein Code (z. B. A2C10E).",
         "Utiliser ADB": "ADB verwenden",
-        "Visible": "Sichtbar"
+        "Visible": "Sichtbar",
+        "Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.": "Sie haben nach dem Klicken auf „Koppeln“ 5 Minuten Zeit, um den Code einzugeben."
     },
     "plugins\/tvremote\/plugin_info\/configuration.php": {
         "Certificat ADB": "ADB-Zertifikat",
