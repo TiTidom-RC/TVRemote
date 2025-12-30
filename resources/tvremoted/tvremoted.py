@@ -482,6 +482,9 @@ class EQRemoteADB(object):
                             self._adb.shell(value, transport_timeout_s=self._config.adb_timeout), 
                             timeout=self._config.adb_timeout
                         )
+                        # Clean whitespace and newlines from shell output
+                        result = result.strip()
+                        
                         if len(result) > 500:
                             self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
                         else:
