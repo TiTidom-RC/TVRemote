@@ -58,6 +58,10 @@ class EQRemote(object):
         self._logger = logging.getLogger(__name__)
         self._jeedom_publisher = _jeedom_publisher
         self._loop = asyncio.get_running_loop()
+        # Exponential backoff for reconnection attempts
+        self._reconnect_delay = self._config.reconnect_delay_min
+        self._reconnect_delay_min = self._config.reconnect_delay_min
+        self._reconnect_delay_max = self._config.reconnect_delay_max
 
     async def main(self) -> None:
         """
@@ -79,6 +83,8 @@ class EQRemote(object):
             while not self._config.is_ending:
                 try:
                     await self._remote.async_connect()
+                    # Reset reconnection delay on successful connection
+                    self._reconnect_delay = self._reconnect_delay_min
                     break
                 except InvalidAuth as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
@@ -91,20 +97,36 @@ class EQRemote(object):
                         'pairing_value': 0
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
-                    await asyncio.sleep(60)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
                 except CannotConnect as exc:
                     self._logger.warning("[EQRemote][MAIN][%s] Cannot connect (device may be offline) :: %s", self._macAddr, exc)
-                    await asyncio.sleep(60)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
                 except ConnectionClosed as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Connection closed unexpectedly. Exception :: %s", self._macAddr, exc)
-                    await asyncio.sleep(60)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
                 except Exception as e:
                     self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
                     self._logger.debug(traceback.format_exc())
-                    await asyncio.sleep(60)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
                     
             self._remote.keep_reconnecting()
@@ -302,6 +324,10 @@ class EQRemoteADB(object):
         self._loop = asyncio.get_running_loop()
         self._signer = None
         self._connected = False
+        # Exponential backoff for reconnection attempts
+        self._reconnect_delay = self._config.reconnect_delay_min
+        self._reconnect_delay_min = self._config.reconnect_delay_min
+        self._reconnect_delay_max = self._config.reconnect_delay_max
 
     async def _load_signer(self) -> bool:
         """Load the ADB signer from key file"""
@@ -350,6 +376,9 @@ class EQRemoteADB(object):
                         await self._adb.connect(rsa_keys=[self._signer], auth_timeout_s=self._config.adb_auth_timeout)
                         self._connected = True
                         self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB", self._macAddr)
+                        
+                        # Reset reconnection delay on successful connection
+                        self._reconnect_delay = self._reconnect_delay_min
                         
                         # Send connection status to Jeedom
                         currentTime = int(time.time())
@@ -401,7 +430,12 @@ class EQRemoteADB(object):
                         }
                         await self._jeedom_publisher.send_to_jeedom(revoke_data)
                     
-                    await asyncio.sleep(10)  # Wait before retry
+                    # Exponential backoff: wait before retry and increase delay for next attempt
+                    self._logger.debug("[EQRemoteADB][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    
+                    # Double the delay for next attempt, up to maximum
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     
         except asyncio.CancelledError:
             self._logger.debug("[EQRemoteADB] Stop Main for device %s (%s)", self._macAddr, self._host)
