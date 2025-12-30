@@ -435,8 +435,11 @@ class EQRemoteADB(object):
                     self._logger.debug("[EQRemoteADB][SendCmd - Shell] %s", value)
                     
                     try:
-                        # Use configured ADB timeout to avoid hanging on offline devices
-                        result = await asyncio.wait_for(self._adb.shell(value), timeout=self._config.adb_timeout)
+                        # Use configured ADB timeout for both asyncio and transport layer
+                        result = await asyncio.wait_for(
+                            self._adb.shell(value, transport_timeout_s=self._config.adb_timeout), 
+                            timeout=self._config.adb_timeout
+                        )
                         if len(result) > 500:
                             self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
                         else:
@@ -450,8 +453,8 @@ class EQRemoteADB(object):
                             data['adb_shell_output_cmd_id'] = cmd_id
                             self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
                         await self._jeedom_publisher.send_to_jeedom(data)
-                    except asyncio.TimeoutError:
-                        self._logger.warning("[EQRemoteADB][SendCmd - Shell] Timeout (%ds) waiting for command response", self._config.adb_timeout)
+                    except (asyncio.TimeoutError, TcpTimeoutException) as e:
+                        self._logger.warning("[EQRemoteADB][SendCmd - Shell] Timeout (%ds) waiting for command response :: %s", self._config.adb_timeout, str(e))
                         # Send error to Jeedom if cmd_id is provided
                         if cmd_id:
                             error_data = {
