@@ -70,9 +70,12 @@ function addCmdToTable(_cmd) {
   const cmdType = init(_cmd.configuration.cmdType)
   const isGlobalRefresh = init(_cmd.logicalId) === 'refresh'
   const isNewCmd = !isset(_cmd.id) || _cmd.id === ''
-  const isRefreshCmd = cmdType === 'refresh-cmd'
-  const isAdbShellCmd = cmdType === 'adb-shell'
-  const isPluginCmd = cmdType === 'plugin'
+  
+  // For existing commands without cmdType, default to 'plugin' (native commands)
+  const effectiveCmdType = cmdType || (isNewCmd ? 'adb-shell' : 'plugin')
+  const isRefreshCmd = effectiveCmdType === 'refresh-cmd'
+  const isAdbShellCmd = effectiveCmdType === 'adb-shell'
+  const isPluginCmd = effectiveCmdType === 'plugin'
   
   // Display conditions
   const displayCmdType = (isGlobalRefresh || isPluginCmd) ? 'none' : ((isNewCmd || isAdbShellCmd || isRefreshCmd) ? 'block' : 'none')
@@ -80,11 +83,11 @@ function addCmdToTable(_cmd) {
   const displayAdbCmd = isAdbShellCmd ? 'block' : 'none'
   const displayRefreshCmd = isRefreshCmd ? 'block' : 'none'
   
-  // Build cmdType selector
+  // Build cmdType selector with dynamic selection
   const selCmdType = `<select style="width:120px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="cmdType">
-    <option value="adb-shell" selected>{{ADB Shell}}</option>
-    <option value="refresh-cmd">{{Refresh Cmd}}</option>
-    <option value="plugin" style="display:none;">{{Plugin}}</option>
+    <option value="adb-shell"${isAdbShellCmd ? ' selected' : ''}>{{ADB Shell}}</option>
+    <option value="refresh-cmd"${isRefreshCmd ? ' selected' : ''}>{{Refresh Cmd}}</option>
+    <option value="plugin" style="display:none;"${isPluginCmd ? ' selected' : ''}>{{Plugin}}</option>
   </select>`
 
   // Build complete row HTML with template literals (optimal V8 performance)
