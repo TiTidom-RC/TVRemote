@@ -71,7 +71,7 @@ if (!isConnect()) {
             <div class="form-group">
                 <label class="col-lg-3 control-label">{{Force la réinitialisation de PyEnv}}
                     <sup><i class="fas fa-ban tooltips" style="color:var(--al-danger-color)!important;" title="{{Les dépendances devront être relancées après la sauvegarde de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitilsation de l'environnement Python utilisé par le plugin}}"></i></sup>
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitialisation de l'environnement Python utilisé par le plugin}}"></i></sup>
                 </label>
                 <div class="col-lg-2">
                     <input type="checkbox" class="configKey" data-l1key="debugRestorePyEnv" />
@@ -80,7 +80,7 @@ if (!isConnect()) {
             <div class="form-group">
                 <label class="col-lg-3 control-label">{{Force la réinitialisation de Venv}}
                     <sup><i class="fas fa-ban tooltips" style="color:var(--al-danger-color)!important;" title="{{Les dépendances devront être relancées après la sauvegarde de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitilsation de l'environnement Venv utilisé par le plugin}}"></i></sup>
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitialisation de l'environnement Venv utilisé par le plugin}}"></i></sup>
                 </label>
                 <div class="col-lg-2">
                     <input type="checkbox" class="configKey" data-l1key="debugRestoreVenv" />
@@ -142,46 +142,28 @@ if (!isConnect()) {
   
   const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
   
-  for (const element of document.querySelectorAll('.customclass-resettvcertkey')) {
-    element.addEventListener('click', () => {
-      domUtils.ajax({
-        type: 'POST',
-        url: AJAX_URL,
-        data: {
-          action: 'resetTVCertKey'
-        },
-        dataType: 'json',
-        error: (request, status, error) => handleAjaxError(request, status, error),
-        success: (data) => {
-          if (data.state !== 'ok') {
-            jeedomUtils.showAlert({ message: data.result, level: 'danger' })
-            return
+  function setupResetButton(selector, action, successMessage) {
+    for (const element of document.querySelectorAll(selector)) {
+      element.addEventListener('click', () => {
+        domUtils.ajax({
+          type: 'POST',
+          url: AJAX_URL,
+          data: { action },
+          dataType: 'json',
+          error: (request, status, error) => handleAjaxError(request, status, error),
+          success: (data) => {
+            if (data.state !== 'ok') {
+              jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+              return
+            }
+            jeedomUtils.showAlert({ message: `${successMessage} :: ${data.result}`, level: 'success' })
           }
-          jeedomUtils.showAlert({ message: `{{Reset TV Cert (OK)}} :: ${data.result}`, level: 'success' })
-        }
+        })
       })
-    })
+    }
   }
-
-  for (const element of document.querySelectorAll('.customclass-resetadbkeys')) {
-    element.addEventListener('click', () => {
-      domUtils.ajax({
-        type: 'POST',
-        url: AJAX_URL,
-        data: {
-          action: 'resetAdbKeys'
-        },
-        dataType: 'json',
-        error: (request, status, error) => handleAjaxError(request, status, error),
-        success: (data) => {
-          if (data.state !== 'ok') {
-            jeedomUtils.showAlert({ message: data.result, level: 'danger' })
-            return
-          }
-          jeedomUtils.showAlert({ message: `{{Reset ADB Keys (OK)}} :: ${data.result}`, level: 'success' })
-        }
-      })
-    })
-  }
+  
+  setupResetButton('.customclass-resettvcertkey', 'resetTVCertKey', '{{Reset TV Cert (OK)}}')
+  setupResetButton('.customclass-resetadbkeys', 'resetAdbKeys', '{{Reset ADB Keys (OK)}}')
 })()
 </script>
