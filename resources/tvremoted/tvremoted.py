@@ -430,24 +430,36 @@ class EQRemoteADB(object):
                 return
             
             if action == 'shell':
-                # Execute shell command
+                # Execute shell command with timeout
                 if value is not None:
                     self._logger.debug("[EQRemoteADB][SendCmd - Shell] %s", value)
                     
-                    result = await self._adb.shell(value)
-                    if len(result) > 500:
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
-                    else:
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
-                    # Envoyer le résultat à Jeedom avec cmd_id si fourni
-                    data = {
-                        'adb_shell_output_mac': self._macAddr,
-                        'adb_shell_output_value': result
-                    }
-                    if cmd_id:
-                        data['adb_shell_output_cmd_id'] = cmd_id
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
-                    await self._jeedom_publisher.send_to_jeedom(data)
+                    try:
+                        # Use configured ADB timeout to avoid hanging on offline devices
+                        result = await asyncio.wait_for(self._adb.shell(value), timeout=self._config.adb_timeout)
+                        if len(result) > 500:
+                            self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
+                        else:
+                            self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
+                        # Envoyer le résultat à Jeedom avec cmd_id si fourni
+                        data = {
+                            'adb_shell_output_mac': self._macAddr,
+                            'adb_shell_output_value': result
+                        }
+                        if cmd_id:
+                            data['adb_shell_output_cmd_id'] = cmd_id
+                            self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
+                        await self._jeedom_publisher.send_to_jeedom(data)
+                    except asyncio.TimeoutError:
+                        self._logger.warning("[EQRemoteADB][SendCmd - Shell] Timeout (%ds) waiting for command response", self._config.adb_timeout)
+                        # Send error to Jeedom if cmd_id is provided
+                        if cmd_id:
+                            error_data = {
+                                'adb_shell_output_mac': self._macAddr,
+                                'adb_shell_output_value': 'ERROR: Command timeout (device may be offline)',
+                                'adb_shell_output_cmd_id': cmd_id
+                            }
+                            await self._jeedom_publisher.send_to_jeedom(error_data)
             elif action == 'keycode':
                 # Send keycode via ADB
                 if value is not None:
