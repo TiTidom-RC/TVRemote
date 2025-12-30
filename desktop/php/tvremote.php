@@ -225,6 +225,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                         <li>{{Un code apparaît sur votre TV (Ex: A2C10E)}}</li>
                                         <li>{{Entrez ce code dans le champ Code et cliquez sur Envoyer}}</li>
                                     </ol>
+                                    <p style="margin-top: 10px; margin-bottom: 5px;">
+                                        <i class="fas fa-clock"></i> {{Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.}}
+                                    </p>
                                     <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
                                         {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
@@ -271,6 +274,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                         <li>{{Options développeur → Débogage USB (Activer)}}</li>
                                         <li>{{Options développeur → Débogage réseau (Activer, si disponible)}}</li>
                                     </ol>
+                                    <p style="margin-top: 10px; margin-bottom: 5px;">
+                                        <i class="fas fa-clock"></i> {{Lors de l'appairage ADB, vous disposez de 1 minute pour valider sur votre TV.}}
+                                    </p>
                                     <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
                                         {{La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
