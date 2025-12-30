@@ -162,22 +162,23 @@ const addCmdToTable = (_cmd) => {
       const valueSelect = newRow.querySelector(SELECTORS.VALUE_SELECT)
       const refreshSelect = newRow.querySelector(SELECTORS.REFRESH_SELECT)
       
-      // Build options with reduce (faster than map+join for large arrays)
+      // Build options HTML (map().join() is clearer than reduce for simple cases)
       if (valueSelect) {
-        const allInfoOptions = infoCmds.reduce((html, cmd) => 
-          html + `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`, '')
+        const allInfoOptions = infoCmds
+          .map(cmd => `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`)
+          .join('')
         valueSelect.insertAdjacentHTML('beforeend', allInfoOptions)
       }
       
       if (refreshSelect) {
-        // Pre-filter with single condition check (optimization)
-        const adbShellOptions = infoCmds.reduce((html, cmd) => {
-          const cfg = cmd.configuration
-          if (cfg?.cmdType === 'adb-shell' || cfg?.['adb-shell-command']) {
-            return html + `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`
-          }
-          return html
-        }, '')
+        // Filter and map for better readability
+        const adbShellOptions = infoCmds
+          .filter(cmd => {
+            const cfg = cmd.configuration
+            return cfg?.cmdType === 'adb-shell' || cfg?.['adb-shell-command']
+          })
+          .map(cmd => `<option value="${init(cmd.id)}">${init(cmd.name)}</option>`)
+          .join('')
         refreshSelect.insertAdjacentHTML('beforeend', adbShellOptions)
       }
       
@@ -216,12 +217,13 @@ const addCmdToTable = (_cmd) => {
 
 
 
-// Handle cmdType change with event delegation (only attach once)
+// Handle cmdType change with event delegation (optimal)
 (() => {
-  const tableCmdElement = document.querySelector(SELECTORS.TABLE_CMD)
+  const { TABLE_CMD, CMD_TYPE_SELECT } = SELECTORS
+  const tableCmdElement = document.querySelector(TABLE_CMD)
   if (tableCmdElement && !tableCmdElement._cmdTypeListenerAttached) {
     tableCmdElement.addEventListener('change', (event) => {
-      if (!event.target.matches(SELECTORS.CMD_TYPE_SELECT)) return
+      if (!event.target.matches(CMD_TYPE_SELECT)) return
       
       const tr = event.target.closest('tr')
       const cmdType = event.target.value
@@ -238,28 +240,34 @@ const addCmdToTable = (_cmd) => {
       
       if (cmdType === 'refresh-cmd') {
         // Refresh mode: force action/other type, hide type/subtype, show cmdToRefresh select
-        elements.typeInput.value = 'action'
-        elements.subTypeInput.value = 'other'
+        if (elements.typeInput) elements.typeInput.value = 'action'
+        if (elements.subTypeInput) elements.subTypeInput.value = 'other'
         jeedom.cmd.changeType(tr, 'other')
-        ;[elements.type, elements.subType, elements.adbShellCmd].forEach(el => el?.unseen())
-        elements.cmdToRefresh?.seen()
+        if (elements.type) elements.type.unseen()
+        if (elements.subType) elements.subType.unseen()
+        if (elements.adbShellCmd) elements.adbShellCmd.unseen()
+        if (elements.cmdToRefresh) elements.cmdToRefresh.seen()
       } else if (cmdType === 'adb-shell') {
         // ADB Shell mode: set action/other for new commands, keep existing type otherwise
         const cmdId = tr.getAttribute('data-cmd_id')
         const isNewCommand = !cmdId || cmdId === '' || cmdId === 'null' || cmdId === 'undefined'
         if (isNewCommand) {
-          elements.typeInput.value = 'action'
-          elements.subTypeInput.value = 'other'
+          if (elements.typeInput) elements.typeInput.value = 'action'
+          if (elements.subTypeInput) elements.subTypeInput.value = 'other'
           jeedom.cmd.changeType(tr, 'other')
         } else {
-          jeedom.cmd.changeType(tr, elements.subTypeInput.value)
+          jeedom.cmd.changeType(tr, elements.subTypeInput?.value)
         }
-        ;[elements.type, elements.subType, elements.adbShellCmd].forEach(el => el?.seen())
-        elements.cmdToRefresh?.unseen()
+        if (elements.type) elements.type.seen()
+        if (elements.subType) elements.subType.seen()
+        if (elements.adbShellCmd) elements.adbShellCmd.seen()
+        if (elements.cmdToRefresh) elements.cmdToRefresh.unseen()
       } else {
         // Plugin/Standard mode: show type/subtype, hide custom fields
-        ;[elements.type, elements.subType].forEach(el => el?.seen())
-        ;[elements.adbShellCmd, elements.cmdToRefresh].forEach(el => el?.unseen())
+        if (elements.type) elements.type.seen()
+        if (elements.subType) elements.subType.seen()
+        if (elements.adbShellCmd) elements.adbShellCmd.unseen()
+        if (elements.cmdToRefresh) elements.cmdToRefresh.unseen()
       }
     })
     tableCmdElement._cmdTypeListenerAttached = true
@@ -270,12 +278,11 @@ const addCmdToTable = (_cmd) => {
 const printEqLogic = (_eqLogic) => {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
   if (_eqLogic?.configuration?.use_adb === undefined) {
-    const useAdbCheckbox = document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')
-    useAdbCheckbox?.jeeValue(0) // Jeedom native method
+    document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')?.jeeValue(0)
   }
 }
 
-// Cache des éléments pour éviter getElementById multiples
+// DOM cache to avoid multiple getElementById calls
 const DOM_CACHE = {
   hostAddr: null,
   macAddr: null,
@@ -368,8 +375,7 @@ for (const element of document.querySelectorAll('.customclass-beginpairingadb'))
 
 for (const element of document.querySelectorAll(SELECTORS.SCAN_BUTTONS)) {
   element.addEventListener('click', (event) => {
-    const scanState = event.currentTarget.getAttribute('data-scanState')
-    changeScanState(scanState)
+    changeScanState(event.currentTarget.getAttribute('data-scanState'))
   })
 }
 
@@ -417,14 +423,18 @@ document.body.addEventListener('tvremote::adbPairingResult', (event) => {
       jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
     }
     // Update status indicator
-    adbStatus?.removeClass('label-danger').addClass('label-success')
-    if (adbStatus) adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+    if (adbStatus) {
+      adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+      adbStatus.removeClass('label-danger').addClass('label-success')
+    }
   } else if (adb_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
-    adbStatus?.removeClass('label-success').addClass('label-danger')
-    if (adbStatus) adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+    if (adbStatus) {
+      adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+      adbStatus.removeClass('label-success').addClass('label-danger')
+    }
   }
 })
 
@@ -442,22 +452,24 @@ document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
       jeedomUtils.showAlert({ message: `{{Appairage TVRemote réussi pour}} ${deviceName}`, level: 'success' })
     }
     // Update status indicator
-    tvremoteStatus?.removeClass('label-danger').addClass('label-success')
-    if (tvremoteStatus) tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+    if (tvremoteStatus) {
+      tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+      tvremoteStatus.removeClass('label-danger').addClass('label-success')
+    }
   } else if (tvremote_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
-    tvremoteStatus?.removeClass('label-success').addClass('label-danger')
-    if (tvremoteStatus) tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+    if (tvremoteStatus) {
+      tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+      tvremoteStatus.removeClass('label-success').addClass('label-danger')
+    }
   }
 })
 
 document.body.addEventListener('tvremote::scanState', (event) => {
-  const _options = event.detail
-  const scanState = _options?.scanState
+  const scanState = event.detail?.scanState
   
-  // Cache des sélecteurs avec constantes
   const scanButtons = document.querySelectorAll(SELECTORS.SCAN_BUTTONS)
   const scanIcons = document.querySelectorAll(SELECTORS.SCAN_ICONS)
   const scanTexts = document.querySelectorAll(SELECTORS.SCAN_TEXTS)
@@ -474,7 +486,11 @@ document.body.addEventListener('tvremote::scanState', (event) => {
   }
   
   for (const el of scanIcons) {
-    isScanOn ? el.addClass('icon_red') : el.removeClass('icon_red')
+    if (isScanOn) {
+      el.addClass('icon_red')
+    } else {
+      el.removeClass('icon_red')
+    }
   }
   
   for (const el of scanTexts) {
@@ -490,12 +506,13 @@ document.body.addEventListener('tvremote::scanState', (event) => {
 
 // Helper function to update pairing status badge
 const updatePairingStatusBadge = (statusElement, isPaired) => {
-  const [removeClass, addClass, icon, text] = isPaired
-    ? ['label-danger', 'label-success', 'check-circle', '{{Appairé}}']
-    : ['label-success', 'label-danger', 'times-circle', '{{Non appairé}}']
-  
-  statusElement.removeClass(removeClass).addClass(addClass)
-  statusElement.innerHTML = `<i class="fas fa-${icon}"></i> ${text}`
+  if (isPaired) {
+    statusElement.removeClass('label-danger').addClass('label-success')
+    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+  } else {
+    statusElement.removeClass('label-success').addClass('label-danger')
+    statusElement.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+  }
   statusElement.seen()
 }
 
@@ -503,13 +520,17 @@ const updatePairingStatusBadge = (statusElement, isPaired) => {
 for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="tvremote_paired_status"]')) {
   element.addEventListener('change', (event) => {
     const statusElement = document.getElementById('tvremote-pairing-status')
-    statusElement && updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
+    if (statusElement) {
+      updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
+    }
   })
 }
 
 for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="adb_paired_status"]')) {
   element.addEventListener('change', (event) => {
     const statusElement = document.getElementById('adb-pairing-status')
-    statusElement && updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
+    if (statusElement) {
+      updatePairingStatusBadge(statusElement, parseInt(event.target.value, 10) === 1)
+    }
   })
 }
