@@ -137,45 +137,51 @@ if (!isConnect()) {
 </form>
 
 <script>
-    $('.customclass-resettvcertkey').on('click', function () {
-        $.ajax({
-            type: "POST",
-            url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
-            data: {
-                action: "resetTVCertKey"
-            },
-            dataType: 'json',
-            error: function (request, status, error) {
-                handleAjaxError(request, status, error);
-            },
-            success: function (data) {
-                if (data.state !== 'ok') {
-                    $('#div_alert').showAlert({ message: data.result, level: 'danger' });
-                    return;
-                }
-                $('#div_alert').showAlert({ message: '{{Reset TV Cert (OK)}} :: ' + data.result, level: 'success' });
-            }
-        });
-    });
+(function() {
+  'use strict'
+  
+  const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
+  
+  for (const element of document.querySelectorAll('.customclass-resettvcertkey')) {
+    element.addEventListener('click', () => {
+      domUtils.ajax({
+        type: 'POST',
+        url: AJAX_URL,
+        data: {
+          action: 'resetTVCertKey'
+        },
+        dataType: 'json',
+        error: (request, status, error) => handleAjaxError(request, status, error),
+        success: (data) => {
+          if (data.state !== 'ok') {
+            jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+            return
+          }
+          jeedomUtils.showAlert({ message: `{{Reset TV Cert (OK)}} :: ${data.result}`, level: 'success' })
+        }
+      })
+    })
+  }
 
-    $('.customclass-resetadbkeys').on('click', function () {
-        $.ajax({
-            type: "POST",
-            url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
-            data: {
-                action: "resetAdbKeys"
-            },
-            dataType: 'json',
-            error: function (request, status, error) {
-                handleAjaxError(request, status, error);
-            },
-            success: function (data) {
-                if (data.state !== 'ok') {
-                    $('#div_alert').showAlert({ message: data.result, level: 'danger' });
-                    return;
-                }
-                $('#div_alert').showAlert({ message: '{{Reset ADB Keys (OK)}} :: ' + data.result, level: 'success' });
-            }
-        });
-    });
+  for (const element of document.querySelectorAll('.customclass-resetadbkeys')) {
+    element.addEventListener('click', () => {
+      domUtils.ajax({
+        type: 'POST',
+        url: AJAX_URL,
+        data: {
+          action: 'resetAdbKeys'
+        },
+        dataType: 'json',
+        error: (request, status, error) => handleAjaxError(request, status, error),
+        success: (data) => {
+          if (data.state !== 'ok') {
+            jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+            return
+          }
+          jeedomUtils.showAlert({ message: `{{Reset ADB Keys (OK)}} :: ${data.result}`, level: 'success' })
+        }
+      })
+    })
+  }
+})()
 </script>
