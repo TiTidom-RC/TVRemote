@@ -739,7 +739,8 @@ class tvremote extends eqLogic {
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('refresh');
             $cmd->setType('action');
-            $cmd->setSubType('other');    
+            $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -755,6 +756,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('online');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -770,6 +772,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('adb_connected');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -785,6 +788,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('is_on');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -801,6 +805,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('power_on');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-volume-mute"></i>');
             $cmd->setValue($power_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -820,6 +825,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('power_off');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-volume-off"></i>');
             $cmd->setValue($power_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -842,6 +848,7 @@ class tvremote extends eqLogic {
             $cmd->setUnite('%');
             $cmd->setConfiguration('minValue', 0);
             $cmd->setConfiguration('maxValue', 100);
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'core::tile');
             $cmd->setTemplate('mobile', 'core::tile');
 	        $cmd->setIsVisible(1);
@@ -859,6 +866,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volume_muted');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -875,6 +883,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('mute_on');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-mute"></i>');
             $cmd->setValue($mute_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -894,6 +903,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('mute_off');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-off"></i>');
             $cmd->setValue($mute_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -913,6 +923,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('menu');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-bars"></i>');
 	        $cmd->setIsVisible(1);
@@ -930,6 +941,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumedown');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-down icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -946,6 +958,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumeup');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-up icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -962,6 +975,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('tv');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-tv"></i>');
 	        $cmd->setIsVisible(1);
@@ -979,6 +993,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('info');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-info-circle"></i>');
 	        $cmd->setIsVisible(1);
@@ -996,6 +1011,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('up');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-up icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1012,6 +1028,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('settings');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-cogs"></i>');
 	        $cmd->setIsVisible(1);
@@ -1029,6 +1046,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('left');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-left icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1045,6 +1063,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('center');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-dot-circle"></i>');
             $cmd->setDisplay('icon', '<i class="fas fa-check-circle"></i>');
 	        $cmd->setIsVisible(1);
@@ -1062,6 +1081,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('right');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-right icon_blue"></i>');
 	        $cmd->setIsVisible(1);
@@ -1079,6 +1099,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('back');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1096,6 +1117,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('down');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-down icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1112,6 +1134,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('home');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-home"></i>');
 	        $cmd->setIsVisible(1);
@@ -1129,6 +1152,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('one');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1146,6 +1170,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('two');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1162,6 +1187,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('three');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1179,6 +1205,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('four');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1196,6 +1223,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('five');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1212,6 +1240,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('six');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1229,6 +1258,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('seven');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1246,6 +1276,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('eight');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1262,6 +1293,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('nine');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1279,6 +1311,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('channel_down');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-minus-square icon_blue"></i>');
 	        $cmd->setIsVisible(1);
@@ -1296,6 +1329,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('zero');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1312,6 +1346,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('channel_up');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-plus-square icon_blue"></i>');
 	        $cmd->setIsVisible(1);
@@ -1330,6 +1365,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('input');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1347,6 +1383,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_1');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1363,6 +1400,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_2');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1379,6 +1417,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_3');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1395,6 +1434,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_4');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1412,6 +1452,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_previous');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-step-backward"></i>');
 	        $cmd->setIsVisible(1);
@@ -1429,6 +1470,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_rewind');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-backward"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1445,6 +1487,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_play');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-play"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1461,6 +1504,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_pause');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-pause"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1477,6 +1521,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_stop');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-stop"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1493,6 +1538,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_forward');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-forward"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1509,6 +1555,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_next');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-step-forward"></i>');
 	        $cmd->setIsVisible(1);
@@ -1517,23 +1564,6 @@ class tvremote extends eqLogic {
         } else {
             $orderCmd++;
         }
-
-        /* $cmd = $this->getCmd(null, 'media_eject');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Media Eject', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('media_eject');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            $cmd->setDisplay('forceReturnLineAfter', '1');
-            $cmd->setDisplay('icon', '<i class="fas fa-eject"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        } */
 
         $cmd = $this->getCmd(null, 'oqee');
         if (!is_object($cmd)) {
@@ -1545,6 +1575,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'oqee.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineBefore', '1');
@@ -1565,6 +1596,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'youtube.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1584,6 +1616,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'netflix.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1603,6 +1636,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'primevideo.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1622,6 +1656,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'disneyplus.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1641,6 +1676,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'mycanal.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1660,6 +1696,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'plex.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1679,6 +1716,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'appletv.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1698,6 +1736,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'orangetv.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1717,6 +1756,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'molotov.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineAfter', '1');
@@ -1735,6 +1775,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('current_app');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(1);
@@ -1752,6 +1793,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('updatelasttime');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(1);
@@ -1769,6 +1811,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('updatelasttimets');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(0);
@@ -1786,6 +1829,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('customcmd');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(0);
@@ -1804,6 +1848,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('keycode');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setIsVisible(0);
             $cmd->setDisplay('parameters', array("title_placeholder" => "Options", "message_placeholder" => "Key Code"));
@@ -1821,6 +1866,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('appcode');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
             $cmd->setDisplay('parameters', array("title_placeholder" => "Options", "message_placeholder" => "App Code"));
@@ -1838,6 +1884,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('adbshell');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
             $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "ADB Command"));
@@ -1855,6 +1902,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('adb_shell_output');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
