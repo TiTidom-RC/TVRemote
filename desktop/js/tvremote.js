@@ -17,6 +17,25 @@
 // Constants for better maintainability
 const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
 
+// Bridge jQuery events to native CustomEvents (if jQuery is available)
+if (typeof jQuery !== 'undefined') {
+  const jQueryToNative = (eventName) => {
+    $('body').on(eventName, function(event, data) {
+      document.body.dispatchEvent(new CustomEvent(eventName, { 
+        detail: data,
+        bubbles: true,
+        cancelable: true
+      }))
+    })
+  }
+  
+  // Register plugin events that need bridging
+  jQueryToNative('tvremote::scanState')
+  jQueryToNative('tvremote::scanResult')
+  jQueryToNative('tvremote::adbPairingResult')
+  jQueryToNative('tvremote::tvremotePairingResult')
+}
+
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -364,7 +383,9 @@ function changeScanState(_scanState) {
   })
 }
 
-$('body').on('tvremote::scanResult', function (_event, _option) {
+// Now you can use vanilla JS addEventListener!
+document.body.addEventListener('tvremote::scanResult', (event) => {
+  const _option = event.detail
   if (_option?.friendly_name) {
     if (_option.isNew === 1) {
       jeedomUtils.showAlert({ message: `[SCAN] TVRemote AJOUTE :: ${_option.friendly_name}`, level: 'success' })
@@ -374,7 +395,8 @@ $('body').on('tvremote::scanResult', function (_event, _option) {
   }
 })
 
-$('body').on('tvremote::adbPairingResult', function (_event, _option) {
+document.body.addEventListener('tvremote::adbPairingResult', (event) => {
+  const _option = event.detail
   if (!_option) return
   
   const deviceName = _option.friendly_name || _option.mac
@@ -401,7 +423,8 @@ $('body').on('tvremote::adbPairingResult', function (_event, _option) {
   }
 })
 
-$('body').on('tvremote::tvremotePairingResult', function (_event, _option) {
+document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
+  const _option = event.detail
   if (!_option) return
   
   const deviceName = _option.friendly_name || _option.mac
@@ -428,8 +451,9 @@ $('body').on('tvremote::tvremotePairingResult', function (_event, _option) {
   }
 })
 
-$('body').on('tvremote::scanState', function (_event, _options) {
-  const scanState = _options['scanState']
+document.body.addEventListener('tvremote::scanState', (event) => {
+  const _options = event.detail
+  const scanState = _options?.scanState
   
   if (scanState === 'scanOn') {
     jeedomUtils.hideAlert()
