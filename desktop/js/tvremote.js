@@ -17,6 +17,20 @@
 // Constants for better maintainability
 const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
 
+// Ensure Jeedom event polling is started for this page
+if (typeof jeedom !== 'undefined' && typeof jeedom.event !== 'undefined') {
+  console.log('[tvremote] Initializing Jeedom event polling...')
+  if (typeof jeedom.event.changes === 'function') {
+    // Force event polling to start if not already running
+    jeedom.event.changes('', '', function() {
+      // Polling callback - events will be dispatched automatically
+    })
+    console.log('[tvremote] Event polling initialized')
+  }
+} else {
+  console.error('[tvremote] Jeedom event system not available!')
+}
+
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -431,6 +445,11 @@ document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
   }
 })
 
+// Test if event polling is working at all
+document.body.addEventListener('cmd::update', (event) => {
+  console.log('[DEBUG] Generic Jeedom event received:', event.type, event.detail)
+})
+
 document.body.addEventListener('tvremote::scanState', (event) => {
   const _options = event.detail
   const scanState = _options?.scanState
@@ -459,6 +478,9 @@ document.body.addEventListener('tvremote::scanState', (event) => {
     window.location.reload()
   }
 })
+
+// Check if event system is initialized
+console.log('[DEBUG] Jeedom event system:', typeof jeedom !== 'undefined' && typeof jeedom.event !== 'undefined' ? 'Available' : 'NOT AVAILABLE')
 
 // Helper function to update pairing status badge
 const updatePairingStatusBadge = (statusElement, isPaired) => {
