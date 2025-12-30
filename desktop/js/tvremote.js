@@ -61,7 +61,7 @@ if (typeof jQuery !== 'undefined') {
 }
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
-const addCmdToTable = (_cmd) => {
+function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
     _cmd = { configuration: {} }
   }
@@ -286,6 +286,10 @@ const printEqLogic = (_eqLogic) => {
     document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')?.jeeValue(0)
   }
 }
+
+// Expose functions globally for Jeedom to call them
+window.addCmdToTable = addCmdToTable
+window.printEqLogic = printEqLogic
 
 // DOM cache to avoid multiple getElementById calls
 const DOM_CACHE = {
