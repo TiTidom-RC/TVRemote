@@ -18,9 +18,6 @@
 (function() {
 'use strict'
 
-// Debug: check if script is loaded multiple times
-console.log('[TVRemote] Script loaded at:', new Date().toISOString())
-
 // Constants for better maintainability and performance
 const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
 
