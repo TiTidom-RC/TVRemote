@@ -90,7 +90,7 @@ try {
                 $scanupdtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
             }
         }
-    } elseif (isset($result['adb_shell_output_mac']) && isset($result['adb_shell_output_value'])) {
+    } elseif (isset($result['adb_shell_output_mac']) && (isset($result['adb_shell_output_value']) || isset($result['adb_shell_error']))) {
         log::add('tvremote', 'debug', '[CALLBACK][ADB Shell Output] MAC :: ' . $result['adb_shell_output_mac']);
         $tv_remote = tvremote::byLogicalId($result['adb_shell_output_mac'], 'tvremote');
         if (is_object($tv_remote)) {
