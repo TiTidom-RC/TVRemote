@@ -24,6 +24,7 @@
         "Commande Action non implémentée actuellement": "Ação de comando não implementada atualmente",
         "Commande Info non implémentée actuellement": "Comando Informação não implementada atualmente",
         "Commande non implémentée actuellement": "Comando não implementado atualmente",
+        "Connexion ADB": "Ligação ADB",
         "Current App": "Aplicação atual",
         "Custom Cmd": "Cmd personalizado",
         "Disney+": "Disney+",
@@ -40,7 +41,6 @@
         "Input": "Entrada",
         "Key Code": "Código-chave",
         "Left": "Esquerda",
-        "Media Eject": "Ejeção de suportes",
         "Media Forward": "Media Forward",
         "Media Next": "Meios de comunicação social Seguinte",
         "Media Pause": "Pausa nos media",
@@ -110,8 +110,8 @@
         "Supprimer la commande": "Apagar comando",
         "Tester": "Teste",
         "Unité": "Unidade",
-        "Échec de l\\'appairage ADB pour": "Falha no emparelhamento ADB para",
-        "Échec de l\\'appairage TVRemote pour": "Falha no emparelhamento do TVRemote para"
+        "Échec de l'appairage ADB pour": "Falha no emparelhamento ADB para",
+        "Échec de l'appairage TVRemote pour": "Falha no emparelhamento do TVRemote para"
     },
     "plugins\/tvremote\/desktop\/php\/tvremote.php": {
         "401 - Accès non autorisé": "401 - Acesso não autorizado",
@@ -152,6 +152,7 @@
         "Informations": "Informações",
         "La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.": "A TV deve estar ligada para o emparelhamento. Para poder enviar comandos quando a TV estiver em modo de espera, o modo de economia de energia não deve desligar a rede.",
         "La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.": "A TV deve estar ligada para o emparelhamento. Para que os estados sejam atualizados quando a TV estiver em modo de espera, o modo de economia de energia não deve desligar a rede.",
+        "Lors de l'appairage ADB, vous disposez de 1 minute pour valider sur votre TV.": "Durante o emparelhamento ADB, tem 1 minuto para validar na sua TV.",
         "Mes TVRemotes": "Os meus TVRemotes",
         "Modèle": "Modelo",
         "Nom": "Nome",
@@ -179,7 +180,8 @@
         "Type Cmd": "Tipo Cmd",
         "Un code apparaît sur votre TV (Ex: A2C10E)": "Um código aparece na sua TV (por exemplo: A2C10E)",
         "Utiliser ADB": "Utilizar ADB",
-        "Visible": "Visível"
+        "Visible": "Visível",
+        "Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.": "Tem 5 minutos para introduzir o código depois de clicar em Emparelhar."
     },
     "plugins\/tvremote\/plugin_info\/configuration.php": {
         "Certificat ADB": "Certificado ADB",

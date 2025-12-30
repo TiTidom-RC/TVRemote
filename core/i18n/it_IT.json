@@ -24,6 +24,7 @@
         "Commande Action non implémentée actuellement": "Azione di comando non attualmente implementata",
         "Commande Info non implémentée actuellement": "Comando Info attualmente non implementato",
         "Commande non implémentée actuellement": "Comando non attualmente implementato",
+        "Connexion ADB": "Connessione ADB",
         "Current App": "App attuale",
         "Custom Cmd": "Comando personalizzato",
         "Disney+": "Disney+",
@@ -40,7 +41,6 @@
         "Input": "Ingresso",
         "Key Code": "Codice chiave",
         "Left": "A sinistra",
-        "Media Eject": "Espulsione dei media",
         "Media Forward": "Media Forward",
         "Media Next": "Media Next",
         "Media Pause": "Pausa multimediale",
@@ -110,8 +110,8 @@
         "Supprimer la commande": "Comando di cancellazione",
         "Tester": "Test",
         "Unité": "Unità",
-        "Échec de l\\'appairage ADB pour": "Errore nell'accoppiamento ADB per",
-        "Échec de l\\'appairage TVRemote pour": "Errore nell'accoppiamento TVRemote per"
+        "Échec de l'appairage ADB pour": "Errore nell'accoppiamento ADB per",
+        "Échec de l'appairage TVRemote pour": "Errore nell'accoppiamento TVRemote per"
     },
     "plugins\/tvremote\/desktop\/php\/tvremote.php": {
         "401 - Accès non autorisé": "401 - Accesso non autorizzato",
@@ -152,6 +152,7 @@
         "Informations": "Informazioni",
         "La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.": "Il televisore deve essere acceso per l'accoppiamento. Per poter inviare comandi quando il televisore è in standby, la modalità di risparmio energetico non deve disattivare la rete.",
         "La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.": "Il televisore deve essere acceso per l'accoppiamento. Affinché gli stati vengano aggiornati quando il televisore è in standby, la modalità di risparmio energetico non deve interrompere la connessione di rete.",
+        "Lors de l'appairage ADB, vous disposez de 1 minute pour valider sur votre TV.": "Durante l'accoppiamento ADB, hai 1 minuto di tempo per confermare sul tuo televisore.",
         "Mes TVRemotes": "I miei telecomandi TV",
         "Modèle": "Modello",
         "Nom": "Nome",
@@ -179,7 +180,8 @@
         "Type Cmd": "Tipo Cmd",
         "Un code apparaît sur votre TV (Ex: A2C10E)": "Sul televisore compare un codice (ad es. A2C10E)",
         "Utiliser ADB": "Utilizzare ADB",
-        "Visible": "Visibile"
+        "Visible": "Visibile",
+        "Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.": "Hai 5 minuti di tempo per inserire il codice dopo aver cliccato su Accoppia."
     },
     "plugins\/tvremote\/plugin_info\/configuration.php": {
         "Certificat ADB": "Certificato ADB",
