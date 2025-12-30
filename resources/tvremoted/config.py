@@ -215,3 +215,13 @@ class Config(object):
     @property
     def adb_auth_timeout(self):
         return 60
+    
+    @property
+    def reconnect_delay_min(self):
+        """Minimum delay between reconnection attempts (seconds)"""
+        return 10
+    
+    @property
+    def reconnect_delay_max(self):
+        """Maximum delay between reconnection attempts (seconds)"""
+        return 120

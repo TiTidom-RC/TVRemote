@@ -58,6 +58,10 @@ class EQRemote(object):
         self._logger = logging.getLogger(__name__)
         self._jeedom_publisher = _jeedom_publisher
         self._loop = asyncio.get_running_loop()
+        # Exponential backoff for reconnection attempts
+        self._reconnect_delay = self._config.reconnect_delay_min
+        self._reconnect_delay_min = self._config.reconnect_delay_min
+        self._reconnect_delay_max = self._config.reconnect_delay_max
 
     async def main(self) -> None:
         """
@@ -79,6 +83,8 @@ class EQRemote(object):
             while not self._config.is_ending:
                 try:
                     await self._remote.async_connect()
+                    # Reset reconnection delay on successful connection
+                    self._reconnect_delay = self._reconnect_delay_min
                     break
                 except InvalidAuth as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
@@ -91,16 +97,36 @@ class EQRemote(object):
                         'pairing_value': 0
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
-                    await asyncio.sleep(60)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
-                except (CannotConnect, ConnectionClosed) as exc:
-                    self._logger.error("[EQRemote][MAIN][%s] Cannot connect. Exception :: %s", self._macAddr, exc)
-                    await asyncio.sleep(60)
+                except CannotConnect as exc:
+                    self._logger.warning("[EQRemote][MAIN][%s] Cannot connect (device may be offline) :: %s", self._macAddr, exc)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
+                    continue
+                except ConnectionClosed as exc:
+                    self._logger.error("[EQRemote][MAIN][%s] Connection closed unexpectedly. Exception :: %s", self._macAddr, exc)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
                 except Exception as e:
                     self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
                     self._logger.debug(traceback.format_exc())
-                    await asyncio.sleep(60)
+                    
+                    # Exponential backoff: wait before retry and increase delay
+                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     continue
                     
             self._remote.keep_reconnecting()
@@ -278,8 +304,7 @@ class EQRemote(object):
             self._logger.error("[EQRemote][SendCommand] Exception (ValueError) :: %s", e)
             self._logger.debug(traceback.format_exc())
         except ConnectionClosed as e:
-            self._logger.error("[EQRemote][SendCommand] Exception (ConnectionError) :: %s", e)
-            self._logger.debug(traceback.format_exc())
+            self._logger.warning("[EQRemote][SendCommand] Connection closed (device may be offline) :: %s", e)
         except Exception as e:
             self._logger.error("[EQRemote][SendCommand] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
@@ -299,6 +324,10 @@ class EQRemoteADB(object):
         self._loop = asyncio.get_running_loop()
         self._signer = None
         self._connected = False
+        # Exponential backoff for reconnection attempts
+        self._reconnect_delay = self._config.reconnect_delay_min
+        self._reconnect_delay_min = self._config.reconnect_delay_min
+        self._reconnect_delay_max = self._config.reconnect_delay_max
 
     async def _load_signer(self) -> bool:
         """Load the ADB signer from key file"""
@@ -348,6 +377,9 @@ class EQRemoteADB(object):
                         self._connected = True
                         self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB", self._macAddr)
                         
+                        # Reset reconnection delay on successful connection
+                        self._reconnect_delay = self._reconnect_delay_min
+                        
                         # Send connection status to Jeedom
                         currentTime = int(time.time())
                         currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
@@ -364,8 +396,16 @@ class EQRemoteADB(object):
                     # Keep connection alive with polling (ADB has no event callbacks like AndroidTVRemote2)
                     await asyncio.sleep(5)
                     
-                except (TcpTimeoutException, InvalidResponseError, DeviceAuthError) as e:
-                    self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
+                except (TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
+                    # Handle connection errors gracefully (device offline, network issue, etc.)
+                    if isinstance(e, DeviceAuthError):
+                        self._logger.error("[EQRemoteADB][MAIN][%s] Authorization error :: %s", self._macAddr, e)
+                    elif isinstance(e, (OSError, ConnectionError)):
+                        # Network errors (device offline, unreachable, etc.) - use WARNING instead of ERROR
+                        self._logger.warning("[EQRemoteADB][MAIN][%s] Device unreachable :: %s", self._macAddr, e)
+                    else:
+                        self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
+                    
                     self._connected = False
                     
                     # Send disconnection status to Jeedom
@@ -390,12 +430,17 @@ class EQRemoteADB(object):
                         }
                         await self._jeedom_publisher.send_to_jeedom(revoke_data)
                     
-                    await asyncio.sleep(10)  # Wait before retry
+                    # Exponential backoff: wait before retry and increase delay for next attempt
+                    self._logger.debug("[EQRemoteADB][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+                    await asyncio.sleep(self._reconnect_delay)
+                    
+                    # Double the delay for next attempt, up to maximum
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
                     
         except asyncio.CancelledError:
             self._logger.debug("[EQRemoteADB] Stop Main for device %s (%s)", self._macAddr, self._host)
         except Exception as e: 
-            self._logger.error("[EQRemoteADB][MAIN] Exception :: %s", e)
+            self._logger.error("[EQRemoteADB][MAIN] Unexpected exception :: %s", e)
             self._logger.debug(traceback.format_exc())
     
     async def remove(self) -> None:
@@ -416,27 +461,65 @@ class EQRemoteADB(object):
         try:
             if self._adb is None or not self._connected:
                 self._logger.error("[EQRemoteADB][SendCommand] ADB not connected")
+                # Send error to Jeedom if cmd_id is provided
+                if cmd_id:
+                    error_data = {
+                        'adb_shell_output_mac': self._macAddr,
+                        'adb_shell_output_cmd_id': cmd_id,
+                        'adb_shell_error': 'Device not connected (ADB)'
+                    }
+                    await self._jeedom_publisher.send_to_jeedom(error_data)
                 return
             
             if action == 'shell':
-                # Execute shell command
+                # Execute shell command with timeout
                 if value is not None:
                     self._logger.debug("[EQRemoteADB][SendCmd - Shell] %s", value)
                     
-                    result = await self._adb.shell(value)
-                    if len(result) > 500:
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
-                    else:
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
-                    # Envoyer le résultat à Jeedom avec cmd_id si fourni
-                    data = {
-                        'adb_shell_output_mac': self._macAddr,
-                        'adb_shell_output_value': result
-                    }
-                    if cmd_id:
-                        data['adb_shell_output_cmd_id'] = cmd_id
-                        self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
-                    await self._jeedom_publisher.send_to_jeedom(data)
+                    try:
+                        # Use configured ADB timeout for both asyncio and transport layer
+                        result = await asyncio.wait_for(
+                            self._adb.shell(value, transport_timeout_s=self._config.adb_timeout), 
+                            timeout=self._config.adb_timeout
+                        )
+                        # Clean whitespace and newlines from shell output
+                        result = result.strip()
+                        
+                        if len(result) > 500:
+                            self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] (%d chars) :: %s", len(result), result)
+                        else:
+                            self._logger.debug("[EQRemoteADB][SendCmd - Shell Result] %s", result)
+                        # Envoyer le résultat à Jeedom avec cmd_id si fourni
+                        data = {
+                            'adb_shell_output_mac': self._macAddr,
+                            'adb_shell_output_value': result
+                        }
+                        if cmd_id:
+                            data['adb_shell_output_cmd_id'] = cmd_id
+                            self._logger.debug("[EQRemoteADB][SendCmd - Shell] Sending result for cmd_id %s", cmd_id)
+                        await self._jeedom_publisher.send_to_jeedom(data)
+                    except (asyncio.TimeoutError, TcpTimeoutException) as e:
+                        self._logger.warning("[EQRemoteADB][SendCmd - Shell] Timeout (%ds) waiting for command response :: %s", self._config.adb_timeout, str(e))
+                        # Send error to Jeedom if cmd_id is provided
+                        if cmd_id:
+                            error_data = {
+                                'adb_shell_output_mac': self._macAddr,
+                                'adb_shell_output_cmd_id': cmd_id,
+                                'adb_shell_error': 'Command timeout'
+                            }
+                            await self._jeedom_publisher.send_to_jeedom(error_data)
+                    except (OSError, ConnectionError, InvalidResponseError) as e:
+                        self._logger.warning("[EQRemoteADB][SendCmd - Shell] Connection lost during command execution :: %s", str(e))
+                        # Mark as disconnected so main loop can reconnect
+                        self._connected = False
+                        # Send error to Jeedom if cmd_id is provided
+                        if cmd_id:
+                            error_data = {
+                                'adb_shell_output_mac': self._macAddr,
+                                'adb_shell_output_cmd_id': cmd_id,
+                                'adb_shell_error': 'Connection lost'
+                            }
+                            await self._jeedom_publisher.send_to_jeedom(error_data)
             elif action == 'keycode':
                 # Send keycode via ADB
                 if value is not None:
@@ -693,8 +776,11 @@ class TVRemoted:
             try:
                 self._logger.debug("[PAIRING][START][%s] Start Pairing...", _mac)
                 await remote.async_start_pairing()
-            except (CannotConnect, ConnectionClosed) as e:
-                self._logger.error("[PAIRING][START][%s] Exception :: %s", _mac, e)
+            except CannotConnect as e:
+                self._logger.warning("[PAIRING][START][%s] Cannot connect (device may be offline) :: %s", _mac, e)
+                return
+            except ConnectionClosed as e:
+                self._logger.error("[PAIRING][START][%s] Connection closed :: %s", _mac, e)
                 return
             
             while not self._config.is_ending and (pairing_starttime + self._config.pairing_timeout) > currentTime :
@@ -833,8 +919,12 @@ class TVRemoted:
                         'message': 'Device not authorized. Please check TV screen for authorization prompt.'
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
-            except (TcpTimeoutException, InvalidResponseError) as e:
-                self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
+            except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
+                # Distinguer les erreurs de connexion normales (device offline) des erreurs critiques
+                if isinstance(e, (OSError, ConnectionError)):
+                    self._logger.warning("[PAIRING_ADB][%s] Cannot connect (device may be offline) :: %s", _mac, e)
+                else:
+                    self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
                 if self._jeedom_publisher is not None:
                     data = {
                         'mac': _mac,
