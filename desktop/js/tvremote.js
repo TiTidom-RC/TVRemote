@@ -33,7 +33,7 @@ const SELECTORS = Object.freeze({
   REFRESH_SELECT: '.cmdAttr[data-l2key=cmdToRefresh]'
 })
 
-// Bridge jQuery events to native CustomEvents (bidirectional, if jQuery is available)
+// Bridge jQuery events to native CustomEvents (unidirectional: jQuery → CustomEvents)
 if (typeof jQuery !== 'undefined') {
   const eventsToBridge = [
     'tvremote::scanState',
@@ -56,14 +56,6 @@ if (typeof jQuery !== 'undefined') {
       document.body.dispatchEvent(customEvent)
     })
     
-    // CustomEvents → jQuery (bidirectional bridge)
-    document.body.addEventListener(eventName, (event) => {
-      if (event.__jQueryBridged) return  // Prevent infinite loop
-      
-      const jQueryEvent = $.Event(eventName)
-      jQueryEvent.__jQueryBridged = true
-      $('body').trigger(jQueryEvent, event.detail)
-    })
   })
 }
 
