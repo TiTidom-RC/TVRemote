@@ -33,28 +33,30 @@ const SELECTORS = Object.freeze({
   REFRESH_SELECT: '.cmdAttr[data-l2key=cmdToRefresh]'
 })
 
-// Bridge jQuery events to native CustomEvents (if jQuery is available)
+// Bridge jQuery events to native CustomEvents (unidirectional: jQuery → CustomEvents)
 if (typeof jQuery !== 'undefined') {
-  const jQueryToNative = (eventName) => {
+  const eventsToBridge = [
+    'tvremote::scanState',
+    'tvremote::scanResult',
+    'tvremote::adbPairingResult',
+    'tvremote::tvremotePairingResult'
+  ]
+  
+  eventsToBridge.forEach(eventName => {
+    // jQuery → CustomEvents
     $('body').on(eventName, function(event, data) {
-      // Prevent infinite loop: don't re-emit if event comes from our bridge
-      if (event.originalEvent && event.originalEvent.__bridged) return
+      if (event.originalEvent?.__bridged) return  // Prevent infinite loop
       
-      const customEvent = new CustomEvent(eventName, { 
+      const customEvent = new CustomEvent(eventName, {
         detail: data,
         bubbles: true,
         cancelable: true
       })
-      customEvent.__bridged = true  // Mark as bridged to prevent loop
+      customEvent.__bridged = true
       document.body.dispatchEvent(customEvent)
     })
-  }
-  
-  // Register plugin events that need bridging
-  jQueryToNative('tvremote::scanState')
-  jQueryToNative('tvremote::scanResult')
-  jQueryToNative('tvremote::adbPairingResult')
-  jQueryToNative('tvremote::tvremotePairingResult')
+    
+  })
 }
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
