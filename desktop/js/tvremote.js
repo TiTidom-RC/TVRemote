@@ -14,6 +14,8 @@
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Protect against multiple script loads (Jeedom SPA navigation, cache, etc.)
+(function() {
 'use strict'
 
 // Debug: check if script is loaded multiple times
@@ -537,3 +539,5 @@ for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="adb_pa
     }
   })
 }
+
+})() // End IIFE protection
