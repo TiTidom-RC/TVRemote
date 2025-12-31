@@ -474,10 +474,10 @@ class EQRemoteADB(object):
                     await asyncio.sleep(5)
                 
                 except asyncio.CancelledError:
-                    # Connection task was cancelled (likely by cancel_connection_attempt during pairing)
-                    self._logger.debug("[EQRemoteADB][MAIN][%s] Connection cancelled", self._macAddr)
+                    # Task was cancelled (device removal or connection cancel during pairing)
+                    self._logger.debug("[EQRemoteADB][MAIN][%s] Task cancelled, exiting main loop", self._macAddr)
                     self._reset_state()
-                    # Don't break the loop, just continue to next iteration
+                    raise  # Re-raise to exit the main loop
                     
                 except (TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
                     # Handle connection errors gracefully (device offline, network issue, etc.)
