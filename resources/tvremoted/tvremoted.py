@@ -1042,6 +1042,8 @@ class TVRemoted:
     async def _pairing_adb(self, _mac=None, _host=None) -> None:
         """Function to pair with TV using ADB"""
         
+        self._logger.info("[PAIRING_ADB][%s] Function called for host %s", _mac, _host)
+        
         if self._config.scanmode:
             self._logger.error("[PAIRING_ADB] TV ScanMode in Progress. Stop Scan before trying to Pair.")
             return
@@ -1095,6 +1097,7 @@ class TVRemoted:
                 self._logger.info("[PAIRING_ADB][%s] ADB connection successful", _mac)
                 
                 # Inform Jeedom of success
+                self._logger.debug("[PAIRING_ADB][%s] Sending success callback to Jeedom", _mac)
                 if self._jeedom_publisher is not None:
                     data = {
                         'mac': _mac,
@@ -1102,6 +1105,7 @@ class TVRemoted:
                         'message': 'ADB pairing successful'
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
+                    self._logger.debug("[PAIRING_ADB][%s] Success callback sent", _mac)
                 
                 # Close connection (wrap in try/except to avoid interfering with success notification)
                 try:
