@@ -492,7 +492,8 @@ class tvremote extends eqLogic {
                 'cmd' => 'addtvremote_adb',
                 'mac' => $this->getLogicalId(),
                 'host' => $this->getConfiguration('host'),
-                'friendly_name' => $this->getConfiguration('friendly_name')
+                'friendly_name' => $this->getConfiguration('friendly_name'),
+                'adb_paired' => $this->getConfiguration('adb_paired_status', 0)
             );
             self::sendToDaemon($value_adb);
         }

@@ -324,8 +324,10 @@ class EQRemoteADB(object):
         self._loop = asyncio.get_running_loop()
         self._signer = None
         self._connected = False
-        self._connection_task = None  # Track ongoing connection attempt
+        self._connection_task: asyncio.Task | None = None  # Track ongoing connection attempt
         self._pairing_mode = False  # Flag to indicate pairing is in progress
+        self._main_task: asyncio.Task | None = None  # Reference to the main loop task
+        self._adb_paired = 0  # Pairing status (0=not paired, 1=paired)
         # Exponential backoff for reconnection attempts
         self._reconnect_delay = self._config.reconnect_delay_min
         self._last_heartbeat = 0  # Timestamp of last heartbeat check
@@ -380,7 +382,7 @@ class EQRemoteADB(object):
     async def main(self) -> None:
         """
         The is the entry point of your class EQRemoteADB.
-        You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemoteADB.main())`
+        You should start the asyncio task with this function like this: `asyncio.create_task(myEQRemoteADB.main())`
         """
         try:
             self._logger.debug("[EQRemoteADB][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
@@ -400,6 +402,11 @@ class EQRemoteADB(object):
             
             while not self._config.is_ending:
                 try:
+                    # Skip connection if not paired or pairing in progress
+                    if self._adb_paired != 1 or self._pairing_mode:
+                        await asyncio.sleep(5)
+                        continue
+                    
                     if self._can_connect():
                         # Start a new connection if none is in progress
                         if not self._is_connecting():
@@ -464,6 +471,7 @@ class EQRemoteADB(object):
                     # If pairing is in progress, don't process errors (pairing handles its own connection)
                     if self._pairing_mode:
                         self._logger.debug("[EQRemoteADB][MAIN][%s] Connection error during pairing mode (expected, ignored) :: %s", self._macAddr, e)
+                        await asyncio.sleep(5)  # Important: avoid busy loop
                         continue  # Skip notifications and backoff, return to loop start
                     
                     # Log errors based on type
@@ -494,6 +502,9 @@ class EQRemoteADB(object):
         except Exception as e: 
             self._logger.error("[EQRemoteADB][MAIN] Unexpected exception :: %s", e)
             self._logger.debug(traceback.format_exc())
+        finally:
+            self._main_task = None
+            self._logger.debug("[EQRemoteADB][MAIN][%s] Main loop stopped", self._macAddr)
     
     async def cancel_connection_attempt(self) -> None:
         """Cancel any ongoing connection attempt"""
@@ -605,7 +616,7 @@ class EQRemoteADB(object):
                     except (OSError, ConnectionError, InvalidResponseError) as e:
                         self._logger.warning("[EQRemoteADB][SendCmd - Shell] Connection lost during command execution :: %s", str(e))
                         # Mark as disconnected so main loop can reconnect
-                        self._connected = False
+                        self._reset_state()
                         # Send error to Jeedom if cmd_id is provided
                         if cmd_id:
                             error_data = {
@@ -637,7 +648,7 @@ class EQRemoteADB(object):
                 self._logger.error("[EQRemoteADB][SendCommand] Command Mapping :: %s :: Unknown Key !", action)
         except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
             self._logger.error("[EQRemoteADB][SendCommand] Connection error :: %s", e)
-            self._connected = False
+            self._reset_state()
             self._logger.debug(traceback.format_exc())
         except Exception as e:
             self._logger.error("[EQRemoteADB][SendCommand] Exception :: %s", e)
@@ -816,11 +827,26 @@ class TVRemoted:
                     if message['friendly_name'] not in self._config.remote_names_adb:
                         self._config.remote_names_adb.append(message['friendly_name'])
                         self._logger.debug('[DAEMON][SOCKET] Add ADB to Remote Names :: %s', str(self._config.remote_names_adb))
+                    
                     if message['mac'] not in self._config.remote_mac_adb:
+                        # Create new device
                         self._config.remote_mac_adb.append(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Add ADB to Remote MAC :: %s', str(self._config.remote_mac_adb))
-                        self._config.remote_devices_adb[message['mac']] = EQRemoteADB(message['mac'], message['host'], self._config, self._jeedom_publisher)
-                        await self._config.remote_devices_adb[message['mac']].main()
+                        device = EQRemoteADB(message['mac'], message['host'], self._config, self._jeedom_publisher)
+                        self._config.remote_devices_adb[message['mac']] = device
+                        
+                        # Store adb_paired status in device for main loop logic
+                        device._adb_paired = message.get('adb_paired', 0)
+                        
+                        # Always start main loop as async task (it will handle pairing logic internally)
+                        device._main_task = asyncio.create_task(device.main())
+                        self._logger.debug('[DAEMON][SOCKET] Main loop task created for %s (paired=%s)', message['mac'], device._adb_paired)
+                    else:
+                        # Update pairing status if device already exists
+                        device = self._config.remote_devices_adb.get(message['mac'])
+                        if device:
+                            device._adb_paired = message.get('adb_paired', 0)
+                            self._logger.debug('[DAEMON][SOCKET] Device %s already exists, updated paired status to %s', message['mac'], device._adb_paired)
             elif message['cmd'] == "removetvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
                     self._logger.debug('[DAEMON][SOCKET] Remove ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
@@ -833,7 +859,16 @@ class TVRemoted:
                     if message['mac'] in self._config.remote_mac_adb:
                         self._config.remote_mac_adb.remove(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Remove ADB from Remote MAC :: %s', str(self._config.remote_mac_adb))
-                        await self._config.remote_devices_adb[message['mac']].remove()
+                        device = self._config.remote_devices_adb[message['mac']]
+                        # Cancel main loop task if running
+                        if device._main_task is not None and not device._main_task.done():
+                            device._main_task.cancel()
+                            try:
+                                await device._main_task
+                            except asyncio.CancelledError:
+                                self._logger.debug('[DAEMON][SOCKET] Main loop cancelled for %s', message['mac'])
+                        # Remove device
+                        await device.remove()
                         del self._config.remote_devices_adb[message['mac']]
                         
             else:
@@ -1030,9 +1065,12 @@ class TVRemoted:
                 except Exception as close_error:
                     self._logger.debug("[PAIRING_ADB][%s] Error closing connection (ignored) :: %s", _mac, close_error)
                 
-                # Disable pairing mode
+                # Disable pairing mode and update paired status
                 if _mac in self._config.remote_mac_adb and _mac in self._config.remote_devices_adb:
-                    self._config.remote_devices_adb[_mac].set_pairing_mode(False)
+                    device = self._config.remote_devices_adb[_mac]
+                    device.set_pairing_mode(False)
+                    device._adb_paired = 1
+                    self._logger.info("[PAIRING_ADB][%s] Device paired, main loop will connect soon", _mac)
                 
             except DeviceAuthError as e:
                 self._logger.error("[PAIRING_ADB][%s] Device not authorized. Please check TV screen for authorization prompt :: %s", _mac, e)
