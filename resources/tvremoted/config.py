@@ -210,18 +210,32 @@ class Config(object):
     
     @property
     def adb_timeout(self):
-        return 30
+        """Timeout for ADB shell commands (seconds)"""
+        return 20
     
     @property
-    def adb_auth_timeout(self):
+    def adb_auth_timeout_pairing(self):
+        """Timeout for ADB authentication during manual pairing (seconds)
+        Longer to give user time to validate on TV screen"""
         return 60
+    
+    @property
+    def adb_auth_timeout_connect(self):
+        """Timeout for ADB authentication during automatic reconnection (seconds)
+        Shorter since no user interaction needed"""
+        return 30
     
     @property
     def reconnect_delay_min(self):
         """Minimum delay between reconnection attempts (seconds)"""
-        return 10
+        return 15
     
     @property
     def reconnect_delay_max(self):
         """Maximum delay between reconnection attempts (seconds)"""
         return 120
+    
+    @property
+    def adb_heartbeat_interval(self):
+        """Interval for ADB heartbeat checks to detect disconnections (seconds)"""
+        return 30

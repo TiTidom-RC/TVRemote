@@ -283,7 +283,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">{{Statut}}</label>
+                                    <label class="col-sm-4 control-label">
+                                        {{Statut}}
+                                        <sup><i class="fas fa-info-circle tooltips" title="{{Si l'autorisation ADB est révoquée depuis les paramètres de la TV, le démon tentera automatiquement de se reconnecter. Une nouvelle demande d'autorisation apparaîtra sur l'écran de la TV qu'il faudra accepter pour rétablir la connexion.}}"></i></sup>
+                                    </label>
                                     <div class="col-lg-3">
                                         <input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_paired_status" />
                                         <span class="label label-danger" id="adb-pairing-status" style="display:none;">

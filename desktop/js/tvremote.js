@@ -279,11 +279,38 @@ function addCmdToTable(_cmd) {
   }
 })()
 
+// Helper function to update pairing status badge
+const updatePairingStatusBadge = (statusElement, isPaired) => {
+  if (isPaired) {
+    statusElement.removeClass('label-danger').addClass('label-success')
+    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
+  } else {
+    statusElement.removeClass('label-success').addClass('label-danger')
+    statusElement.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
+  }
+  statusElement.seen()
+}
 
 const printEqLogic = (_eqLogic) => {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
   if (_eqLogic?.configuration?.use_adb === undefined) {
     document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')?.jeeValue(0)
+  }
+  
+  // Update pairing status badges based on configuration
+  const adbPairedStatus = _eqLogic?.configuration?.adb_paired_status
+  const tvremotePairedStatus = _eqLogic?.configuration?.tvremote_paired_status
+  
+  // Update ADB pairing status badge
+  const adbStatusElement = document.getElementById('adb-pairing-status')
+  if (adbStatusElement && adbPairedStatus !== undefined) {
+    updatePairingStatusBadge(adbStatusElement, parseInt(adbPairedStatus, 10) === 1)
+  }
+  
+  // Update TVRemote pairing status badge
+  const tvremoteStatusElement = document.getElementById('tvremote-pairing-status')
+  if (tvremoteStatusElement && tvremotePairedStatus !== undefined) {
+    updatePairingStatusBadge(tvremoteStatusElement, parseInt(tvremotePairedStatus, 10) === 1)
   }
 }
 
@@ -433,16 +460,14 @@ document.body.addEventListener('tvremote::adbPairingResult', (event) => {
     }
     // Update status indicator
     if (adbStatus) {
-      adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-      adbStatus.removeClass('label-danger').addClass('label-success')
+      updatePairingStatusBadge(adbStatus, true)
     }
   } else if (adb_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
     if (adbStatus) {
-      adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-      adbStatus.removeClass('label-success').addClass('label-danger')
+      updatePairingStatusBadge(adbStatus, false)
     }
   }
 })
@@ -462,16 +487,14 @@ document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
     }
     // Update status indicator
     if (tvremoteStatus) {
-      tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-      tvremoteStatus.removeClass('label-danger').addClass('label-success')
+      updatePairingStatusBadge(tvremoteStatus, true)
     }
   } else if (tvremote_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
     if (tvremoteStatus) {
-      tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-      tvremoteStatus.removeClass('label-success').addClass('label-danger')
+      updatePairingStatusBadge(tvremoteStatus, false)
     }
   }
 })
@@ -512,18 +535,6 @@ document.body.addEventListener('tvremote::scanState', (event) => {
     window.location.reload()
   }
 })
-
-// Helper function to update pairing status badge
-const updatePairingStatusBadge = (statusElement, isPaired) => {
-  if (isPaired) {
-    statusElement.removeClass('label-danger').addClass('label-success')
-    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-  } else {
-    statusElement.removeClass('label-success').addClass('label-danger')
-    statusElement.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-  }
-  statusElement.seen()
-}
 
 // Update pairing status badges when configuration changes (for...of optimization)
 for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="tvremote_paired_status"]')) {
