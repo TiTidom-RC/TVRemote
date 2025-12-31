@@ -34,7 +34,9 @@ const SELECTORS = Object.freeze({
 })
 
 // Bridge jQuery events to native CustomEvents (unidirectional: jQuery → CustomEvents)
-if (typeof jQuery !== 'undefined') {
+if (typeof jQuery !== 'undefined' && !window.tvremoteBridgeAttached) {
+  window.tvremoteBridgeAttached = true
+  
   const eventsToBridge = [
     'tvremote::scanState',
     'tvremote::scanResult',
