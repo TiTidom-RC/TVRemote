@@ -171,6 +171,7 @@
         "Rechercher": "Search",
         "Sauvegarder": "Save",
         "Scan": "Scan",
+        "Si l'autorisation ADB est révoquée depuis les paramètres de la TV, le démon tentera automatiquement de se reconnecter. Une nouvelle demande d'autorisation apparaîtra sur l'écran de la TV qu'il faudra accepter pour rétablir la connexion.": "If ADB authorization is revoked from the TV settings, the daemon will automatically attempt to reconnect. A new authorization request will appear on the TV screen, which must be accepted to reestablish the connection.",
         "Statut": "Status",
         "Stop Scan": "Stop Scan",
         "Supprimer": "Delete",
