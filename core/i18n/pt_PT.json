@@ -171,6 +171,7 @@
         "Rechercher": "Pesquisar",
         "Sauvegarder": "Guardar",
         "Scan": "Digitalização",
+        "Si l'autorisation ADB est révoquée depuis les paramètres de la TV, le démon tentera automatiquement de se reconnecter. Une nouvelle demande d'autorisation apparaîtra sur l'écran de la TV qu'il faudra accepter pour rétablir la connexion.": "Se a autorização ADB for revogada nas definições da TV, o daemon tentará automaticamente ligar-se novamente. Um novo pedido de autorização aparecerá no ecrã da TV, que deverá ser aceite para restabelecer a ligação.",
         "Statut": "Estado",
         "Stop Scan": "Parar a digitalização",
         "Supprimer": "Eliminar",

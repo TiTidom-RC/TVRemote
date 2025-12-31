@@ -171,6 +171,7 @@
         "Rechercher": "Ricerca",
         "Sauvegarder": "Risparmiare",
         "Scan": "Scansione",
+        "Si l'autorisation ADB est révoquée depuis les paramètres de la TV, le démon tentera automatiquement de se reconnecter. Une nouvelle demande d'autorisation apparaîtra sur l'écran de la TV qu'il faudra accepter pour rétablir la connexion.": "Se l'autorizzazione ADB viene revocata dalle impostazioni della TV, il demone tenterà automaticamente di riconnettersi. Sullo schermo della TV apparirà una nuova richiesta di autorizzazione che dovrà essere accettata per ripristinare la connessione.",
         "Statut": "Stato",
         "Stop Scan": "Interrompere la scansione",
         "Supprimer": "Cancellare",
