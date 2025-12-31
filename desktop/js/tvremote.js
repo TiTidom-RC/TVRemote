@@ -34,7 +34,9 @@ const SELECTORS = Object.freeze({
 })
 
 // Bridge jQuery events to native CustomEvents (unidirectional: jQuery → CustomEvents)
-if (typeof jQuery !== 'undefined') {
+if (typeof jQuery !== 'undefined' && !window.tvremoteBridgeAttached) {
+  window.tvremoteBridgeAttached = true
+  
   const eventsToBridge = [
     'tvremote::scanState',
     'tvremote::scanResult',
@@ -433,71 +435,97 @@ const changeScanState = (_scanState) => {
   })
 }
 
-// Vanilla JS event listeners (thanks to jQuery bridge)
-document.body.addEventListener('tvremote::scanResult', (event) => {
-  const _option = event.detail
-  if (_option?.friendly_name) {
-    if (_option.isNew === 1) {
-      jeedomUtils.showAlert({ message: `[SCAN] TVRemote AJOUTE :: ${_option.friendly_name}`, level: 'success' })
-    } else if (_option.isNew === 0) {
-      jeedomUtils.showAlert({ message: `[SCAN] TVRemote MAJ :: ${_option.friendly_name}`, level: 'warning' })
-    }
-  }
-})
+// Store handlers globally to ensure they persist across script reloads
+window.tvremoteEventHandlers = window.tvremoteEventHandlers || {}
 
-document.body.addEventListener('tvremote::adbPairingResult', (event) => {
-  const _option = event.detail
-  if (!_option) return
-  
-  const { friendly_name, mac, adb_paired, message: errorMsg, auto_detected } = _option
-  const deviceName = friendly_name || mac
-  const adbStatus = document.getElementById('adb-pairing-status')
-  
-  if (adb_paired === 1) {
-    // Only show alert if it's not an auto-detection
-    if (!auto_detected) {
-      jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
+// Define handlers only if not already defined
+if (!window.tvremoteEventHandlers.adbPairing) {
+  window.tvremoteEventHandlers.adbPairing = function(event) {
+    const _option = event.detail
+    console.log('[DEBUG] adbPairingResult event received:', _option)
+    if (!_option) {
+      console.log('[DEBUG] adbPairingResult: _option is null or undefined')
+      return
     }
-    // Update status indicator
-    if (adbStatus) {
-      updatePairingStatusBadge(adbStatus, true)
-    }
-  } else if (adb_paired === 0) {
-    const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
-    jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
-    // Update status indicator
-    if (adbStatus) {
-      updatePairingStatusBadge(adbStatus, false)
+    
+    const { friendly_name, mac, adb_paired, message: errorMsg, auto_detected } = _option
+    const deviceName = friendly_name || mac
+    const adbStatus = document.getElementById('adb-pairing-status')
+    
+    console.log('[DEBUG] adbPairingResult:', { mac, adb_paired, deviceName, auto_detected, adbStatus })
+    
+    if (adb_paired === 1) {
+      if (!auto_detected) {
+        console.log('[DEBUG] Showing success alert for', deviceName)
+        jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
+      } else {
+        console.log('[DEBUG] Success alert suppressed (auto_detected=true)')
+      }
+      if (adbStatus) {
+        console.log('[DEBUG] Updating badge to success')
+        updatePairingStatusBadge(adbStatus, true)
+      } else {
+        console.log('[DEBUG] Badge element not found')
+      }
+    } else if (adb_paired === 0) {
+      const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
+      console.log('[DEBUG] Showing error alert:', finalErrorMsg)
+      jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
+      if (adbStatus) {
+        updatePairingStatusBadge(adbStatus, false)
+      }
     }
   }
-})
+}
 
-document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
-  const _option = event.detail
-  if (!_option) return
-  
-  const { friendly_name, mac, tvremote_paired, message: errorMsg, auto_detected } = _option
-  const deviceName = friendly_name || mac
-  const tvremoteStatus = document.getElementById('tvremote-pairing-status')
-  
-  if (tvremote_paired === 1) {
-    // Only show alert if it's not an auto-detection
-    if (!auto_detected) {
-      jeedomUtils.showAlert({ message: `{{Appairage TVRemote réussi pour}} ${deviceName}`, level: 'success' })
-    }
-    // Update status indicator
-    if (tvremoteStatus) {
-      updatePairingStatusBadge(tvremoteStatus, true)
-    }
-  } else if (tvremote_paired === 0) {
-    const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
-    jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
-    // Update status indicator
-    if (tvremoteStatus) {
-      updatePairingStatusBadge(tvremoteStatus, false)
+if (!window.tvremoteEventHandlers.tvremotePairing) {
+  window.tvremoteEventHandlers.tvremotePairing = function(event) {
+    const _option = event.detail
+    if (!_option) return
+    
+    const { friendly_name, mac, tvremote_paired, message: errorMsg, auto_detected } = _option
+    const deviceName = friendly_name || mac
+    const tvremoteStatus = document.getElementById('tvremote-pairing-status')
+    
+    if (tvremote_paired === 1) {
+      if (!auto_detected) {
+        jeedomUtils.showAlert({ message: `{{Appairage TVRemote réussi pour}} ${deviceName}`, level: 'success' })
+      }
+      if (tvremoteStatus) {
+        updatePairingStatusBadge(tvremoteStatus, true)
+      }
+    } else if (tvremote_paired === 0) {
+      const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
+      jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
+      if (tvremoteStatus) {
+        updatePairingStatusBadge(tvremoteStatus, false)
+      }
     }
   }
-})
+}
+
+if (!window.tvremoteEventHandlers.scanResult) {
+  window.tvremoteEventHandlers.scanResult = function(event) {
+    const _option = event.detail
+    if (_option?.friendly_name) {
+      if (_option.isNew === 1) {
+        jeedomUtils.showAlert({ message: `[SCAN] TVRemote AJOUTE :: ${_option.friendly_name}`, level: 'success' })
+      } else if (_option.isNew === 0) {
+        jeedomUtils.showAlert({ message: `[SCAN] TVRemote MAJ :: ${_option.friendly_name}`, level: 'warning' })
+      }
+    }
+  }
+}
+
+// Remove old listeners if they exist
+document.body.removeEventListener('tvremote::adbPairingResult', window.tvremoteEventHandlers.adbPairing)
+document.body.removeEventListener('tvremote::tvremotePairingResult', window.tvremoteEventHandlers.tvremotePairing)
+document.body.removeEventListener('tvremote::scanResult', window.tvremoteEventHandlers.scanResult)
+
+// Add listeners using global references
+document.body.addEventListener('tvremote::adbPairingResult', window.tvremoteEventHandlers.adbPairing)
+document.body.addEventListener('tvremote::tvremotePairingResult', window.tvremoteEventHandlers.tvremotePairing)
+document.body.addEventListener('tvremote::scanResult', window.tvremoteEventHandlers.scanResult)
 
 document.body.addEventListener('tvremote::scanState', (event) => {
   const scanState = event.detail?.scanState

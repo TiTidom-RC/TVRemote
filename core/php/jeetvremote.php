@@ -179,12 +179,15 @@ try {
             // Get friendly name for user-friendly message
             $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
             
+            log::add('tvremote', 'debug', '[CALLBACK] Sending adbPairingResult event to JavaScript');
+            
             // Send event to JavaScript only if equipment exists
             event::add('tvremote::adbPairingResult', array(
                 'mac' => $result['mac'],
                 'friendly_name' => $friendlyName,
                 'adb_paired' => $result['adb_paired'],
-                'message' => isset($result['message']) ? $result['message'] : ''
+                'message' => isset($result['message']) ? $result['message'] : '',
+                'auto_detected' => false  // Manual pairing result
             ));
             
             // Log the message if present
