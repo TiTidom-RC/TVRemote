@@ -234,3 +234,8 @@ class Config(object):
     def reconnect_delay_max(self):
         """Maximum delay between reconnection attempts (seconds)"""
         return 120
+    
+    @property
+    def adb_heartbeat_interval(self):
+        """Interval for ADB heartbeat checks to detect disconnections (seconds)"""
+        return 30
