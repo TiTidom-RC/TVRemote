@@ -1015,7 +1015,7 @@ class TVRemoted:
                 await adb.connect(rsa_keys=[signer], auth_timeout_s=self._config.adb_auth_timeout_pairing)
                 self._logger.info("[PAIRING_ADB][%s] ADB connection successful", _mac)
                 
-                # Inform Jeedom
+                # Inform Jeedom of success
                 if self._jeedom_publisher is not None:
                     data = {
                         'mac': _mac,
@@ -1024,8 +1024,11 @@ class TVRemoted:
                     }
                     await self._jeedom_publisher.send_to_jeedom(data)
                 
-                # Close connection
-                await adb.close()
+                # Close connection (wrap in try/except to avoid interfering with success notification)
+                try:
+                    await adb.close()
+                except Exception as close_error:
+                    self._logger.debug("[PAIRING_ADB][%s] Error closing connection (ignored) :: %s", _mac, close_error)
                 
                 # Disable pairing mode
                 if _mac in self._config.remote_mac_adb and _mac in self._config.remote_devices_adb:

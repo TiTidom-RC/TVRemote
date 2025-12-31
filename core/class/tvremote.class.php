@@ -350,19 +350,32 @@ class tvremote extends eqLogic {
 
     public static function sendBeginPairingAdb($_mac=null, $_host=null)
     {
-        if (!is_null($_mac)) {
-            $value = array(
-                'cmd' => 'sendBeginPairingAdb',
-                'mac' => $_mac,
-                'host' => $_host
-            );
-            self::sendToDaemon($value);
-            log::add('tvremote', 'info', '[sendBeginPairingAdb] Demande d\'appairage ADB envoyée :: MAC=' . $_mac . ' Host=' . $_host);
-            return 'OK';
-        } else {
+        if (is_null($_mac)) {
             log::add('tvremote', 'debug', '[sendBeginPairingAdb] MAC is missing :: KO');
-            return 'MAC is missing (KO)';
+            throw new Exception(__('MAC manquante', __FILE__));
         }
+        
+        // Verify ADB prerequisites
+        $eqLogic = tvremote::byLogicalId($_mac, 'tvremote');
+        
+        if (!$eqLogic->getIsEnable()) {
+            log::add('tvremote', 'error', '[sendBeginPairingAdb] Équipement désactivé :: ' . $eqLogic->getHumanName());
+            throw new Exception(__('L\'équipement doit être activé pour procéder à l\'appairage ADB', __FILE__));
+        }
+        
+        if ($eqLogic->getConfiguration('use_adb', 0) != 1) {
+            log::add('tvremote', 'error', '[sendBeginPairingAdb] ADB non activé :: ' . $eqLogic->getHumanName());
+            throw new Exception(__('L\'option "Activer ADB" doit être cochée pour procéder à l\'appairage', __FILE__));
+        }
+        
+        $value = array(
+            'cmd' => 'sendBeginPairingAdb',
+            'mac' => $_mac,
+            'host' => $_host
+        );
+        self::sendToDaemon($value);
+        log::add('tvremote', 'info', '[sendBeginPairingAdb] Demande d\'appairage ADB envoyée :: MAC=' . $_mac . ' Host=' . $_host);
+        return 'OK';
     }
 
     public static function createAndUpdTVRemoteFromScan($_data)

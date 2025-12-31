@@ -447,23 +447,36 @@ document.body.addEventListener('tvremote::scanResult', (event) => {
 
 document.body.addEventListener('tvremote::adbPairingResult', (event) => {
   const _option = event.detail
-  if (!_option) return
+  console.log('[DEBUG] adbPairingResult event received:', _option)
+  if (!_option) {
+    console.log('[DEBUG] adbPairingResult: _option is null or undefined')
+    return
+  }
   
   const { friendly_name, mac, adb_paired, message: errorMsg, auto_detected } = _option
   const deviceName = friendly_name || mac
   const adbStatus = document.getElementById('adb-pairing-status')
   
+  console.log('[DEBUG] adbPairingResult:', { mac, adb_paired, deviceName, auto_detected, adbStatus })
+  
   if (adb_paired === 1) {
     // Only show alert if it's not an auto-detection
     if (!auto_detected) {
+      console.log('[DEBUG] Showing success alert for', deviceName)
       jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
+    } else {
+      console.log('[DEBUG] Success alert suppressed (auto_detected=true)')
     }
     // Update status indicator
     if (adbStatus) {
+      console.log('[DEBUG] Updating badge to success')
       updatePairingStatusBadge(adbStatus, true)
+    } else {
+      console.log('[DEBUG] Badge element not found')
     }
   } else if (adb_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
+    console.log('[DEBUG] Showing error alert:', finalErrorMsg)
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
     if (adbStatus) {
