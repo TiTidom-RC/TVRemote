@@ -460,16 +460,14 @@ document.body.addEventListener('tvremote::adbPairingResult', (event) => {
     }
     // Update status indicator
     if (adbStatus) {
-      adbStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-      adbStatus.removeClass('label-danger').addClass('label-success')
+      updatePairingStatusBadge(adbStatus, true)
     }
   } else if (adb_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
     if (adbStatus) {
-      adbStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-      adbStatus.removeClass('label-success').addClass('label-danger')
+      updatePairingStatusBadge(adbStatus, false)
     }
   }
 })
@@ -489,16 +487,14 @@ document.body.addEventListener('tvremote::tvremotePairingResult', (event) => {
     }
     // Update status indicator
     if (tvremoteStatus) {
-      tvremoteStatus.innerHTML = '<i class="fas fa-check-circle"></i> {{Appairé}}'
-      tvremoteStatus.removeClass('label-danger').addClass('label-success')
+      updatePairingStatusBadge(tvremoteStatus, true)
     }
   } else if (tvremote_paired === 0) {
     const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
     jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
     // Update status indicator
     if (tvremoteStatus) {
-      tvremoteStatus.innerHTML = '<i class="fas fa-times-circle"></i> {{Non appairé}}'
-      tvremoteStatus.removeClass('label-success').addClass('label-danger')
+      updatePairingStatusBadge(tvremoteStatus, false)
     }
   }
 })

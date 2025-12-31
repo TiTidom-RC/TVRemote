@@ -467,18 +467,7 @@ class EQRemoteADB(object):
                         continue  # Skip notifications and backoff, return to loop start
                     
                     # Log errors based on type
-                    if isinstance(e, DeviceAuthError):
-                        self._logger.error("[EQRemoteADB][MAIN][%s] Authorization error :: %s", self._macAddr, e)
-                        # Send disconnection status to Jeedom
-                        await self._notify_connection_status(online=0, adb_connected=0)
-                        # Notify that pairing was revoked
-                        self._logger.warning("[EQRemoteADB][MAIN][%s] Authorization revoked - ADB access denied by device", self._macAddr)
-                        revoke_data = {
-                            'mac': self._macAddr,
-                            'adb_auth_revoked': 1
-                        }
-                        await self._jeedom_publisher.send_to_jeedom(revoke_data)
-                    elif isinstance(e, (OSError, ConnectionError)):
+                    if isinstance(e, (OSError, ConnectionError)):
                         # Network errors (device offline, unreachable, etc.) - use WARNING instead of ERROR
                         self._logger.warning("[EQRemoteADB][MAIN][%s] Device unreachable :: %s", self._macAddr, e)
                         await self._notify_connection_status(online=0, adb_connected=0)

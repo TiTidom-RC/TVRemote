@@ -198,36 +198,6 @@ try {
         } else {
             log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing :: Equipment not found in Jeedom :: ' . $result['mac']);
         }
-    } elseif (isset($result['adb_auth_revoked'])) {
-        log::add('tvremote', 'warning', '[CALLBACK] ADB Authorization Revoked');
-        
-        if (!isset($result['mac'])) {
-            log::add('tvremote', 'debug', '[CALLBACK] ADB Auth Revoked :: [MAC] non défini !');
-            return;
-        }
-        
-        log::add('tvremote', 'warning', '[CALLBACK] ADB Authorization Revoked :: ' . $result['mac']);
-        
-        // Reset pairing status - authorization has been revoked from TV
-        $tv_remote = tvremote::byLogicalId($result['mac'], 'tvremote');
-        if (is_object($tv_remote)) {
-            $tv_remote->setConfiguration('adb_paired_status', 0);
-            $tv_remote->save();
-            log::add('tvremote', 'warning', '[CALLBACK] ADB Pairing Status reset due to revocation :: ' . $result['mac']);
-            
-            // Get friendly name for user-friendly message
-            $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
-            
-            // Send event to JavaScript only if equipment exists
-            event::add('tvremote::adbPairingResult', array(
-                'mac' => $result['mac'],
-                'friendly_name' => $friendlyName,
-                'adb_paired' => 0,
-                'message' => 'Authorization revoked from TV. Please pair again.'
-            ));
-        } else {
-            log::add('tvremote', 'debug', '[CALLBACK] ADB Auth Revoked :: Equipment not found in Jeedom :: ' . $result['mac']);
-        }
     } elseif (isset($result['pairing_value'])) {
         log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error');
         
