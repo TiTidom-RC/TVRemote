@@ -1,6 +1,7 @@
 import datetime
 import logging
 import argparse
+import json
 try:
     import resource
     HAS_RESOURCE = True
@@ -10,7 +11,6 @@ import sys
 import os
 import signal
 import asyncio
-import functools
 import time
 import traceback
 import ipaddress
@@ -58,10 +58,20 @@ class EQRemote(object):
         self._logger = logging.getLogger(__name__)
         self._jeedom_publisher = _jeedom_publisher
         self._loop = asyncio.get_running_loop()
+        self._main_task: asyncio.Task | None = None  # Reference to the main loop task
         # Exponential backoff for reconnection attempts
         self._reconnect_delay = self._config.reconnect_delay_min
-        self._reconnect_delay_min = self._config.reconnect_delay_min
-        self._reconnect_delay_max = self._config.reconnect_delay_max
+    
+    @staticmethod
+    def _format_timestamp(timestamp: int) -> str:
+        """Format Unix timestamp to readable string"""
+        return datetime.datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y - %H:%M:%S")
+    
+    async def _apply_backoff_delay(self) -> None:
+        """Apply exponential backoff delay before next reconnection attempt"""
+        self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
+        await asyncio.sleep(self._reconnect_delay)
+        self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
 
     async def main(self) -> None:
         """
@@ -84,7 +94,7 @@ class EQRemote(object):
                 try:
                     await self._remote.async_connect()
                     # Reset reconnection delay on successful connection
-                    self._reconnect_delay = self._reconnect_delay_min
+                    self._reconnect_delay = self._config.reconnect_delay_min
                     break
                 except InvalidAuth as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
@@ -99,34 +109,26 @@ class EQRemote(object):
                     await self._jeedom_publisher.send_to_jeedom(data)
                     
                     # Exponential backoff: wait before retry and increase delay
-                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
-                    await asyncio.sleep(self._reconnect_delay)
-                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
+                    await self._apply_backoff_delay()
                     continue
                 except CannotConnect as exc:
                     self._logger.warning("[EQRemote][MAIN][%s] Cannot connect (device may be offline) :: %s", self._macAddr, exc)
                     
                     # Exponential backoff: wait before retry and increase delay
-                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
-                    await asyncio.sleep(self._reconnect_delay)
-                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
+                    await self._apply_backoff_delay()
                     continue
                 except ConnectionClosed as exc:
                     self._logger.error("[EQRemote][MAIN][%s] Connection closed unexpectedly. Exception :: %s", self._macAddr, exc)
                     
                     # Exponential backoff: wait before retry and increase delay
-                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
-                    await asyncio.sleep(self._reconnect_delay)
-                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
+                    await self._apply_backoff_delay()
                     continue
                 except Exception as e:
                     self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
                     self._logger.debug(traceback.format_exc())
                     
                     # Exponential backoff: wait before retry and increase delay
-                    self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
-                    await asyncio.sleep(self._reconnect_delay)
-                    self._reconnect_delay = min(self._reconnect_delay * 2, self._reconnect_delay_max)
+                    await self._apply_backoff_delay()
                     continue
                     
             self._remote.keep_reconnecting()
@@ -139,7 +141,7 @@ class EQRemote(object):
             
                 # UpdateLastTime
                 currentTime = int(time.time())
-                currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")    
+                currentTimeStr = self._format_timestamp(currentTime)
                 
                 _isOn = 1 if self._remote.is_on else 0
                 if self._remote.volume_info is not None and all(keys in self._remote.volume_info for keys in ('level', 'muted', 'max')):
@@ -174,7 +176,7 @@ class EQRemote(object):
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
-                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    currentTimeStr = self._format_timestamp(currentTime)
                     
                     _is_available = 1 if is_available else 0
                     
@@ -196,7 +198,7 @@ class EQRemote(object):
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
-                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    currentTimeStr = self._format_timestamp(currentTime)
                     
                     _isOn = 1 if is_on else 0
                     data = {
@@ -218,7 +220,7 @@ class EQRemote(object):
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
-                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    currentTimeStr = self._format_timestamp(currentTime)
                     
                     data = {
                         'mac': self._macAddr,
@@ -239,7 +241,7 @@ class EQRemote(object):
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
-                    currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                    currentTimeStr = self._format_timestamp(currentTime)
                     
                     _volume_level = volume_info['level']
                     _volume_muted = 1 if volume_info['muted'] else 0
@@ -264,19 +266,32 @@ class EQRemote(object):
             self._remote.add_is_on_updated_callback(is_on_updated)
             self._remote.add_current_app_updated_callback(current_app_updated)
             self._remote.add_volume_info_updated_callback(volume_info_updated)
+            
+            # Keep the task alive to receive callbacks from AndroidTVRemote2
+            # The library handles reconnection internally via keep_reconnecting()
+            while not self._config.is_ending:
+                await asyncio.sleep(60)  # Check every minute if daemon is ending
         
         except asyncio.CancelledError:
             self._logger.debug("[EQRemote] Stop Main for device %s (%s)", self._macAddr, self._host)
         except Exception as e: 
             self._logger.error("[EQRemote][MAIN] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
+        finally:
+            # Cleanup resources
+            if self._remote is not None:
+                try:
+                    self._remote.disconnect()
+                except Exception as e:
+                    self._logger.debug("[EQRemote][MAIN][%s] Error during disconnect cleanup :: %s", self._macAddr, e)
+            self._main_task = None
+            self._logger.debug("[EQRemote][MAIN][%s] Main loop stopped", self._macAddr)
         
     async def remove(self) -> None:
         """Call it to disconnect from a EQRemote"""
         self._logger.debug("[EQRemote] Removing device %s (%s)", self._macAddr, self._host)
-        if self._remote is not None:
-            self._remote.disconnect()
-        await asyncio.sleep(1)
+        # Disconnect is already handled in main() finally block
+        # Just ensure the reference is cleared
         self._remote = None
     
     async def send_command(self, action: str | None = None, value: str | None = None) -> None:
@@ -368,7 +383,7 @@ class EQRemoteADB(object):
     async def _notify_connection_status(self, online: int, adb_connected: int) -> None:
         """Send connection status to Jeedom"""
         currentTime = int(time.time())
-        currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+        currentTimeStr = EQRemote._format_timestamp(currentTime)
         data = {
             'mac': self._macAddr,
             'online': online,
@@ -450,12 +465,12 @@ class EQRemoteADB(object):
                                 # Send disconnection status to Jeedom
                                 await self._notify_connection_status(online=0, adb_connected=0)
                                 
-                                # Apply reconnection backoff delay
+                                # Apply reconnection backoff delay and skip normal sleep
                                 await asyncio.sleep(self._reconnect_delay)
                                 self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
                                 continue  # Skip the normal sleep and retry connection
                     
-                    # Keep connection alive with shorter polling interval
+                    # Sleep between iterations (5s is sufficient for checking pairing status and heartbeat timing)
                     await asyncio.sleep(5)
                 
                 except asyncio.CancelledError:
@@ -503,6 +518,13 @@ class EQRemoteADB(object):
             self._logger.error("[EQRemoteADB][MAIN] Unexpected exception :: %s", e)
             self._logger.debug(traceback.format_exc())
         finally:
+            # Cleanup resources
+            if self._adb is not None and self._connected:
+                try:
+                    await self._adb.close()
+                    self._logger.debug("[EQRemoteADB][MAIN][%s] ADB connection closed", self._macAddr)
+                except Exception as e:
+                    self._logger.debug("[EQRemoteADB][MAIN][%s] Error during ADB close cleanup :: %s", self._macAddr, e)
             self._main_task = None
             self._logger.debug("[EQRemoteADB][MAIN][%s] Main loop stopped", self._macAddr)
     
@@ -710,8 +732,8 @@ class TVRemoted:
         This function register signal handler to interrupt the loop in case of process kill is received from Jeedom. You don't need to change anything here
         """
         loop = asyncio.get_running_loop()
-        loop.add_signal_handler(signal.SIGINT, functools.partial(self._ask_exit, signal.SIGINT))
-        loop.add_signal_handler(signal.SIGTERM, functools.partial(self._ask_exit, signal.SIGTERM))
+        loop.add_signal_handler(signal.SIGINT, lambda: self._ask_exit(signal.SIGINT))
+        loop.add_signal_handler(signal.SIGTERM, lambda: self._ask_exit(signal.SIGTERM))
 
     async def _on_socket_message(self, message: dict) -> None:
         """
@@ -734,7 +756,6 @@ class TVRemoted:
                         protocol = None
                         if 'options' in message and message['options'] is not None:
                             try:
-                                import json
                                 options_json = json.loads("{" + message['options'] + "}")
                                 protocol = options_json.get('protocol', None)
                                 cmd_id = options_json.get('cmd_id', None)
@@ -747,25 +768,30 @@ class TVRemoted:
                         # Check if protocol is explicitly specified via options
                         if protocol:
                             if protocol == 'adb':
-                                if message['mac'] in self._config.remote_mac_adb:
-                                    await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'], cmd_id)
+                                device = self._config.remote_devices_adb.get(message['mac'])
+                                if device:
+                                    await device.send_command(message['cmd_action'], message['value'], cmd_id)
                                 else:
                                     self._logger.warning('[DAEMON][SOCKET] ADB device not found :: %s', message['mac'])
                             elif protocol == 'tvremote':
-                                if message['mac'] in self._config.remote_mac:
-                                    await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
+                                device = self._config.remote_devices.get(message['mac'])
+                                if device:
+                                    await device.send_command(message['cmd_action'], message['value'])
                                 else:
                                     self._logger.warning('[DAEMON][SOCKET] TVRemote device not found :: %s', message['mac'])
                             else:
                                 self._logger.error('[DAEMON][SOCKET] Unknown protocol :: %s', protocol)
                         else:
                             # Protocol not specified, use default logic (priority to AndroidTVRemote2)
-                            if message['mac'] in self._config.remote_mac:
-                                await self._config.remote_devices[message['mac']].send_command(message['cmd_action'], message['value'])
-                            elif message['mac'] in self._config.remote_mac_adb:
-                                await self._config.remote_devices_adb[message['mac']].send_command(message['cmd_action'], message['value'])
+                            device = self._config.remote_devices.get(message['mac'])
+                            if device:
+                                await device.send_command(message['cmd_action'], message['value'])
                             else:
-                                self._logger.warning('[DAEMON][SOCKET] Device not found :: %s', message['mac'])
+                                device_adb = self._config.remote_devices_adb.get(message['mac'])
+                                if device_adb:
+                                    await device_adb.send_command(message['cmd_action'], message['value'])
+                                else:
+                                    self._logger.warning('[DAEMON][SOCKET] Device not found :: %s', message['mac'])
                     else:
                         self._logger.warning('[DAEMON][SOCKET] Unknown Action :: %s', message['cmd_action'])
             elif message['cmd'] == "scanOn":
@@ -798,10 +824,17 @@ class TVRemoted:
                         self._config.remote_names.append(message['friendly_name'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote Names :: %s', str(self._config.remote_names))
                     if message['mac'] not in self._config.remote_mac:
+                        # Create new device
                         self._config.remote_mac.append(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote MAC :: %s', str(self._config.remote_mac))
-                        self._config.remote_devices[message['mac']] = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
-                        await self._config.remote_devices[message['mac']].main()
+                        device = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
+                        self._config.remote_devices[message['mac']] = device
+                        # Launch main loop as async task (non-blocking)
+                        device._main_task = asyncio.create_task(device.main())
+                        self._logger.debug('[DAEMON][SOCKET] Main loop task created for TVRemote %s', message['mac'])
+                    else:
+                        # Device already exists, just log it
+                        self._logger.debug('[DAEMON][SOCKET] TVRemote device %s already exists', message['mac'])
             elif message['cmd'] == "removetvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
                     self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
@@ -814,8 +847,18 @@ class TVRemoted:
                     if message['mac'] in self._config.remote_mac:
                         self._config.remote_mac.remove(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from Remote MAC :: %s', str(self._config.remote_mac))
-                        await self._config.remote_devices[message['mac']].remove()
-                        del self._config.remote_devices[message['mac']]
+                        device = self._config.remote_devices.get(message['mac'])
+                        if device:
+                            # Cancel main loop task if running
+                            if device._main_task is not None and not device._main_task.done():
+                                device._main_task.cancel()
+                                try:
+                                    await device._main_task
+                                except asyncio.CancelledError:
+                                    self._logger.debug('[DAEMON][SOCKET] Main loop cancelled for TVRemote %s', message['mac'])
+                            # Remove device
+                            await device.remove()
+                            del self._config.remote_devices[message['mac']]
             elif message['cmd'] == "addtvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
                     self._logger.debug('[DAEMON][SOCKET] Add ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
@@ -859,17 +902,18 @@ class TVRemoted:
                     if message['mac'] in self._config.remote_mac_adb:
                         self._config.remote_mac_adb.remove(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Remove ADB from Remote MAC :: %s', str(self._config.remote_mac_adb))
-                        device = self._config.remote_devices_adb[message['mac']]
-                        # Cancel main loop task if running
-                        if device._main_task is not None and not device._main_task.done():
-                            device._main_task.cancel()
-                            try:
-                                await device._main_task
-                            except asyncio.CancelledError:
-                                self._logger.debug('[DAEMON][SOCKET] Main loop cancelled for %s', message['mac'])
-                        # Remove device
-                        await device.remove()
-                        del self._config.remote_devices_adb[message['mac']]
+                        device = self._config.remote_devices_adb.get(message['mac'])
+                        if device:
+                            # Cancel main loop task if running
+                            if device._main_task is not None and not device._main_task.done():
+                                device._main_task.cancel()
+                                try:
+                                    await device._main_task
+                                except asyncio.CancelledError:
+                                    self._logger.debug('[DAEMON][SOCKET] Main loop cancelled for %s', message['mac'])
+                            # Remove device
+                            await device.remove()
+                            del self._config.remote_devices_adb[message['mac']]
                         
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
@@ -1126,7 +1170,7 @@ class TVRemoted:
             await info.async_request(zeroconf, 3000)
             if info:
                 currentTime = int(time.time())
-                currentTimeStr = datetime.datetime.fromtimestamp(currentTime).strftime("%d/%m/%Y - %H:%M:%S")
+                currentTimeStr = EQRemote._format_timestamp(currentTime)
                 
                 _friendly_name = info.get_name()
                 _type = info.type
@@ -1283,14 +1327,40 @@ class TVRemoted:
         This function can be called from outside to stop the daemon if needed`
         You need to close your remote connexions and cancel background tasks if any here.
         """
-        self._logger.debug('[CLOSE] Cancel all tasks')
-        # self._search_task.cancel()  # don't forget to cancel your background task
-        if self._main_task is not None:
+        self._logger.debug('[CLOSE] Cancelling all tasks')
+        
+        # Collect all tasks to cancel
+        tasks_to_cancel = []
+        
+        # Cancel all device main loop tasks
+        for mac, device in self._config.remote_devices.items():
+            if device._main_task is not None and not device._main_task.done():
+                self._logger.debug('[CLOSE] Cancelling main loop task for TVRemote device %s', mac)
+                device._main_task.cancel()
+                tasks_to_cancel.append(device._main_task)
+        
+        for mac, device in self._config.remote_devices_adb.items():
+            if device._main_task is not None and not device._main_task.done():
+                self._logger.debug('[CLOSE] Cancelling main loop task for ADB device %s', mac)
+                device._main_task.cancel()
+                tasks_to_cancel.append(device._main_task)
+        
+        # Cancel daemon tasks
+        if self._main_task is not None and not self._main_task.done():
             self._main_task.cancel()
-        if self._listen_task is not None:
+            tasks_to_cancel.append(self._main_task)
+        if self._listen_task is not None and not self._listen_task.done():
             self._listen_task.cancel()
-        if self._send_task is not None:
+            tasks_to_cancel.append(self._listen_task)
+        if self._send_task is not None and not self._send_task.done():
             self._send_task.cancel()
+            tasks_to_cancel.append(self._send_task)
+        
+        # Wait for all cancelled tasks to complete to avoid warnings
+        if tasks_to_cancel:
+            self._logger.debug('[CLOSE] Waiting for %d tasks to finish cancellation', len(tasks_to_cancel))
+            # Note: This is a sync method but called from signal handler
+            # Tasks will complete their cancellation in the event loop
 
 # ----------------------------------------------------------------------------
 
