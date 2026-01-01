@@ -992,7 +992,7 @@ class TVRemoted:
                         self._config.remote_devices_adb[message['mac']] = device
                         
                         # Store adb_paired status in device for main loop logic
-                        device._adb_paired = message.get('adb_paired', 0)
+                        device._adb_paired = int(message.get('adb_paired', 0))
                         
                         # Store persistent connection flag and idle timeout
                         device._persistent_connection = bool(message.get('adb_persistent_connection', 1))
@@ -1006,7 +1006,7 @@ class TVRemoted:
                         # Update pairing status if device already exists
                         device = self._config.remote_devices_adb.get(message['mac'])
                         if device:
-                            device._adb_paired = message.get('adb_paired', 0)
+                            device._adb_paired = int(message.get('adb_paired', 0))
                             device._persistent_connection = bool(message.get('adb_persistent_connection', 1))
                             device._idle_timeout_minutes = int(message.get('adb_idle_timeout', self._config.adb_idle_timeout_default))
                             self._logger.debug('[DAEMON][SOCKET] Device %s already exists, updated paired=%s, persistent=%s', message['mac'], device._adb_paired, device._persistent_connection)
