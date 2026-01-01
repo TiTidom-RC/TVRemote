@@ -293,11 +293,48 @@ const updatePairingStatusBadge = (statusElement, isPaired) => {
   statusElement.seen()
 }
 
+// Helper function to show/hide idle timeout based on persistent connection checkbox
+const updateIdleTimeoutVisibility = () => {
+  const persistentCheckbox = document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')
+  const idleTimeoutGroup = document.getElementById('adb-idle-timeout-group')
+  
+  if (persistentCheckbox && idleTimeoutGroup) {
+    // Show timeout field only when connection is NOT persistent (checkbox unchecked)
+    if (persistentCheckbox.checked) {
+      idleTimeoutGroup.unseen()
+    } else {
+      idleTimeoutGroup.seen()
+    }
+  }
+}
+
+// Attach event listener for persistent connection checkbox changes
+document.addEventListener('DOMContentLoaded', () => {
+  const persistentCheckbox = document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')
+  if (persistentCheckbox) {
+    persistentCheckbox.removeEventListener('change', updateIdleTimeoutVisibility)
+    persistentCheckbox.addEventListener('change', updateIdleTimeoutVisibility)
+  }
+})
+
 const printEqLogic = (_eqLogic) => {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
   if (_eqLogic?.configuration?.use_adb === undefined) {
     document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')?.jeeValue(0)
   }
+  
+  // Si adb_persistent_connection n'existe pas, on force à true (connexion permanente par défaut)
+  if (_eqLogic?.configuration?.adb_persistent_connection === undefined) {
+    document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')?.jeeValue(1)
+  }
+  
+  // Si adb_idle_timeout n'existe pas, on force la valeur par défaut (5)
+  if (_eqLogic?.configuration?.adb_idle_timeout === undefined) {
+    document.querySelector('.eqLogicAttr[data-l2key="adb_idle_timeout"]')?.jeeValue(5)
+  }
+  
+  // Affichage conditionnel du timeout d'inactivité
+  updateIdleTimeoutVisibility()
   
   // Update pairing status badges based on configuration
   const adbPairedStatus = _eqLogic?.configuration?.adb_paired_status

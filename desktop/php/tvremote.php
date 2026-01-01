@@ -266,6 +266,22 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                         <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="use_adb" />{{Activer ADB}}</label>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">{{Maintenir Connexion}}
+                                        <sup><i class="fas fa-question-circle tooltips" title="{{Coché : la connexion ADB reste ouverte en permanence (commandes instantanées, détection temps réel). Décoché : la connexion se ferme automatiquement après une période d'inactivité (économie de ressources)}}"></i></sup>
+                                    </label>
+                                    <div class="col-sm-6">
+                                        <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_persistent_connection" />{{Toujours connecté}}</label>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="adb-idle-timeout-group">
+                                    <label class="col-sm-4 control-label">{{Délai Inactivité (min)}}
+                                        <sup><i class="fas fa-question-circle tooltips" title="{{Durée d'inactivité avant déconnexion automatique. Valeur par défaut : 5 minutes}}"></i></sup>
+                                    </label>
+                                    <div class="col-sm-6">
+                                        <input type="number" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="adb_idle_timeout" min="1" max="60" placeholder="5" />
+                                    </div>
+                                </div>
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i> <strong>{{Activation ADB sur la TV}}</strong>
                                     <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:

@@ -237,5 +237,12 @@ class Config(object):
     
     @property
     def adb_heartbeat_interval(self):
-        """Interval for ADB heartbeat checks to detect disconnections (seconds)"""
-        return 30
+        """Interval for ADB heartbeat checks to detect disconnections (seconds)
+        Set to 20s to prevent Android TV timeout (typically 60s) from closing idle ADB connections"""
+        return 20
+    
+    @property
+    def adb_idle_timeout_default(self):
+        """Default idle timeout for on-demand connection mode (minutes)
+        After this period of inactivity, ADB connection will be closed to save resources"""
+        return 5
