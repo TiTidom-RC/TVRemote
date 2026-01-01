@@ -490,15 +490,16 @@ class EQRemoteADB(object):
                                 await self._notify_connection_status(online=1, adb_connected=0)
                                 continue
                         
-                        # Heartbeat check (only in persistent mode)
-                        # In on-demand mode, we want the connection to close after inactivity
-                        # so we don't send keepalive heartbeats
-                        if self._persistent_connection and current_time - self._last_heartbeat >= self._config.adb_heartbeat_interval:
+                        # Heartbeat check (in both modes to prevent TV from auto-closing the connection)
+                        # Sends keepalive every 20s to maintain connection stability
+                        # Does NOT update _last_activity, so idle timeout is still enforced in on-demand mode
+                        if current_time - self._last_heartbeat >= self._config.adb_heartbeat_interval:
                             self._last_heartbeat = current_time
                             try:
-                                # Verify connection with no-op shell command
+                                # Send keepalive with no-op shell command
                                 await asyncio.wait_for(self._adb.shell(":", transport_timeout_s=5), timeout=5)
-                                self._logger.debug("[EQRemoteADB][HEARTBEAT][%s] Connection verified", self._macAddr)
+                                mode_type = "permanent" if self._persistent_connection else "on-demand"
+                                self._logger.debug("[EQRemoteADB][HEARTBEAT][%s] Connection verified (mode: %s)", self._macAddr, mode_type)
                             except (asyncio.TimeoutError, TcpTimeoutException, InvalidResponseError, OSError, ConnectionError, AttributeError) as e:
                                 self._logger.warning("[EQRemoteADB][HEARTBEAT][%s] Device disconnected :: %s", self._macAddr, e)
                                 assert self._adb is not None  # Guaranteed: _connected implies _adb exists
