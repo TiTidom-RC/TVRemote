@@ -455,6 +455,7 @@ class EQRemoteADB(object):
                             self._connection_task = None
                             self._connected = True
                             self._last_heartbeat = time.time()  # Initialize heartbeat timer
+                            self._last_activity = time.time()   # Initialize activity timer for on-demand mode
                             mode_str = "permanent" if self._persistent_connection else "on-demand"
                             self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB (mode: %s)", self._macAddr, mode_str)
                             self._reconnect_delay = self._config.reconnect_delay_min  # Reset backoff on successful connection
@@ -489,16 +490,15 @@ class EQRemoteADB(object):
                                 await self._notify_connection_status(online=1, adb_connected=0)
                                 continue
                         
-                        # Heartbeat check (pour les deux modes)
-                        if current_time - self._last_heartbeat >= self._config.adb_heartbeat_interval:
+                        # Heartbeat check (only in persistent mode)
+                        # In on-demand mode, we want the connection to close after inactivity
+                        # so we don't send keepalive heartbeats
+                        if self._persistent_connection and current_time - self._last_heartbeat >= self._config.adb_heartbeat_interval:
                             self._last_heartbeat = current_time
                             try:
                                 # Verify connection with no-op shell command
                                 await asyncio.wait_for(self._adb.shell(":", transport_timeout_s=5), timeout=5)
                                 self._logger.debug("[EQRemoteADB][HEARTBEAT][%s] Connection verified", self._macAddr)
-                                # Update activity time for on-demand mode
-                                if not self._persistent_connection:
-                                    self._last_activity = current_time
                             except (asyncio.TimeoutError, TcpTimeoutException, InvalidResponseError, OSError, ConnectionError, AttributeError) as e:
                                 self._logger.warning("[EQRemoteADB][HEARTBEAT][%s] Device disconnected :: %s", self._macAddr, e)
                                 assert self._adb is not None  # Guaranteed: _connected implies _adb exists
@@ -668,6 +668,7 @@ class EQRemoteADB(object):
                     )
                     self._connected = True
                     self._last_heartbeat = time.time()
+                    self._last_activity = time.time()  # Update activity timestamp after successful connection
                     self._logger.info("[EQRemoteADB][SendCommand] Connected for on-demand command")
                 except (asyncio.TimeoutError, asyncio.CancelledError, OSError, ConnectionError) as e:
                     self._logger.error("[EQRemoteADB][SendCommand] Failed to connect :: %s", e)
@@ -1009,6 +1010,11 @@ class TVRemoted:
                             device._adb_paired = int(message.get('adb_paired', 0))
                             device._persistent_connection = bool(message.get('adb_persistent_connection', 1))
                             device._idle_timeout_minutes = int(message.get('adb_idle_timeout', self._config.adb_idle_timeout_default))
+                            
+                            # In on-demand mode with active connection, reset activity timestamp to avoid immediate disconnect
+                            if not device._persistent_connection and device._connected:
+                                device._last_activity = time.time()
+                            
                             self._logger.debug('[DAEMON][SOCKET] Device %s already exists, updated paired=%s, persistent=%s', message['mac'], device._adb_paired, device._persistent_connection)
             elif message['cmd'] == "removetvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
