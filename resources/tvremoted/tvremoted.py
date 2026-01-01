@@ -564,6 +564,9 @@ class EQRemoteADB(object):
             # Cancel any ongoing connection and close existing one
             await self.cancel_connection_attempt()
             
+            # Log removal at INFO level for coherence with connection log
+            self._logger.info("[EQRemoteADB][MAIN][%s] Device removed (ADB disconnected)", self._macAddr)
+            
             # Reset pairing mode and clear ADB reference
             self._pairing_mode = False
             self._adb = None
