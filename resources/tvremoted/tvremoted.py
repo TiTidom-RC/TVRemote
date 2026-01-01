@@ -996,7 +996,7 @@ class TVRemoted:
                         device._adb_paired = int(message.get('adb_paired', 0))
                         
                         # Store persistent connection flag and idle timeout
-                        device._persistent_connection = bool(message.get('adb_persistent_connection', 1))
+                        device._persistent_connection = int(message.get('adb_persistent_connection', 1)) != 0
                         device._idle_timeout_minutes = int(message.get('adb_idle_timeout', self._config.adb_idle_timeout_default))
                         self._logger.debug('[DAEMON][SOCKET] Persistent connection: %s, Idle timeout: %d min', device._persistent_connection, device._idle_timeout_minutes)
                         
@@ -1008,7 +1008,7 @@ class TVRemoted:
                         device = self._config.remote_devices_adb.get(message['mac'])
                         if device:
                             device._adb_paired = int(message.get('adb_paired', 0))
-                            device._persistent_connection = bool(message.get('adb_persistent_connection', 1))
+                            device._persistent_connection = int(message.get('adb_persistent_connection', 1)) != 0
                             device._idle_timeout_minutes = int(message.get('adb_idle_timeout', self._config.adb_idle_timeout_default))
                             
                             # In on-demand mode with active connection, reset activity timestamp to avoid immediate disconnect
