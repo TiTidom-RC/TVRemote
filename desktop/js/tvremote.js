@@ -333,9 +333,9 @@ const printEqLogic = (_eqLogic) => {
     document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')?.jeeValue(0)
   }
   
-  // Si adb_persistent_connection n'existe pas, on force à true (connexion permanente par défaut)
+  // Si adb_persistent_connection n'existe pas, on force à false (mode on-demand par défaut)
   if (_eqLogic?.configuration?.adb_persistent_connection === undefined) {
-    document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')?.jeeValue(1)
+    document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')?.jeeValue(0)
   }
   
   // Si adb_idle_timeout n'existe pas, on force la valeur par défaut (5)

@@ -494,7 +494,7 @@ class tvremote extends eqLogic {
                 'host' => $this->getConfiguration('host'),
                 'friendly_name' => $this->getConfiguration('friendly_name'),
                 'adb_paired' => $this->getConfiguration('adb_paired_status', 0),
-                'adb_persistent_connection' => $this->getConfiguration('adb_persistent_connection', 1),
+                'adb_persistent_connection' => $this->getConfiguration('adb_persistent_connection', 0),
                 'adb_idle_timeout' => $this->getConfiguration('adb_idle_timeout', 5)
             );
             self::sendToDaemon($value_adb);
