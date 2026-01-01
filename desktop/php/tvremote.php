@@ -268,7 +268,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Maintenir Connexion}}
-                                        <sup><i class="fas fa-question-circle tooltips" title="{{Coché : la connexion ADB reste ouverte en permanence (commandes instantanées, détection temps réel). Décoché : la connexion se ferme automatiquement après une période d'inactivité (économie de ressources)}}"></i></sup>
+                                        <sup><i class="fas fa-question-circle tooltips" title="{{Coché : la connexion ADB reste ouverte en permanence (commandes instantanées, détection temps réel).&#10;Décoché : la connexion se ferme automatiquement après une période d'inactivité (économie de ressources)}}"></i></sup>
                                     </label>
                                     <div class="col-sm-6">
                                         <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="adb_persistent_connection" />{{Toujours connecté}}</label>
