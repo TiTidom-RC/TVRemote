@@ -210,6 +210,22 @@ $eqLogics = eqLogic::byType($plugin->getId());
                         <div class="col-lg-6">
                             <legend><i class="fas fa-link"></i> {{TVRemote}}</legend>
                             <div id="tvremote-pairing-section">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure d'Appairage}}</strong>
+                                    <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
+                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
+                                        <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
+                                        <li>{{Un code apparaît sur votre TV (Ex: A2C10E)}}</li>
+                                        <li>{{Entrez ce code dans le champ Code et cliquez sur Envoyer}}</li>
+                                    </ol>
+                                    <p style="margin-top: 10px; margin-bottom: 5px;">
+                                        <i class="fas fa-clock"></i> {{Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.}}
+                                    </p>
+                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
+                                        {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Statut}}</label>
                                     <div class="col-sm-3">
@@ -232,25 +248,25 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                         <span class="input-group-btn"><a class="btn btn-warning roundedRight customclass-sendpaircode" title="Envoyer le code"><i class="fas fa-paper-plane"></i> {{Envoyer}}</a></span>
                                     </div>
                                 </div>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i> <strong>{{Procédure d'Appairage}}</strong>
-                                    <br>{{Cliquez sur Appairer, puis entrez le code qui s'affiche sur votre TV}}
-                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
-                                        <li>{{Cliquez sur le bouton Appairer ci-dessous}}</li>
-                                        <li>{{Un code apparaît sur votre TV (Ex: A2C10E)}}</li>
-                                        <li>{{Entrez ce code dans le champ Code et cliquez sur Envoyer}}</li>
-                                    </ol>
-                                    <p style="margin-top: 10px; margin-bottom: 5px;">
-                                        <i class="fas fa-clock"></i> {{Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.}}
-                                    </p>
-                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
-                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
-                                        {{La TV doit être allumée pour l'appairage. Pour que les statuts soient mis à jour lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
-                                    </div>
-                                </div>
                             </div>
                             <legend><i class="fas fa-link"></i> {{ADB}}</legend>
                             <div id="adb-pairing-section">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>{{Activation ADB sur la TV}}</strong>
+                                    <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
+                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
+                                        <li>{{Paramètres → À propos → Build (Appuyer 7 fois)}}</li>
+                                        <li>{{Options développeur → Débogage USB (Activer)}}</li>
+                                        <li>{{Options développeur → Débogage réseau (Activer, si disponible)}}</li>
+                                    </ol>
+                                    <p style="margin-top: 10px; margin-bottom: 5px;">
+                                        <i class="fas fa-clock"></i> {{Lors de l'appairage ADB, vous disposez de 1 minute pour valider sur votre TV.}}
+                                    </p>
+                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
+                                        {{La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label">{{Utiliser ADB}}
                                         <sup><i class="fas fa-question-circle tooltips" title="{{Activer pour utiliser le protocole ADB avec cet équipement}}"></i></sup>
@@ -291,22 +307,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="col-sm-4 control-label">{{Action}}</label>
                                     <div class="col-sm-2">
                                         <a class="btn btn-success customclass-beginpairingadb"><i class="fas fa-link"></i> {{Appairer}}</a>
-                                    </div>
-                                </div>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i> <strong>{{Activation ADB sur la TV}}</strong>
-                                    <br>{{Pour utiliser ADB, vous devez activer les options développeur sur votre TV}}:
-                                    <ol style="margin-top: 10px; margin-bottom: 5px;">
-                                        <li>{{Paramètres → À propos → Build (Appuyer 7 fois)}}</li>
-                                        <li>{{Options développeur → Débogage USB (Activer)}}</li>
-                                        <li>{{Options développeur → Débogage réseau (Activer, si disponible)}}</li>
-                                    </ol>
-                                    <p style="margin-top: 10px; margin-bottom: 5px;">
-                                        <i class="fas fa-clock"></i> {{Lors de l'appairage ADB, vous disposez de 1 minute pour valider sur votre TV.}}
-                                    </p>
-                                    <div class="alert alert-warning" style="margin-top: 10px; margin-bottom: 0;">
-                                        <i class="fas fa-exclamation-triangle"></i> <strong>{{Important}}</strong><br>
-                                        {{La TV doit être allumée pour l'appairage. Pour pouvoir envoyer des commandes lorsque la TV est en veille, le mode d'économie d'énergie ne doit pas couper le réseau.}}
                                     </div>
                                 </div>
                             </div>
