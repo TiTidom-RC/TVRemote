@@ -179,8 +179,6 @@ try {
             // Get friendly name for user-friendly message
             $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
             
-            log::add('tvremote', 'debug', '[CALLBACK] Sending adbPairingResult event to JavaScript');
-            
             // Send event to JavaScript only if equipment exists
             event::add('tvremote::adbPairingResult', array(
                 'mac' => $result['mac'],

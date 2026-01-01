@@ -442,9 +442,7 @@ window.tvremoteEventHandlers = window.tvremoteEventHandlers || {}
 if (!window.tvremoteEventHandlers.adbPairing) {
   window.tvremoteEventHandlers.adbPairing = function(event) {
     const _option = event.detail
-    console.log('[DEBUG] adbPairingResult event received:', _option)
     if (!_option) {
-      console.log('[DEBUG] adbPairingResult: _option is null or undefined')
       return
     }
     
@@ -452,24 +450,15 @@ if (!window.tvremoteEventHandlers.adbPairing) {
     const deviceName = friendly_name || mac
     const adbStatus = document.getElementById('adb-pairing-status')
     
-    console.log('[DEBUG] adbPairingResult:', { mac, adb_paired, deviceName, auto_detected, adbStatus })
-    
     if (adb_paired === 1) {
       if (!auto_detected) {
-        console.log('[DEBUG] Showing success alert for', deviceName)
         jeedomUtils.showAlert({ message: `{{Appairage ADB réussi pour}} ${deviceName}`, level: 'success' })
-      } else {
-        console.log('[DEBUG] Success alert suppressed (auto_detected=true)')
       }
       if (adbStatus) {
-        console.log('[DEBUG] Updating badge to success')
         updatePairingStatusBadge(adbStatus, true)
-      } else {
-        console.log('[DEBUG] Badge element not found')
       }
     } else if (adb_paired === 0) {
       const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
-      console.log('[DEBUG] Showing error alert:', finalErrorMsg)
       jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
       if (adbStatus) {
         updatePairingStatusBadge(adbStatus, false)
