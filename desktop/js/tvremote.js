@@ -559,38 +559,6 @@ const changeScanState = (_scanState) => {
   document.body.addEventListener('tvremote::tvremotePairingResult', window.tvremoteEventHandlers.tvremotePairing)
   document.body.addEventListener('tvremote::scanResult', window.tvremoteEventHandlers.scanResult)
   document.body.addEventListener('tvremote::scanState', window.tvremoteEventHandlers.scanState)
-  
-  // Cleanup function to remove listeners when leaving the plugin page
-  if (!window.tvremoteEventHandlers.cleanup) {
-    window.tvremoteEventHandlers.cleanup = function() {
-      document.body.removeEventListener('tvremote::adbPairingResult', window.tvremoteEventHandlers.adbPairing)
-      document.body.removeEventListener('tvremote::tvremotePairingResult', window.tvremoteEventHandlers.tvremotePairing)
-      document.body.removeEventListener('tvremote::scanResult', window.tvremoteEventHandlers.scanResult)
-      document.body.removeEventListener('tvremote::scanState', window.tvremoteEventHandlers.scanState)
-    }
-  }
-  
-  // Listen for page changes to cleanup when leaving the plugin
-  if (!window.tvremoteEventHandlers.pageChangeHandler) {
-    window.tvremoteEventHandlers.pageChangeHandler = function() {
-      // Check if we're NOT on the tvremote plugin page anymore
-      // Note: Opening configuration modal/overlay keeps us on the same page (modifyWithoutSave unchanged)
-      // We only cleanup when actually navigating away to a different page
-      const currentPage = jeeFrontEnd?.modifyWithoutSave || ''
-      const isPluginContext = document.querySelector('[data-page="plugin"]')
-      
-      if (currentPage && !currentPage.includes('tvremote') && isPluginContext === null) {
-        // We've truly left the plugin page (not just opened a modal), cleanup listeners
-        window.tvremoteEventHandlers.cleanup()
-        // Also remove the pageChange listener itself to avoid memory leaks
-        document.body.removeEventListener('jeedom::pageChange', window.tvremoteEventHandlers.pageChangeHandler)
-      }
-    }
-  }
-  
-  // Always ensure pageChange listener is attached (remove first to avoid duplicates)
-  document.body.removeEventListener('jeedom::pageChange', window.tvremoteEventHandlers.pageChangeHandler)
-  document.body.addEventListener('jeedom::pageChange', window.tvremoteEventHandlers.pageChangeHandler)
 })()
 
 // Update pairing status badges when configuration changes (for...of optimization)
