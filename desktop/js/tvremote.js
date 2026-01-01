@@ -293,11 +293,72 @@ const updatePairingStatusBadge = (statusElement, isPaired) => {
   statusElement.seen()
 }
 
+// Helper function to show/hide ADB connection options based on use_adb checkbox
+const updateAdbOptionsVisibility = () => {
+  const useAdbCheckbox = document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')
+  const persistentConnectionGroup = document.getElementById('adb-persistent-connection-group')
+  const idleTimeoutGroup = document.getElementById('adb-idle-timeout-group')
+  
+  if (useAdbCheckbox) {
+    // Show/hide both groups based on use_adb checkbox
+    if (useAdbCheckbox.checked) {
+      persistentConnectionGroup?.seen()
+      // Then update idle timeout visibility based on persistent connection checkbox
+      updateIdleTimeoutVisibility()
+    } else {
+      persistentConnectionGroup?.unseen()
+      idleTimeoutGroup?.unseen()
+    }
+  }
+}
+
+// Helper function to show/hide idle timeout based on persistent connection checkbox
+const updateIdleTimeoutVisibility = () => {
+  const persistentCheckbox = document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')
+  const idleTimeoutGroup = document.getElementById('adb-idle-timeout-group')
+  
+  if (persistentCheckbox && idleTimeoutGroup) {
+    // Show timeout field only when connection is NOT persistent (checkbox unchecked)
+    if (persistentCheckbox.checked) {
+      idleTimeoutGroup.unseen()
+    } else {
+      idleTimeoutGroup.seen()
+    }
+  }
+}
+
 const printEqLogic = (_eqLogic) => {
   // Si la configuration use_adb n'existe pas encore (nouvel équipement), on force le décochage
   if (_eqLogic?.configuration?.use_adb === undefined) {
     document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')?.jeeValue(0)
   }
+  
+  // Si adb_persistent_connection n'existe pas, on force à true (connexion permanente par défaut)
+  if (_eqLogic?.configuration?.adb_persistent_connection === undefined) {
+    document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')?.jeeValue(1)
+  }
+  
+  // Si adb_idle_timeout n'existe pas, on force la valeur par défaut (5)
+  if (_eqLogic?.configuration?.adb_idle_timeout === undefined) {
+    document.querySelector('.eqLogicAttr[data-l2key="adb_idle_timeout"]')?.jeeValue(5)
+  }
+  
+  // Attach event listeners for ADB-related checkbox changes (re-attached on each equipment load)
+  const useAdbCheckbox = document.querySelector('.eqLogicAttr[data-l2key="use_adb"]')
+  const persistentCheckbox = document.querySelector('.eqLogicAttr[data-l2key="adb_persistent_connection"]')
+  
+  if (useAdbCheckbox) {
+    useAdbCheckbox.removeEventListener('change', updateAdbOptionsVisibility)
+    useAdbCheckbox.addEventListener('change', updateAdbOptionsVisibility)
+  }
+  
+  if (persistentCheckbox) {
+    persistentCheckbox.removeEventListener('change', updateIdleTimeoutVisibility)
+    persistentCheckbox.addEventListener('change', updateIdleTimeoutVisibility)
+  }
+  
+  // Affichage conditionnel des options ADB
+  updateAdbOptionsVisibility()
   
   // Update pairing status badges based on configuration
   const adbPairedStatus = _eqLogic?.configuration?.adb_paired_status
