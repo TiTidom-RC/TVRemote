@@ -368,22 +368,33 @@ class EQRemoteADB(object):
             self._logger.debug(traceback.format_exc())
             return False
     
-    def _reset_state(self) -> None:
-        """Reset connection state"""
+    def _reset_state(self, clear_activity: bool = False) -> None:
+        """Reset connection state
+        
+        Args:
+            clear_activity: If True, clears _last_activity (voluntary disconnect).
+                          If False, preserves it to allow reconnection within idle period.
+        """
         self._connection_task = None
         self._connected = False
         self._last_heartbeat = 0  # Reset heartbeat timer
-        self._last_activity = 0  # Reset activity timer for on-demand mode
+        if clear_activity:
+            self._last_activity = 0  # Clear activity timer (voluntary disconnect)
     
     def _can_connect(self) -> bool:
         """Check if we can attempt a new connection
         In persistent mode: always try to reconnect when disconnected
-        In non-persistent mode: only connect when a command is sent (via send_command)
+        In on-demand mode: reconnect if still within idle timeout period (involuntary disconnect)
         """
-        if not self._persistent_connection:
-            # Non-persistent mode: don't auto-reconnect in main loop
-            return False
-        return not self._connected and not self._pairing_mode
+        if not self._connected and not self._pairing_mode:
+            if self._persistent_connection:
+                return True
+            # On-demand mode: reconnect if we're still within the idle timeout period
+            if self._last_activity > 0:
+                time_since_activity = time.time() - self._last_activity
+                if time_since_activity < self._idle_timeout_minutes * 60:
+                    return True  # Involuntary disconnect during idle period, reconnect
+        return False
     
     def _is_connecting(self) -> bool:
         """Check if a connection is in progress"""
@@ -470,7 +481,7 @@ class EQRemoteADB(object):
                                     await self._adb.close()
                                 except Exception:
                                     pass  # Ignore errors during cleanup
-                            self._reset_state()
+                            self._reset_state(clear_activity=False)  # Involuntary disconnect (timeout)
                     
                     # Heartbeat: Check connection health when connected
                     if self._connected and not self._pairing_mode:
@@ -486,7 +497,7 @@ class EQRemoteADB(object):
                                     self._logger.info("[EQRemoteADB][IDLE][%s] ADB connection closed", self._macAddr)
                                 except Exception as e:
                                     self._logger.debug("[EQRemoteADB][IDLE][%s] Error closing ADB :: %s", self._macAddr, e)
-                                self._reset_state()
+                                self._reset_state(clear_activity=True)  # Voluntary disconnect
                                 await self._notify_connection_status(online=1, adb_connected=0)
                                 continue
                         
@@ -507,15 +518,11 @@ class EQRemoteADB(object):
                                     await self._adb.close()
                                 except Exception:
                                     pass  # Ignore errors during cleanup
-                                self._reset_state()
+                                self._reset_state(clear_activity=False)  # Involuntary disconnect, preserve activity for reconnection
                                 
                                 # Send disconnection status to Jeedom
                                 await self._notify_connection_status(online=0, adb_connected=0)
-                                
-                                # Backoff delay only in persistent mode
-                                if self._persistent_connection:
-                                    await asyncio.sleep(self._reconnect_delay)
-                                    self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
+                                # No backoff here - let the normal connection loop handle reconnection
                                 continue
                     
                     # Sleep between iterations (5s is sufficient for checking pairing status and heartbeat timing)
@@ -530,7 +537,7 @@ class EQRemoteADB(object):
                             await self._adb.close()
                         except Exception:
                             pass  # Ignore errors during cleanup
-                    self._reset_state()
+                    self._reset_state(clear_activity=False)  # Involuntary disconnect
                     raise  # Re-raise to exit the main loop
                     
                 except (TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
@@ -541,7 +548,7 @@ class EQRemoteADB(object):
                             await self._adb.close()
                         except Exception:
                             pass  # Ignore errors during cleanup
-                    self._reset_state()
+                    self._reset_state(clear_activity=False)  # Involuntary disconnect (connection error)
                     
                     # If pairing is in progress, don't process errors (pairing handles its own connection)
                     if self._pairing_mode:
@@ -558,8 +565,9 @@ class EQRemoteADB(object):
                         self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
                         await self._notify_connection_status(online=0, adb_connected=0)
                     
-                    # Exponential backoff for persistent mode only
-                    if self._persistent_connection:
+                    # Apply backoff only when we will attempt reconnection
+                    # _can_connect() already contains the logic for this decision
+                    if self._can_connect():
                         self._logger.debug("[EQRemoteADB][MAIN][%s] Waiting %ds before reconnection attempt", self._macAddr, self._reconnect_delay)
                         await asyncio.sleep(self._reconnect_delay)
                         self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
@@ -608,7 +616,7 @@ class EQRemoteADB(object):
                 self._logger.debug("[EQRemoteADB][%s] Error closing connection :: %s", self._macAddr, e)
         
         # Reset all connection state consistently
-        self._reset_state()
+        self._reset_state(clear_activity=True)  # Voluntary user action
     
     def set_pairing_mode(self, pairing: bool) -> None:
         """Set pairing mode to prevent background connection attempts"""
@@ -746,7 +754,7 @@ class EQRemoteADB(object):
                             await self._adb.close()
                         except Exception:
                             pass  # Ignore errors during cleanup
-                        self._reset_state()
+                        self._reset_state(clear_activity=False)  # Involuntary disconnect during command
                         # Send error to Jeedom if cmd_id is provided
                         if cmd_id:
                             error_data = {
@@ -785,7 +793,7 @@ class EQRemoteADB(object):
                 await self._adb.close()
             except Exception:
                 pass  # Ignore errors during cleanup
-            self._reset_state()
+            self._reset_state(clear_activity=False)  # Involuntary disconnect
             self._logger.debug(traceback.format_exc())
         except Exception as e:
             self._logger.error("[EQRemoteADB][SendCommand] Exception :: %s", e)
