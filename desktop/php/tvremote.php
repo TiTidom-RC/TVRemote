@@ -278,7 +278,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="col-sm-4 control-label">{{Délai Inactivité (min)}}
                                         <sup><i class="fas fa-question-circle tooltips" title="{{Durée d'inactivité avant déconnexion automatique. Valeur par défaut : 5 minutes}}"></i></sup>
                                     </label>
-                                    <div class="col-sm-6">
+                                    <div class="col-sm-2">
                                         <input type="number" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="adb_idle_timeout" min="1" max="60" placeholder="5" />
                                     </div>
                                 </div>
