@@ -509,53 +509,57 @@ const changeScanState = (_scanState) => {
     }
   }
   
+  if (!window.tvremoteEventHandlers.scanState) {
+    window.tvremoteEventHandlers.scanState = function(event) {
+      const scanState = event.detail?.scanState
+      
+      const scanButtons = document.querySelectorAll(SELECTORS.SCAN_BUTTONS)
+      const scanIcons = document.querySelectorAll(SELECTORS.SCAN_ICONS)
+      const scanTexts = document.querySelectorAll(SELECTORS.SCAN_TEXTS)
+      
+      jeedomUtils.hideAlert()
+      
+      const isScanOn = scanState === 'scanOn'
+      
+      // Batch DOM updates with for...of (faster than forEach)
+      for (const el of scanButtons) {
+        el.setAttribute('data-scanState', isScanOn ? 'scanOff' : 'scanOn')
+        el.removeClass(isScanOn ? 'logoPrimary' : 'logoSecondary')
+          .addClass(isScanOn ? 'logoSecondary' : 'logoPrimary')
+      }
+      
+      for (const el of scanIcons) {
+        if (isScanOn) {
+          el.addClass('icon_red')
+        } else {
+          el.removeClass('icon_red')
+        }
+      }
+      
+      for (const el of scanTexts) {
+        el.textContent = isScanOn ? '{{Stop Scan}}' : '{{Scan}}'
+      }
+      
+      if (isScanOn) {
+        jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
+      } else {
+        window.location.reload()
+      }
+    }
+  }
+  
   // Remove existing listeners to avoid duplicates (in case of page reload in Jeedom)
   document.body.removeEventListener('tvremote::adbPairingResult', window.tvremoteEventHandlers.adbPairing)
   document.body.removeEventListener('tvremote::tvremotePairingResult', window.tvremoteEventHandlers.tvremotePairing)
   document.body.removeEventListener('tvremote::scanResult', window.tvremoteEventHandlers.scanResult)
+  document.body.removeEventListener('tvremote::scanState', window.tvremoteEventHandlers.scanState)
   
   // Attach event listeners (always executed on script load to ensure listeners are active)
   document.body.addEventListener('tvremote::adbPairingResult', window.tvremoteEventHandlers.adbPairing)
   document.body.addEventListener('tvremote::tvremotePairingResult', window.tvremoteEventHandlers.tvremotePairing)
   document.body.addEventListener('tvremote::scanResult', window.tvremoteEventHandlers.scanResult)
+  document.body.addEventListener('tvremote::scanState', window.tvremoteEventHandlers.scanState)
 })()
-
-document.body.addEventListener('tvremote::scanState', (event) => {
-  const scanState = event.detail?.scanState
-  
-  const scanButtons = document.querySelectorAll(SELECTORS.SCAN_BUTTONS)
-  const scanIcons = document.querySelectorAll(SELECTORS.SCAN_ICONS)
-  const scanTexts = document.querySelectorAll(SELECTORS.SCAN_TEXTS)
-  
-  jeedomUtils.hideAlert()
-  
-  const isScanOn = scanState === 'scanOn'
-  
-  // Batch DOM updates with for...of (faster than forEach)
-  for (const el of scanButtons) {
-    el.setAttribute('data-scanState', isScanOn ? 'scanOff' : 'scanOn')
-    el.removeClass(isScanOn ? 'logoPrimary' : 'logoSecondary')
-      .addClass(isScanOn ? 'logoSecondary' : 'logoPrimary')
-  }
-  
-  for (const el of scanIcons) {
-    if (isScanOn) {
-      el.addClass('icon_red')
-    } else {
-      el.removeClass('icon_red')
-    }
-  }
-  
-  for (const el of scanTexts) {
-    el.textContent = isScanOn ? '{{Stop Scan}}' : '{{Scan}}'
-  }
-  
-  if (isScanOn) {
-    jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
-  } else {
-    window.location.reload()
-  }
-})
 
 // Update pairing status badges when configuration changes (for...of optimization)
 for (const element of document.querySelectorAll('.eqLogicAttr[data-l2key="tvremote_paired_status"]')) {
