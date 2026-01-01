@@ -594,7 +594,13 @@ class EQRemoteADB(object):
             self._logger.debug("[EQRemoteADB][MAIN][%s] Main loop stopped", self._macAddr)
     
     async def cancel_connection_attempt(self) -> None:
-        """Cancel any ongoing connection attempt"""
+        """Cancel any ongoing connection attempt and close existing connection
+        
+        Can be called in different states:
+        - Connected: will close connection and notify Jeedom
+        - Connecting: will cancel task without notification (not yet connected)
+        - Disconnected: no-op, just resets state
+        """
         if self._is_connecting():
             assert self._connection_task is not None  # Guaranteed by _is_connecting()
             self._logger.debug("[EQRemoteADB][%s] Cancelling ongoing connection attempt", self._macAddr)
@@ -615,8 +621,15 @@ class EQRemoteADB(object):
             except Exception as e:
                 self._logger.debug("[EQRemoteADB][%s] Error closing connection :: %s", self._macAddr, e)
         
+        # Capture state before reset to know if we need to notify
+        was_connected = self._connected
+        
         # Reset all connection state consistently
         self._reset_state(clear_activity=True)  # Voluntary user action
+        
+        # Notify Jeedom only if we were connected (state changed)
+        if was_connected:
+            await self._notify_connection_status(online=1, adb_connected=0)
     
     def set_pairing_mode(self, pairing: bool) -> None:
         """Set pairing mode to prevent background connection attempts"""
@@ -679,6 +692,8 @@ class EQRemoteADB(object):
                     self._last_heartbeat = time.time()
                     self._last_activity = time.time()  # Update activity timestamp after successful connection
                     self._logger.info("[EQRemoteADB][SendCommand] Connected for on-demand command")
+                    # Notify Jeedom that ADB is now connected
+                    await self._notify_connection_status(online=1, adb_connected=1)
                 except (asyncio.TimeoutError, asyncio.CancelledError, OSError, ConnectionError) as e:
                     self._logger.error("[EQRemoteADB][SendCommand] Failed to connect :: %s", e)
                     # Clean up ADB object if connection failed
@@ -755,6 +770,8 @@ class EQRemoteADB(object):
                         except Exception:
                             pass  # Ignore errors during cleanup
                         self._reset_state(clear_activity=False)  # Involuntary disconnect during command
+                        # Notify Jeedom that ADB is now disconnected
+                        await self._notify_connection_status(online=1, adb_connected=0)
                         # Send error to Jeedom if cmd_id is provided
                         if cmd_id:
                             error_data = {
@@ -794,6 +811,8 @@ class EQRemoteADB(object):
             except Exception:
                 pass  # Ignore errors during cleanup
             self._reset_state(clear_activity=False)  # Involuntary disconnect
+            # Notify Jeedom that ADB is now disconnected
+            await self._notify_connection_status(online=1, adb_connected=0)
             self._logger.debug(traceback.format_exc())
         except Exception as e:
             self._logger.error("[EQRemoteADB][SendCommand] Exception :: %s", e)
