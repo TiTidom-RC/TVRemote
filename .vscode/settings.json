@@ -41,6 +41,7 @@
         "isset",
         "jeedomname",
         "jeetvremote",
+        "keepalive",
         "keyevent",
         "keyfilepath",
         "keygen",
