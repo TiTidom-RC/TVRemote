@@ -2022,7 +2022,7 @@ class tvremote extends eqLogic {
                              'six', 'seven', 'eight', 'nine', 'zero', 'channel_up', 'channel_down',
                              'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4',
                              'previous', 'rewind', 'play', 'pause', 'stop', 'forward', 'next',
-                             'mute_on', 'mute_off'];
+                             'mute_on', 'mute_off', 'power_on', 'power_off'];
         
         foreach ($actionLogicalIds as $logicalId) {
             $cmd = $this->getCmd('action', $logicalId);

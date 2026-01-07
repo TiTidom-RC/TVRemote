@@ -448,8 +448,9 @@
             </div>
 
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
-                    title="Date valeur : #is_on_valueDate# || Date collecte : #is_on_collectDate#">
+                <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
+                    data-power_on_id="#power_on_id#" data-power_off_id="#power_off_id#"
+                    title="Date valeur : #is_on_valueDate# || Date collecte : #is_on_collectDate# || Cliquer pour allumer/éteindre">
                     <i class="fas fa-power-off"></i>
                     <span class="cmdValue" style="display:none;">#is_on_value#</span>
                 </div>
@@ -665,6 +666,28 @@
                         // Optimistic UI update - immediately update visual state
                         const newValue = isMuted ? '0' : '1'
                         muteIcon.setAttribute('data-cmd_value', newValue)
+                        
+                        // Execute command
+                        jeedom.cmd.execute({ id: cmdId })
+                    }
+                })
+            }
+
+            // Setup power toggle handler
+            const powerIcon = widgetRoot.querySelector('.status-icon.clickable[data-power_on_id]')
+            if (powerIcon) {
+                powerIcon.addEventListener('click', e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+
+                    const currentValue = powerIcon.getAttribute('data-cmd_value') || '0'
+                    const isOn = currentValue === '1'
+                    const cmdId = isOn ? powerIcon.getAttribute('data-power_off_id') : powerIcon.getAttribute('data-power_on_id')
+
+                    if (cmdId) {
+                        // Optimistic UI update - immediately update visual state
+                        const newValue = isOn ? '0' : '1'
+                        powerIcon.setAttribute('data-cmd_value', newValue)
                         
                         // Execute command
                         jeedom.cmd.execute({ id: cmdId })
