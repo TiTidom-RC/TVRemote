@@ -394,31 +394,34 @@
         <div class="tvremote-status-row">
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#"
-                    data-cmd_value="#online_value#" title="#collectDate#">
+                    title="Date valeur : #online_valueDate# || Date collecte : #online_collectDate#">
                     <i class="fas fa-signal"></i>
+                    <span class="cmdValue" style="display:none;">#online_value#</span>
                 </div>
                 <span class="status-label">En Ligne</span>
             </div>
 
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#"
-                    data-cmd_value="#adb_connected_value#" title="#collectDate#">
+                    title="Date valeur : #adb_connected_valueDate# || Date collecte : #adb_connected_collectDate#">
                     <i class="fas fa-plug"></i>
+                    <span class="cmdValue" style="display:none;">#adb_connected_value#</span>
                 </div>
                 <span class="status-label">ADB</span>
             </div>
 
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
-                    data-cmd_value="#is_on_value#" title="#collectDate#">
+                    title="Date valeur : #is_on_valueDate# || Date collecte : #is_on_collectDate#">
                     <i class="fas fa-power-off"></i>
+                    <span class="cmdValue" style="display:none;">#is_on_value#</span>
                 </div>
                 <span class="status-label">Power</span>
             </div>
 
             <div class="status-item">
                 <div class="volume-indicator cmd" data-type="info" data-subtype="numeric"
-                    data-cmd_id="#volume_level_id#" title="#collectDate#">
+                    data-cmd_id="#volume_level_id#" title="Date valeur : #volume_level_valueDate# || Date collecte : #volume_level_collectDate#">
                     <span class="cmdValue">#volume_level_value#</span>%
                 </div>
                 <span class="status-label">Volume</span>
@@ -426,8 +429,9 @@
 
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
-                    data-cmd_value="#volume_muted_value#" title="#collectDate#">
+                    title="Date valeur : #volume_muted_valueDate# || Date collecte : #volume_muted_collectDate#">
                     <i class="fas fa-volume-off"></i>
+                    <span class="cmdValue" style="display:none;">#volume_muted_value#</span>
                 </div>
                 <span class="status-label">Mute</span>
             </div>
@@ -559,13 +563,13 @@
     <div class="widget-info-display">
         <div>
             <span class="widget-info-label">App actuelle: </span>
-            <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#" title="#collectDate#">
+            <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#" title="Date valeur : #current_app_valueDate# || Date collecte : #current_app_collectDate#">
                 <span class="cmdValue">#current_app_value#</span>
             </span>
         </div>
         <div>
             <span class="widget-info-label">Dernière mise à jour: </span>
-            <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#updatelasttime_id#" title="#collectDate#">
+            <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#updatelasttime_id#" title="Date valeur : #updatelasttime_valueDate# || Date collecte : #updatelasttime_collectDate#">
                 <span class="cmdValue">#updatelasttime_value#</span>
             </span>
         </div>
@@ -648,8 +652,39 @@
             });
         }
 
+        // Update binary status icons based on cmdValue
+        function updateBinaryStatus(cmdId) {
+            const icon = widget.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]');
+            if (icon && icon.dataset.subtype === 'binary') {
+                const valueSpan = icon.querySelector('.cmdValue');
+                if (valueSpan) {
+                    const value = valueSpan.textContent.trim();
+                    icon.setAttribute('data-cmd_value', value);
+                }
+            }
+        }
+
+        // Initialize status updates using Jeedom standard event system
+        function initStatusUpdates() {
+            // Initial update for all binary commands
+            widget.querySelectorAll('.status-icon.cmd[data-subtype="binary"]').forEach(function(icon) {
+                const cmdId = icon.getAttribute('data-cmd_id');
+                if (cmdId) {
+                    updateBinaryStatus(cmdId);
+                }
+            });
+
+            // Listen to Jeedom standard update events
+            widget.addEventListener('jeedom::cmd::update', function(event) {
+                if (event.detail && event.detail.cmd_id) {
+                    updateBinaryStatus(event.detail.cmd_id);
+                }
+            });
+        }
+
         // Initialize
         setupClickHandlers();
+        initStatusUpdates();
     })();
 </script>
 </div>
