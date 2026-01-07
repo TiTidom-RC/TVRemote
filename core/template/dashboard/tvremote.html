@@ -365,11 +365,12 @@
             transition: all 0.2s ease;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus {
-            outline: none;
-            background: #333;
-            border-color: #2196F3;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus,
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands input.cmd-input:focus {
+            outline: none !important;
+            background: #333 !important;
+            border-color: #2196F3 !important;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2) !important;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
@@ -520,10 +521,11 @@
             color: #2c2c2c;
         }
 
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus {
-            background: #f8f8f8;
-            border-color: #2196F3;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15);
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands input.cmd-input:focus {
+            background: #f8f8f8 !important;
+            border-color: #2196F3 !important;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15) !important;
         }
 
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
