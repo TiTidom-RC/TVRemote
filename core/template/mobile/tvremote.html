@@ -935,7 +935,7 @@
                     input.style.setProperty('background-color', '#4a4a4a', 'important')
                 })
                 input.addEventListener('blur', () => {
-                    input.style.setProperty('background-color', '#1a1a1a', 'important')
+                    input.style.removeProperty('background-color')
                 })
             }
 
