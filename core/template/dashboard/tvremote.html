@@ -630,8 +630,8 @@
             // ========================================
 
             const setupClickHandlers = () => {
-                const buttons = widgetRoot.querySelectorAll('[data-cmd_id]')
-
+            // Only attach click handlers to action buttons (not info commands)
+            const buttons = widgetRoot.querySelectorAll('[data-cmd_id]:not([data-type="info"])')
                 buttons.forEach(btn => {
                     const cmdId = btn.getAttribute('data-cmd_id')
                     if (!cmdId) return
