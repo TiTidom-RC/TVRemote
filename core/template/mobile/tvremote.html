@@ -4,40 +4,54 @@
     data-eqType="#eqType#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="mobile"
     data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#"
     style="width: #width#;height: #height#;max-width: 100%;#style#">
-    <div class="tvremote-header">
-        <div class="tvremote-title">#name#</div>
-        
+
+    <!-- Widget name with refresh button -->
+    <div class="widget-name">
+        <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
+        <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
+        <span class="cmd refresh cursor" title="Rafraîchir" data-cmd_id="#refresh_id#"
+            style="position: absolute; right: 5px; top: 5px;">
+            <i class="fas fa-sync"></i>
+        </span>
+    </div>
+
+    <div class="tvremote-content">
         <div class="tvremote-status-row">
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#" data-cmd_value="#online_value#">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#"
+                    data-cmd_value="#online_value#">
                     <i class="fas fa-signal"></i>
                 </div>
                 <span class="status-label">En Ligne</span>
             </div>
-            
+
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#" data-cmd_value="#adb_connected_value#">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#"
+                    data-cmd_value="#adb_connected_value#">
                     <i class="fas fa-plug"></i>
                 </div>
                 <span class="status-label">ADB</span>
             </div>
-            
+
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#" data-cmd_value="#is_on_value#">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
+                    data-cmd_value="#is_on_value#">
                     <i class="fas fa-power-off"></i>
                 </div>
                 <span class="status-label">Power</span>
             </div>
-            
+
             <div class="status-item">
-                <div class="volume-indicator cmd" data-type="info" data-subtype="numeric" data-cmd_id="#volume_level_id#">
+                <div class="volume-indicator cmd" data-type="info" data-subtype="numeric"
+                    data-cmd_id="#volume_level_id#">
                     <span class="cmdValue">#volume_level_value#</span>%
                 </div>
                 <span class="status-label">Volume</span>
             </div>
-            
+
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#" data-cmd_value="#volume_muted_value#">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
+                    data-cmd_value="#volume_muted_value#">
                     <i class="fas fa-volume-off"></i>
                 </div>
                 <span class="status-label">Mute</span>
@@ -70,7 +84,7 @@
             <i class="fas fa-chevron-up"></i>
         </button>
         <div class="nav-placeholder"></div>
-        
+
         <button class="nav-btn" data-action="left" title="Gauche">
             <i class="fas fa-chevron-left"></i>
         </button>
@@ -80,7 +94,7 @@
         <button class="nav-btn" data-action="right" title="Droite">
             <i class="fas fa-chevron-right"></i>
         </button>
-        
+
         <div class="nav-placeholder"></div>
         <button class="nav-btn" data-action="down" title="Bas">
             <i class="fas fa-chevron-down"></i>
@@ -108,15 +122,15 @@
         <button class="num-btn" data-action="one">1</button>
         <button class="num-btn" data-action="two">2</button>
         <button class="num-btn" data-action="three">3</button>
-        
+
         <button class="num-btn" data-action="four">4</button>
         <button class="num-btn" data-action="five">5</button>
         <button class="num-btn" data-action="six">6</button>
-        
+
         <button class="num-btn" data-action="seven">7</button>
         <button class="num-btn" data-action="eight">8</button>
         <button class="num-btn" data-action="nine">9</button>
-        
+
         <button class="num-btn" data-action="channel_down">
             <i class="fas fa-minus"></i>
         </button>
@@ -165,20 +179,20 @@
     <div class="apps-section" id="apps-section-mobile-#id#">
         #apps_html#
     </div>
+</div>
+<!-- Current app display -->
+<div class="current-app-display">
+    <span class="current-app-label">App actuelle: </span>
+    <span class="current-app-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#">
+        <span class="cmdValue">#current_app_value#</span>
+    </span>
+</div>
 
-    <!-- Current app display -->
-    <div class="current-app-display">
-        <span class="current-app-label">App actuelle: </span>
-        <span class="current-app-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#">
-            <span class="cmdValue">#current_app_value#</span>
-        </span>
-    </div>
-
-    <script>
-    (function() {
+<script>
+    (function () {
         const eqLogicId = '#id#';
         const widget = document.querySelector('.tvremote-widget[data-eqlogic_id="' + eqLogicId + '"][data-version="mobile"]');
-        
+
         if (!widget) {
             console.error('TVRemote: Widget not found for eqLogic', eqLogicId);
             return;
@@ -189,9 +203,9 @@
         // Setup click handlers for all buttons with data-cmd_id
         function setupClickHandlers() {
             // Handle app buttons
-            widget.querySelectorAll('.app-btn[data-cmd_id]').forEach(function(btn) {
+            widget.querySelectorAll('.app-btn[data-cmd_id]').forEach(function (btn) {
                 const cmdId = btn.getAttribute('data-cmd_id');
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     executeCmd(cmdId, this);
@@ -201,22 +215,22 @@
             // Handle action buttons - need to load cmd map first
             jeedom.eqLogic.byId({
                 id: eqLogicId,
-                error: function(error) {
+                error: function (error) {
                     console.error('TVRemote: Error loading equipment:', error);
                 },
-                success: function(data) {
+                success: function (data) {
                     if (data && data.cmds) {
                         const cmdMap = {};
-                        data.cmds.forEach(function(cmd) {
+                        data.cmds.forEach(function (cmd) {
                             cmdMap[cmd.logicalId] = cmd;
                         });
-                        
+
                         // Setup handlers for action buttons (navigation, volume, etc.)
-                        widget.querySelectorAll('[data-action]').forEach(function(btn) {
+                        widget.querySelectorAll('[data-action]').forEach(function (btn) {
                             const logicalId = btn.getAttribute('data-action');
                             const cmd = cmdMap[logicalId];
                             if (cmd && cmd.id) {
-                                btn.addEventListener('click', function(e) {
+                                btn.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     executeCmd(cmd.id, this);
@@ -232,18 +246,18 @@
         function executeCmd(cmdId, btnElement) {
             if (btnElement) {
                 btnElement.style.opacity = '0.6';
-                setTimeout(function() {
+                setTimeout(function () {
                     btnElement.style.opacity = '1';
                 }, 200);
             }
-            
+
             console.log('TVRemote: Executing command', cmdId);
             jeedom.cmd.execute({
                 id: cmdId,
-                error: function(error) {
+                error: function (error) {
                     console.error('TVRemote: Error executing command:', error);
                 },
-                success: function() {
+                success: function () {
                     console.log('TVRemote: Command executed successfully');
                 }
             });
@@ -252,5 +266,5 @@
         // Initialize
         setupClickHandlers();
     })();
-    </script>
+</script>
 </div>
