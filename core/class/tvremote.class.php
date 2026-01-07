@@ -2051,9 +2051,20 @@ class tvremote extends eqLogic {
         // Add visibility class for adb_shell_output info command
         $adbOutputCmd = $this->getCmd('info', 'adb_shell_output');
         $replace['#adb_shell_output_visible_class#'] = (is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) ? 'visible' : '';
-        // Add visibility class for adb_shell_output info command
-        $adbOutputCmd = $this->getCmd('info', 'adb_shell_output');
-        $replace['#adb_shell_output_visible_class#'] = (is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) ? 'visible' : '';
+        
+        // Show advanced commands block only if at least one command is visible
+        $hasVisibleAdvancedCmd = false;
+        foreach (['keycode', 'appcode', 'adbshell'] as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd) && $cmd->getIsVisible()) {
+                $hasVisibleAdvancedCmd = true;
+                break;
+            }
+        }
+        if (!$hasVisibleAdvancedCmd && is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) {
+            $hasVisibleAdvancedCmd = true;
+        }
+        $replace['#advanced_commands_visible#'] = $hasVisibleAdvancedCmd ? 'visible' : '';
         
         // Get refresh command ID
         $refreshCmd = $this->getCmd('action', 'refresh');

@@ -338,6 +338,11 @@
             background: #1a1a1a;
             border-radius: 8px;
             border: 1px solid #333;
+            display: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands.visible {
+            display: block;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-title {
@@ -820,7 +825,7 @@
         </div>
 
         <!-- Advanced Commands -->
-        <div class="advanced-commands">
+        <div class="advanced-commands #advanced_commands_visible#">
             <div class="advanced-commands-title">Commandes Avancées</div>
             
             <div class="cmd-group #keycode_visible_class#">
