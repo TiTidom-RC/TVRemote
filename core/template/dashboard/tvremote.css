@@ -314,8 +314,8 @@
     margin: 15px 0;
 }
 
-/* Current app display */
-.current-app-display {
+/* Widget info display (current app, last update, etc) */
+.widget-info-display {
     text-align: center;
     color: #aaa;
     font-size: 12px;
@@ -325,12 +325,16 @@
     border-radius: 8px;
 }
 
-.current-app-label {
+.widget-info-display > div {
+    margin: 4px 0;
+}
+
+.widget-info-label {
     color: #666;
     font-weight: bold;
 }
 
-.current-app-value {
+.widget-info-value {
     color: #2196F3;
     font-weight: bold;
 }

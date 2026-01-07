@@ -1988,7 +1988,8 @@ class tvremote extends eqLogic {
             'is_on' => ['id' => '', 'value' => '0'],
             'volume_level' => ['id' => '', 'value' => '0'],
             'volume_muted' => ['id' => '', 'value' => '0'],
-            'current_app' => ['id' => '', 'value' => '-']
+            'current_app' => ['id' => '', 'value' => '-'],
+            'updatelasttime' => ['id' => '', 'value' => '']
         ];
         
         foreach ($cmdMap as $logicalId => $data) {
@@ -2012,6 +2013,8 @@ class tvremote extends eqLogic {
         $replace['#volume_muted_value#'] = $cmdMap['volume_muted']['value'];
         $replace['#current_app_id#'] = $cmdMap['current_app']['id'];
         $replace['#current_app_value#'] = $cmdMap['current_app']['value'];
+        $replace['#updatelasttime_id#'] = $cmdMap['updatelasttime']['id'];
+        $replace['#updatelasttime_value#'] = $cmdMap['updatelasttime']['value'];
         
         // Generate apps HTML
         $appsHtml = '';

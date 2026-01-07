@@ -19,7 +19,7 @@
         <div class="tvremote-status-row">
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#"
-                    data-cmd_value="#online_value#">
+                    data-cmd_value="#online_value#" title="#collectDate#">
                     <i class="fas fa-signal"></i>
                 </div>
                 <span class="status-label">En Ligne</span>
@@ -27,7 +27,7 @@
 
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#"
-                    data-cmd_value="#adb_connected_value#">
+                    data-cmd_value="#adb_connected_value#" title="#collectDate#">
                     <i class="fas fa-plug"></i>
                 </div>
                 <span class="status-label">ADB</span>
@@ -35,7 +35,7 @@
 
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
-                    data-cmd_value="#is_on_value#">
+                    data-cmd_value="#is_on_value#" title="#collectDate#">
                     <i class="fas fa-power-off"></i>
                 </div>
                 <span class="status-label">Power</span>
@@ -43,7 +43,7 @@
 
             <div class="status-item">
                 <div class="volume-indicator cmd" data-type="info" data-subtype="numeric"
-                    data-cmd_id="#volume_level_id#">
+                    data-cmd_id="#volume_level_id#" title="#collectDate#">
                     <span class="cmdValue">#volume_level_value#</span>%
                 </div>
                 <span class="status-label">Volume</span>
@@ -51,7 +51,7 @@
 
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
-                    data-cmd_value="#volume_muted_value#">
+                    data-cmd_value="#volume_muted_value#" title="#collectDate#">
                     <i class="fas fa-volume-off"></i>
                 </div>
                 <span class="status-label">Mute</span>
@@ -181,12 +181,20 @@
     </div>
 </div>
 
-<!-- Current app display -->
-<div class="current-app-display">
-    <span class="current-app-label">App actuelle: </span>
-    <span class="current-app-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#">
-        <span class="cmdValue">#current_app_value#</span>
-    </span>
+<!-- Widget info display -->
+<div class="widget-info-display">
+    <div>
+        <span class="widget-info-label">App actuelle: </span>
+        <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#" title="#collectDate#">
+            <span class="cmdValue">#current_app_value#</span>
+        </span>
+    </div>
+    <div>
+        <span class="widget-info-label">Dernière mise à jour: </span>
+        <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#updatelasttime_id#" title="#collectDate#">
+            <span class="cmdValue">#updatelasttime_value#</span>
+        </span>
+    </div>
 </div>
 
 <script>
