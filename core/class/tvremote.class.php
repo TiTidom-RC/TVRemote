@@ -1995,7 +1995,8 @@ class tvremote extends eqLogic {
             'volume_level' => ['id' => '', 'value' => '0'],
             'volume_muted' => ['id' => '', 'value' => '0'],
             'current_app' => ['id' => '', 'value' => '-'],
-            'updatelasttime' => ['id' => '', 'value' => '']
+            'updatelasttime' => ['id' => '', 'value' => ''],
+            'adb_shell_output' => ['id' => '', 'value' => '']
         ];
         
         foreach ($cmdMap as $logicalId => $data) {
@@ -2028,7 +2029,7 @@ class tvremote extends eqLogic {
                              'six', 'seven', 'eight', 'nine', 'zero', 'channel_up', 'channel_down',
                              'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4',
                              'previous', 'rewind', 'play', 'pause', 'stop', 'forward', 'next',
-                             'mute_on', 'mute_off', 'power_on', 'power_off'];
+                             'mute_on', 'mute_off', 'power_on', 'power_off', 'keycode', 'appcode', 'adbshell'];
         
         foreach ($actionLogicalIds as $logicalId) {
             $cmd = $this->getCmd('action', $logicalId);

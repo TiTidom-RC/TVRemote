@@ -332,6 +332,61 @@
             font-weight: bold;
         }
 
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands {
+            margin-top: 10px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-title {
+            color: #aaa;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input {
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
+            margin-top: 8px;
+            padding: 8px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #4CAF50;
+            font-size: 11px;
+            font-family: monospace;
+            min-height: 40px;
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-label {
+            color: #999;
+            font-size: 10px;
+            margin-bottom: 3px;
+            display: block;
+        }
+
         /* Light Theme Overrides */
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] {
             background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
@@ -409,6 +464,23 @@
         }
 
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-item:has(.status-icon[data-cmd_value="1"]) .info-icon {
+            color: #4CAF50;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands {
+            background: #f8f8f8;
+            border-color: #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input {
+            background: #ffffff;
+            border-color: #ccc;
+            color: #2c2c2c;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
+            background: #f0f0f0;
+            border-color: #d0d0d0;
             color: #4CAF50;
         }
 
@@ -712,6 +784,28 @@
                 </span>
             </div>
         </div>
+
+        <!-- Advanced Commands -->
+        <div class="advanced-commands">
+            <div class="advanced-commands-title">Commandes Avancées</div>
+            
+            <label class="cmd-label">KeyCode:</label>
+            <input type="text" class="cmd-input" id="keycode-input-#uid#" placeholder="Ex: KEYCODE_HOME" 
+                data-cmd_id="#keycode_id#">
+            
+            <label class="cmd-label">AppCode:</label>
+            <input type="text" class="cmd-input" id="appcode-input-#uid#" placeholder="Ex: com.netflix.ninja" 
+                data-cmd_id="#appcode_id#">
+            
+            <label class="cmd-label">ADB Shell:</label>
+            <input type="text" class="cmd-input" id="adbshell-input-#uid#" placeholder="Ex: input keyevent 3" 
+                data-cmd_id="#adbshell_id#">
+            
+            <label class="cmd-label">Sortie ADB Shell:</label>
+            <div class="cmd-output cmd" data-type="info" data-subtype="string" data-cmd_id="#adb_shell_output_id#">
+                <span class="cmdValue">#adb_shell_output_value#</span>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -778,6 +872,38 @@
                     }
                 })
             }
+        }
+
+        // ========================================
+        // === INPUT HANDLERS (Advanced Commands) ===
+        // ========================================
+
+        const setupInputHandlers = () => {
+            const keycodeInput = widgetRoot.querySelector('#keycode-input-#uid#')
+            const appcodeInput = widgetRoot.querySelector('#appcode-input-#uid#')
+            const adbshellInput = widgetRoot.querySelector('#adbshell-input-#uid#')
+
+            const handleInputEnter = (input) => {
+                input.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const cmdId = input.getAttribute('data-cmd_id')
+                        const value = input.value.trim()
+                        
+                        if (cmdId && value) {
+                            jeedom.cmd.execute({ 
+                                id: cmdId, 
+                                value: { message: value } 
+                            })
+                            input.value = '' // Clear input after execution
+                        }
+                    }
+                })
+            }
+
+            if (keycodeInput) handleInputEnter(keycodeInput)
+            if (appcodeInput) handleInputEnter(appcodeInput)
+            if (adbshellInput) handleInputEnter(adbshellInput)
         }
 
         // ========================================
@@ -854,6 +980,7 @@
 
             // Initialize widget
             setupClickHandlers()
+            setupInputHandlers()
             initStatusUpdates()
 
         })();
