@@ -661,6 +661,11 @@
                     const cmdId = isMuted ? muteIcon.getAttribute('data-mute_off_id') : muteIcon.getAttribute('data-mute_on_id')
 
                     if (cmdId) {
+                        // Optimistic UI update - immediately update visual state
+                        const newValue = isMuted ? '0' : '1'
+                        muteIcon.setAttribute('data-cmd_value', newValue)
+                        
+                        // Execute command
                         jeedom.cmd.execute({ id: cmdId })
                     }
                 })
