@@ -578,21 +578,25 @@
 </div>
 
 <script>
-    (function () {
-        const eqLogicId = '#id#';
-        const widget = document.querySelector('.eqLogic-widget[data-eqLogic_id="' + eqLogicId + '"]');
+    (() => {
+        'use strict'
+        
+        console.log('TVRemote: Script loaded');
+        const widgetRoot = document.querySelector('.eqLogic-widget[data-eqLogic_uid="#uid#"]');
+        console.log('TVRemote: Widget found:', widgetRoot);
 
-        if (!widget) {
-            console.error('TVRemote: Widget not found for eqLogic', eqLogicId);
+        if (!widgetRoot) {
+            console.error('TVRemote: Widget not found');
             return;
         }
 
+        const eqLogicId = '#id#';
         console.log('TVRemote: Initializing mobile widget', eqLogicId);
 
         // Setup click handlers for all buttons with data-cmd_id
         function setupClickHandlers() {
             // Handle app buttons
-            widget.querySelectorAll('.app-btn[data-cmd_id]').forEach(function (btn) {
+            widgetRoot.querySelectorAll('.app-btn[data-cmd_id]').forEach(function (btn) {
                 const cmdId = btn.getAttribute('data-cmd_id');
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -617,7 +621,7 @@
                         console.log('TVRemote: Command map:', cmdMap);
 
                         // Setup handlers for action buttons (navigation, volume, etc.)
-                        widget.querySelectorAll('[data-action]').forEach(function (btn) {
+                        widgetRoot.querySelectorAll('[data-action]').forEach(function (btn) {
                             const logicalId = btn.getAttribute('data-action');
                             const cmd = cmdMap[logicalId];
                             console.log('TVRemote: Button', logicalId, 'mapped to cmd:', cmd);
@@ -660,7 +664,7 @@
 
         // Update binary status icons based on cmdValue
         function updateBinaryStatus(cmdId) {
-            const icon = widget.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]');
+            const icon = widgetRoot.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]');
             if (icon && icon.dataset.subtype === 'binary') {
                 const valueSpan = icon.querySelector('.cmdValue');
                 if (valueSpan) {
@@ -673,7 +677,7 @@
         // Initialize status updates using Jeedom standard event system
         function initStatusUpdates() {
             // Initial update for all binary commands
-            widget.querySelectorAll('.status-icon.cmd[data-subtype="binary"]').forEach(function(icon) {
+            widgetRoot.querySelectorAll('.status-icon.cmd[data-subtype="binary"]').forEach(function(icon) {
                 const cmdId = icon.getAttribute('data-cmd_id');
                 if (cmdId) {
                     updateBinaryStatus(cmdId);
@@ -681,7 +685,7 @@
             });
 
             // Listen to Jeedom standard update events
-            widget.addEventListener('jeedom::cmd::update', function(event) {
+            widgetRoot.addEventListener('jeedom::cmd::update', function(event) {
                 if (event.detail && event.detail.cmd_id) {
                     updateBinaryStatus(event.detail.cmd_id);
                 }
