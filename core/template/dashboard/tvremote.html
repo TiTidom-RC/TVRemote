@@ -1,9 +1,9 @@
-<div class="tvremote-widget eqLogic eqLogic-widget allowResize #custom_layout# #eqLogic_class# #class# #category#"
+<div class="tvremote-widget eqLogic eqLogic-widget allowResize #custom_layout# #eqLogic_class# #class# #category# #theme_class#"
     data-eqType="#eqType#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="dashboard"
     data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#"
     style="width: #width#;height: #height#;#style#">
     <style>
-        /* TVRemote Widget CSS */
+        /* TVRemote Widget CSS - Dark Theme (default) */
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
             background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
             border-radius: 15px;
@@ -318,6 +318,103 @@
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-value {
             color: #2196F3;
             font-weight: bold;
+        }
+
+        /* Light Theme Overrides */
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] {
+            background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .tvremote-header {
+            border-bottom: 2px solid #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .tvremote-title {
+            color: #2c2c2c;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-item {
+            color: #666;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-icon {
+            background: #ccc;
+            color: #666;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-icon.cmd[data-cmd_value="1"] {
+            background: #4CAF50 !important;
+            color: white !important;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-icon.cmd[data-cmd_value="0"] {
+            background: #ccc !important;
+            color: #666 !important;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .volume-indicator {
+            color: #2c2c2c;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .num-btn,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .hdmi-btn,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .media-btn {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            color: #2c2c2c;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn:hover,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn:hover,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .num-btn:hover,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .hdmi-btn:hover,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .media-btn:hover {
+            background: linear-gradient(145deg, #f8f8f8, #e5e5e5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn.primary,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn.center {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn.primary:hover,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn.center:hover {
+            background: linear-gradient(145deg, #42A5F5, #2196F3);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .apps-section {
+            border-top: 2px solid #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .app-btn {
+            background: #f5f5f5;
+            border: 2px solid #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .app-btn:hover {
+            border-color: #2196F3;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .section-divider {
+            background: #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-display {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-label {
+            color: #999;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-value {
+            color: #2196F3;
         }
 
         @media (max-width: 480px) {

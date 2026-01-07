@@ -1,9 +1,9 @@
-<div class="tvremote-widget eqLogic eqLogic-widget #custom_layout# #eqLogic_class# #class# #category#"
+<div class="tvremote-widget eqLogic eqLogic-widget #custom_layout# #eqLogic_class# #class# #category# #theme_class#"
     data-eqType="#eqType#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="mobile"
     data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#"
     style="width: #width#;height: #height#;max-width: 100%;#style#">
     <style>
-        /* TVRemote Widget CSS */
+        /* TVRemote Widget CSS - Dark Theme (default) */
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
             background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
             border-radius: 15px;
@@ -318,6 +318,78 @@
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-value {
             color: #2196F3;
             font-weight: bold;
+        }
+
+        /* Light Theme Overrides */
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] {
+            background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
+            border-color: #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-header h3 {
+            color: #2c2c2c;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-section,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .controls-section,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-display {
+            background: linear-gradient(145deg, #fafafa, #eeeeee);
+            border-color: #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .num-btn {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            color: #2c2c2c;
+            border: 1px solid #d0d0d0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn:hover,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .num-btn:hover {
+            background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn:active,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .num-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-icon {
+            color: #ccc;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-icon.active {
+            color: #4CAF50;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-separator {
+            background: #d0d0d0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .primary-btn {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .primary-btn:hover {
+            background: linear-gradient(145deg, #1976D2, #1565C0);
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-display {
+            background: #f0f0f0;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-display {
+            color: #666;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .widget-info-label {
+            color: #777;
         }
 
         @media (max-width: 480px) {

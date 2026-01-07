@@ -1975,11 +1975,17 @@ class tvremote extends eqLogic {
         // Load template content
         $html = file_get_contents($templatePath);
         
+        // Detect current theme
+        $themeConfig = jeedom::getThemeConfig();
+        $currentTheme = ($_version == 'mobile') ? $themeConfig['current_mobile_theme'] : $themeConfig['current_desktop_theme'];
+        $isDarkTheme = (strpos(strtolower($currentTheme), 'dark') !== false || strpos(strtolower($currentTheme), 'night') !== false);
+        
         // Replace placeholders
         $replace['#id#'] = $this->getId();
         $replace['#name#'] = $this->getName();
         $replace['#name_display#'] = $this->getName();
         $replace['#version#'] = $_version;
+        $replace['#theme_class#'] = $isDarkTheme ? 'theme-dark' : 'theme-light';
         
         // Get command IDs and values for info commands
         $cmdMap = [
