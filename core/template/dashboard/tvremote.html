@@ -631,6 +631,7 @@
                     callbackCalled = true;
                     console.log('TVRemote: Equipment data loaded:', data);
                     if (data && data.cmds) {
+                        console.log('TVRemote: Found', data.cmds.length, 'commands');
                         const cmdMap = {};
                         data.cmds.forEach(function (cmd) {
                             cmdMap[cmd.logicalId] = cmd;
@@ -656,6 +657,9 @@
                                 console.warn('TVRemote: No command found for action:', logicalId);
                             }
                         });
+                        console.log('TVRemote: All action buttons configured');
+                    } else {
+                        console.error('TVRemote: No commands data in response. Data:', data);
                     }
                 }
             });
