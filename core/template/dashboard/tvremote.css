@@ -4,9 +4,8 @@
     border-radius: 20px;
     padding: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    max-width: 420px;
-    margin: 10px auto;
     font-family: 'Roboto', sans-serif;
+    box-sizing: border-box;
 }
 
 .tvremote-header {
