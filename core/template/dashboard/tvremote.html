@@ -612,12 +612,23 @@
 
             // Handle action buttons - need to load cmd map first
             console.log('TVRemote: Loading equipment data for ID:', eqLogicId);
+            
+            // Set a timeout to detect if the call hangs
+            let callbackCalled = false;
+            setTimeout(function() {
+                if (!callbackCalled) {
+                    console.error('TVRemote: jeedom.eqLogic.byId timeout after 5 seconds');
+                }
+            }, 5000);
+            
             jeedom.eqLogic.byId({
                 id: eqLogicId,
                 error: function (error) {
+                    callbackCalled = true;
                     console.error('TVRemote: Error loading equipment:', error);
                 },
                 success: function (data) {
+                    callbackCalled = true;
                     console.log('TVRemote: Equipment data loaded:', data);
                     if (data && data.cmds) {
                         const cmdMap = {};
