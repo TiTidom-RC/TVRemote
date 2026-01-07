@@ -567,14 +567,15 @@
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
                 width: auto;
                 min-width: 700px;
+                max-width: 1000px;
             }
 
             /* Layout principal en CSS Grid */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
                 display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-columns: 0.8fr 1fr 1.2fr;
                 grid-template-rows: auto auto auto auto auto;
-                gap: 12px;
+                gap: 10px;
             }
 
             /* Colonne 1 - Ligne 1 : Status */
@@ -587,29 +588,50 @@
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-section {
                 grid-column: 1;
                 grid-row: 2;
+                justify-self: center;
+                width: 100%;
+                max-width: 200px;
             }
 
             /* Réinitialiser control-row à 4 colonnes en mode horizontal */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn {
+                max-width: 95px;
             }
 
             /* Colonne 1 - Ligne 3 : Pavé numérique */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .numpad-section {
                 grid-column: 1;
                 grid-row: 3;
+                justify-self: center;
+                width: 100%;
+                max-width: 200px;
             }
 
             /* Colonne 2 - Ligne 1 : HDMI Sources */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-section {
                 grid-column: 2;
                 grid-row: 1;
+                justify-self: center;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn {
+                max-width: 70px;
             }
 
             /* Colonne 2 - Ligne 2 : Contrôles multimédia */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-section {
                 grid-column: 2;
                 grid-row: 2;
+                justify-self: center;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn {
+                max-width: 50px;
             }
 
             /* Colonne 2 - Ligne 3 : Keypad (navigation) */
@@ -641,8 +663,13 @@
                 margin-top: 8px;
                 display: flex;
                 flex-wrap: nowrap;
+                justify-content: center;
                 overflow-x: auto;
-                gap: 6px;
+                gap: 8px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
+                flex-shrink: 0;
             }
 
             /* Ligne 5 - Pleine largeur : Widget Info */
