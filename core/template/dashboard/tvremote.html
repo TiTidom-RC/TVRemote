@@ -1,18 +1,386 @@
-<link rel="stylesheet" type="text/css" href="plugins/tvremote/core/template/dashboard/tvremote.css">
-
 <div class="tvremote-widget eqLogic eqLogic-widget allowResize #custom_layout# #eqLogic_class# #class# #category#"
     data-eqType="#eqType#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="dashboard"
     data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#"
     style="width: #width#;height: #height#;#style#">
+    <style>
+        /* TVRemote Widget CSS */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            font-family: 'Roboto', sans-serif;
+            box-sizing: border-box;
+            width: 420px;
+            min-width: 300px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #404040;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-status-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-label {
+            white-space: nowrap;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.cmd[data-cmd_value="1"] {
+            background: #4CAF50;
+            color: white;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.cmd[data-cmd_value="0"] {
+            background: #666;
+            color: #999;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-indicator {
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-section {
+            margin: 15px 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row.three-cols {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn {
+            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            padding: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:hover {
+            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn.primary {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn.primary:hover {
+            background: linear-gradient(145deg, #42A5F5, #2196F3);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+            max-width: 240px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn {
+            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            width: 70px;
+            height: 70px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn:hover {
+            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            transform: scale(1.05);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn.center {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            border: 3px solid #1565C0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-placeholder {
+            background: transparent;
+            border: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .numpad-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn {
+            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn:hover {
+            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            transform: translateY(-2px);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-section {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn {
+            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 12px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn:hover {
+            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-section {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn {
+            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn:hover {
+            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            padding-top: 15px;
+            border-top: 2px solid #404040;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
+            background: #2a2a2a;
+            border: 2px solid #404040;
+            border-radius: 12px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn:hover {
+            border-color: #2196F3;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .section-divider {
+            height: 2px;
+            background: #404040;
+            margin: 15px 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display {
+            text-align: center;
+            color: #aaa;
+            font-size: 12px;
+            margin: 10px 0;
+            padding: 8px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display > div {
+            margin: 4px 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-label {
+            color: #666;
+            font-weight: bold;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-value {
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
+                max-width: 100%;
+                padding: 15px;
+            }
+            
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn,
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn {
+                padding: 12px;
+                font-size: 16px;
+            }
+            
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+        }
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-left {
+            display: flex;
+            flex: 0 1 auto;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-center {
+            display: flex;
+            flex: 1 1 auto;
+            justify-content: center;
+            text-align: center;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-center a {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-right {
+            display: flex;
+            flex: 0 1 auto;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-right .cmd.refresh {
+            margin-top: unset !important;
+            padding-right: 5px;
+            color: inherit !important;
+        }
+    </style>
 
     <!-- Widget name with refresh button -->
     <div class="widget-name">
-        <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
-        <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
-        <span class="cmd refresh cursor" title="Rafraîchir" data-cmd_id="#refresh_id#"
-            style="position: absolute; right: 5px; top: 5px;">
-            <i class="fas fa-sync"></i>
-        </span>
+        <div class="tvremote-name-left"></div>
+        <div class="tvremote-name-center">
+            <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
+            <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
+        </div>
+        <div class="tvremote-name-right">
+            <span class="cmd refresh cursor" title="Rafraîchir" data-cmd_id="#refresh_id#">
+                <i class="fas fa-sync"></i>
+            </span>
+        </div>
     </div>
 
     <div class="tvremote-content">
