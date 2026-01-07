@@ -376,6 +376,20 @@
             color: inherit !important;
         }
 
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.clickable:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.clickable:active {
+            transform: scale(0.95);
+        }
+
         /* Animation for value updates */
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .cmd-updated {
             animation: pulse-update 0.5s ease-in-out;
@@ -451,8 +465,9 @@
             </div>
 
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
-                    title="Date valeur : #volume_muted_valueDate# || Date collecte : #volume_muted_collectDate#">
+                <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
+                    data-mute_on_id="#mute_on_id#" data-mute_off_id="#mute_off_id#"
+                    title="Date valeur : #volume_muted_valueDate# || Date collecte : #volume_muted_collectDate# || Cliquer pour activer/désactiver">
                     <i class="fas fa-volume-off"></i>
                     <span class="cmdValue" style="display:none;">#volume_muted_value#</span>
                 </div>
@@ -633,26 +648,43 @@
                         jeedom.cmd.execute({ id: cmdId })
                     })
                 })
+
+            // Setup mute toggle handler
+            const muteIcon = widgetRoot.querySelector('.status-icon.clickable[data-mute_on_id]')
+            if (muteIcon) {
+                muteIcon.addEventListener('click', e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+
+                    const currentValue = muteIcon.getAttribute('data-cmd_value') || '0'
+                    const isMuted = currentValue === '1'
+                    const cmdId = isMuted ? muteIcon.getAttribute('data-mute_off_id') : muteIcon.getAttribute('data-mute_on_id')
+
+                    if (cmdId) {
+                        jeedom.cmd.execute({ id: cmdId })
+                    }
+                })
             }
+        }
 
-            // ========================================
-            // === VALUE UPDATE HANDLERS ===
-            // ========================================
+        // ========================================
+        // === VALUE UPDATE HANDLERS ===
+        // ========================================
 
-            const updateBinaryStatus = cmdId => {
-                const icon = widgetRoot.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]')
-                if (!icon || icon.dataset.subtype !== 'binary') return
+        const updateBinaryStatus = cmdId => {
+            const icon = widgetRoot.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]')
+            if (!icon || icon.dataset.subtype !== 'binary') return
 
-                const valueSpan = icon.querySelector('.cmdValue')
+            const valueSpan = icon.querySelector('.cmdValue')
+            if (valueSpan) {
+                icon.setAttribute('data-cmd_value', valueSpan.textContent.trim())
+            }
+        }
+
+        const updateCmdValue = (cmdId, value, displayValue) => {
+            widgetRoot.querySelectorAll('[data-cmd_id="' + cmdId + '"]').forEach(element => {
+                const valueSpan = element.querySelector('.cmdValue')
                 if (valueSpan) {
-                    icon.setAttribute('data-cmd_value', valueSpan.textContent.trim())
-                }
-            }
-
-            const updateCmdValue = (cmdId, value, displayValue) => {
-                widgetRoot.querySelectorAll('[data-cmd_id="' + cmdId + '"]').forEach(element => {
-                    const valueSpan = element.querySelector('.cmdValue')
-                    if (valueSpan) {
                         valueSpan.textContent = displayValue || value
 
                         // Visual feedback
