@@ -817,19 +817,19 @@
             <div class="cmd-group #keycode_visible_class#">
                 <label class="cmd-label">KeyCode:</label>
                 <input type="text" class="cmd-input" id="keycode-input-#uid#" placeholder="Ex: KEYCODE_HOME" 
-                    data-cmd_id="#keycode_id#">
+                    data-action-cmd-id="#keycode_id#">
             </div>
             
             <div class="cmd-group #appcode_visible_class#">
                 <label class="cmd-label">AppCode:</label>
                 <input type="text" class="cmd-input" id="appcode-input-#uid#" placeholder="Ex: com.netflix.ninja" 
-                    data-cmd_id="#appcode_id#">
+                    data-action-cmd-id="#appcode_id#">
             </div>
             
             <div class="cmd-group #adbshell_visible_class#">
                 <label class="cmd-label">ADB Shell:</label>
                 <input type="text" class="cmd-input" id="adbshell-input-#uid#" placeholder="Ex: input keyevent 3" 
-                    data-cmd_id="#adbshell_id#">
+                    data-action-cmd-id="#adbshell_id#">
             </div>
             
             <div class="cmd-group #adb_shell_output_visible_class#">
@@ -920,7 +920,7 @@
                 input.addEventListener('keypress', e => {
                     if (e.key === 'Enter') {
                         e.preventDefault()
-                        const cmdId = input.getAttribute('data-cmd_id')
+                        const cmdId = input.getAttribute('data-action-cmd-id')
                         const value = input.value.trim()
                         
                         if (cmdId && value) {
