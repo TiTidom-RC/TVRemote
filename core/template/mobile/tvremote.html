@@ -614,16 +614,22 @@
                             cmdMap[cmd.logicalId] = cmd;
                         });
 
+                        console.log('TVRemote: Command map:', cmdMap);
+
                         // Setup handlers for action buttons (navigation, volume, etc.)
                         widget.querySelectorAll('[data-action]').forEach(function (btn) {
                             const logicalId = btn.getAttribute('data-action');
                             const cmd = cmdMap[logicalId];
+                            console.log('TVRemote: Button', logicalId, 'mapped to cmd:', cmd);
                             if (cmd && cmd.id) {
                                 btn.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    console.log('TVRemote: Button clicked, executing cmd', cmd.id);
                                     executeCmd(cmd.id, this);
                                 });
+                            } else {
+                                console.warn('TVRemote: No command found for action:', logicalId);
                             }
                         });
                     }
