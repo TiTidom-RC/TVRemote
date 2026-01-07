@@ -303,7 +303,7 @@
             border-radius: 8px;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display > div {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display>div {
             margin: 4px 0;
         }
 
@@ -322,19 +322,20 @@
                 max-width: 100%;
                 padding: 15px;
             }
-            
+
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn,
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn {
                 padding: 12px;
                 font-size: 16px;
             }
-            
+
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn {
                 width: 60px;
                 height: 60px;
                 font-size: 20px;
             }
         }
+
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name {
             display: flex;
             justify-content: space-between;
@@ -381,9 +382,18 @@
         }
 
         @keyframes pulse-update {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; background-color: rgba(52, 152, 219, 0.3); }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+                background-color: rgba(52, 152, 219, 0.3);
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
     </style>
 
@@ -392,7 +402,8 @@
         <div class="tvremote-name-left"></div>
         <div class="tvremote-name-center">
             <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
-            <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
+            <a href="#eqLink#" class="reportModeHidden">#name_display# <span
+                    class="object_name">#object_name#</span></a>
         </div>
         <div class="tvremote-name-right">
             <span class="cmd refresh cursor" title="Rafraîchir" data-cmd_id="#refresh_id#">
@@ -432,7 +443,8 @@
 
             <div class="status-item">
                 <div class="volume-indicator cmd" data-type="info" data-subtype="numeric"
-                    data-cmd_id="#volume_level_id#" title="Date valeur : #volume_level_valueDate# || Date collecte : #volume_level_collectDate#">
+                    data-cmd_id="#volume_level_id#"
+                    title="Date valeur : #volume_level_valueDate# || Date collecte : #volume_level_collectDate#">
                     <span class="cmdValue">#volume_level_value#</span>%
                 </div>
                 <span class="status-label">Volume</span>
@@ -450,304 +462,255 @@
 
         <!-- Top control row -->
         <div class="control-section">
-        <div class="control-row">
-            <button class="remote-btn" data-cmd_id="#menu_id#" title="Menu">
-                <i class="fas fa-bars"></i>
+            <div class="control-row">
+                <button class="remote-btn" data-cmd_id="#menu_id#" title="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="remote-btn primary" data-cmd_id="#volumedown_id#" title="Volume -">
+                    <i class="fas fa-volume-down"></i>
+                </button>
+                <button class="remote-btn primary" data-cmd_id="#volumeup_id#" title="Volume +">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button class="remote-btn" data-cmd_id="#tv_id#" title="TV / Source">
+                    <i class="fas fa-tv"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation pad -->
+        <div class="nav-section">
+            <div class="nav-placeholder"></div>
+            <button class="nav-btn" data-cmd_id="#up_id#">
+                <i class="fas fa-chevron-up"></i>
             </button>
-            <button class="remote-btn primary" data-cmd_id="#volumedown_id#" title="Volume -">
-                <i class="fas fa-volume-down"></i>
+            <div class="nav-placeholder"></div>
+
+            <button class="nav-btn" data-cmd_id="#left_id#">
+                <i class="fas fa-chevron-left"></i>
             </button>
-            <button class="remote-btn primary" data-cmd_id="#volumeup_id#" title="Volume +">
-                <i class="fas fa-volume-up"></i>
+            <button class="nav-btn center" data-cmd_id="#center_id#" title="OK / Valider">
+                <i class="fas fa-check"></i>
             </button>
-            <button class="remote-btn" data-cmd_id="#tv_id#" title="TV / Source">
-                <i class="fas fa-tv"></i>
+            <button class="nav-btn" data-cmd_id="#right_id#">
+                <i class="fas fa-chevron-right"></i>
             </button>
+
+            <div class="nav-placeholder"></div>
+            <button class="nav-btn" data-cmd_id="#down_id#">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="nav-placeholder"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="control-section">
+            <div class="control-row three-cols">
+                <button class="remote-btn" data-cmd_id="#back_id#" title="Retour">
+                    <i class="fas fa-reply"></i>
+                </button>
+                <button class="remote-btn" data-cmd_id="#home_id#" title="Accueil">
+                    <i class="fas fa-home"></i>
+                </button>
+                <button class="remote-btn" data-cmd_id="#settings_id#" title="Paramètres">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Number pad -->
+        <div class="numpad-section">
+            <button class="num-btn" data-cmd_id="#one_id#">1</button>
+            <button class="num-btn" data-cmd_id="#two_id#">2</button>
+            <button class="num-btn" data-cmd_id="#three_id#">3</button>
+
+            <button class="num-btn" data-cmd_id="#four_id#">4</button>
+            <button class="num-btn" data-cmd_id="#five_id#">5</button>
+            <button class="num-btn" data-cmd_id="#six_id#">6</button>
+
+            <button class="num-btn" data-cmd_id="#seven_id#">7</button>
+            <button class="num-btn" data-cmd_id="#eight_id#">8</button>
+            <button class="num-btn" data-cmd_id="#nine_id#">9</button>
+
+            <button class="num-btn" data-cmd_id="#channel_down_id#" title="Channel -">
+                <i class="fas fa-minus"></i>
+            </button>
+            <button class="num-btn" data-cmd_id="#zero_id#">0</button>
+            <button class="num-btn" data-cmd_id="#channel_up_id#" title="Channel +">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- HDMI inputs -->
+        <div class="hdmi-section">
+            <button class="hdmi-btn" data-cmd_id="#input_id#" title="Changer de source">Input</button>
+            <button class="hdmi-btn" data-cmd_id="#hdmi_1_id#" title="Entrée HDMI 1">HDMI 1</button>
+            <button class="hdmi-btn" data-cmd_id="#hdmi_2_id#" title="Entrée HDMI 2">HDMI 2</button>
+            <button class="hdmi-btn" data-cmd_id="#hdmi_3_id#" title="Entrée HDMI 3">HDMI 3</button>
+            <button class="hdmi-btn" data-cmd_id="#hdmi_4_id#" title="Entrée HDMI 4">HDMI 4</button>
+        </div>
+
+        <!-- Media controls -->
+        <div class="media-section">
+            <button class="media-btn" data-cmd_id="#media_previous_id#" title="Précédent">
+                <i class="fas fa-step-backward"></i>
+            </button>
+            <button class="media-btn" data-cmd_id="#media_rewind_id#" title="Retour rapide">
+                <i class="fas fa-backward"></i>
+            </button>
+            <button class="media-btn" data-cmd_id="#media_play_id#" title="Lecture">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="media-btn" data-cmd_id="#media_pause_id#" title="Pause">
+                <i class="fas fa-pause"></i>
+            </button>
+            <button class="media-btn" data-cmd_id="#media_stop_id#" title="Stop">
+                <i class="fas fa-stop"></i>
+            </button>
+            <button class="media-btn" data-cmd_id="#media_forward_id#" title="Avance rapide">
+                <i class="fas fa-forward"></i>
+            </button>
+            <button class="media-btn" data-cmd_id="#media_next_id#" title="Suivant">
+                <i class="fas fa-step-forward"></i>
+            </button>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Apps section -->
+        <div class="apps-section" id="apps-section-mobile-#id#">
+            #apps_html#
+        </div>
+
+        <!-- Widget info display -->
+        <div class="widget-info-display">
+            <div>
+                <span class="widget-info-label">App actuelle: </span>
+                <span class="widget-info-value cmd" data-type="info" data-subtype="string"
+                    data-cmd_id="#current_app_id#"
+                    title="Date valeur : #current_app_valueDate# || Date collecte : #current_app_collectDate#">
+                    <span class="cmdValue">#current_app_value#</span>
+                </span>
+            </div>
+            <div>
+                <span class="widget-info-label">Dernière mise à jour: </span>
+                <span class="widget-info-value cmd" data-type="info" data-subtype="string"
+                    data-cmd_id="#updatelasttime_id#"
+                    title="Date valeur : #updatelasttime_valueDate# || Date collecte : #updatelasttime_collectDate#">
+                    <span class="cmdValue">#updatelasttime_value#</span>
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- Navigation pad -->
-    <div class="nav-section">
-        <div class="nav-placeholder"></div>
-        <button class="nav-btn" data-cmd_id="#up_id#">
-            <i class="fas fa-chevron-up"></i>
-        </button>
-        <div class="nav-placeholder"></div>
+    <script>
+        (() => {
+            'use strict'
 
-        <button class="nav-btn" data-cmd_id="#left_id#">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <button class="nav-btn center" data-cmd_id="#center_id#" title="OK / Valider">
-            <i class="fas fa-check"></i>
-        </button>
-        <button class="nav-btn" data-cmd_id="#right_id#">
-            <i class="fas fa-chevron-right"></i>
-        </button>
+            const widgetRoot = document.querySelector('.eqLogic-widget[data-eqLogic_uid="#uid#"]')
+            if (!widgetRoot) return
 
-        <div class="nav-placeholder"></div>
-        <button class="nav-btn" data-cmd_id="#down_id#">
-            <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="nav-placeholder"></div>
-    </div>
+            // ========================================
+            // === BUTTON HANDLERS ===
+            // ========================================
 
-    <!-- Action buttons -->
-    <div class="control-section">
-        <div class="control-row three-cols">
-            <button class="remote-btn" data-cmd_id="#back_id#" title="Retour">
-                <i class="fas fa-reply"></i>
-            </button>
-            <button class="remote-btn" data-cmd_id="#home_id#" title="Accueil">
-                <i class="fas fa-home"></i>
-            </button>
-            <button class="remote-btn" data-cmd_id="#settings_id#" title="Paramètres">
-                <i class="fas fa-cog"></i>
-            </button>
-        </div>
-    </div>
+            const setupClickHandlers = () => {
+                const buttons = widgetRoot.querySelectorAll('[data-cmd_id]')
 
-    <!-- Number pad -->
-    <div class="numpad-section">
-        <button class="num-btn" data-cmd_id="#one_id#">1</button>
-        <button class="num-btn" data-cmd_id="#two_id#">2</button>
-        <button class="num-btn" data-cmd_id="#three_id#">3</button>
+                buttons.forEach(btn => {
+                    const cmdId = btn.getAttribute('data-cmd_id')
+                    if (!cmdId) return
 
-        <button class="num-btn" data-cmd_id="#four_id#">4</button>
-        <button class="num-btn" data-cmd_id="#five_id#">5</button>
-        <button class="num-btn" data-cmd_id="#six_id#">6</button>
+                    btn.addEventListener('click', e => {
+                        e.preventDefault()
+                        e.stopPropagation()
 
-        <button class="num-btn" data-cmd_id="#seven_id#">7</button>
-        <button class="num-btn" data-cmd_id="#eight_id#">8</button>
-        <button class="num-btn" data-cmd_id="#nine_id#">9</button>
+                        // Visual feedback
+                        btn.style.opacity = '0.6'
+                        setTimeout(() => { btn.style.opacity = '1' }, 200)
 
-        <button class="num-btn" data-cmd_id="#channel_down_id#" title="Channel -">
-            <i class="fas fa-minus"></i>
-        </button>
-        <button class="num-btn" data-cmd_id="#zero_id#">0</button>
-        <button class="num-btn" data-cmd_id="#channel_up_id#" title="Channel +">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-
-    <!-- HDMI inputs -->
-    <div class="hdmi-section">
-        <button class="hdmi-btn" data-cmd_id="#input_id#" title="Changer de source">Input</button>
-        <button class="hdmi-btn" data-cmd_id="#hdmi_1_id#" title="Entrée HDMI 1">HDMI 1</button>
-        <button class="hdmi-btn" data-cmd_id="#hdmi_2_id#" title="Entrée HDMI 2">HDMI 2</button>
-        <button class="hdmi-btn" data-cmd_id="#hdmi_3_id#" title="Entrée HDMI 3">HDMI 3</button>
-        <button class="hdmi-btn" data-cmd_id="#hdmi_4_id#" title="Entrée HDMI 4">HDMI 4</button>
-    </div>
-
-    <!-- Media controls -->
-    <div class="media-section">
-        <button class="media-btn" data-cmd_id="#media_previous_id#" title="Précédent">
-            <i class="fas fa-step-backward"></i>
-        </button>
-        <button class="media-btn" data-cmd_id="#media_rewind_id#" title="Retour rapide">
-            <i class="fas fa-backward"></i>
-        </button>
-        <button class="media-btn" data-cmd_id="#media_play_id#" title="Lecture">
-            <i class="fas fa-play"></i>
-        </button>
-        <button class="media-btn" data-cmd_id="#media_pause_id#" title="Pause">
-            <i class="fas fa-pause"></i>
-        </button>
-        <button class="media-btn" data-cmd_id="#media_stop_id#" title="Stop">
-            <i class="fas fa-stop"></i>
-        </button>
-        <button class="media-btn" data-cmd_id="#media_forward_id#" title="Avance rapide">
-            <i class="fas fa-forward"></i>
-        </button>
-        <button class="media-btn" data-cmd_id="#media_next_id#" title="Suivant">
-            <i class="fas fa-step-forward"></i>
-        </button>
-    </div>
-
-    <div class="section-divider"></div>
-
-    <!-- Apps section -->
-    <div class="apps-section" id="apps-section-mobile-#id#">
-        #apps_html#
-    </div>
-
-    <!-- Widget info display -->
-    <div class="widget-info-display">
-        <div>
-            <span class="widget-info-label">App actuelle: </span>
-            <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#" title="Date valeur : #current_app_valueDate# || Date collecte : #current_app_collectDate#">
-                <span class="cmdValue">#current_app_value#</span>
-            </span>
-        </div>
-        <div>
-            <span class="widget-info-label">Dernière mise à jour: </span>
-            <span class="widget-info-value cmd" data-type="info" data-subtype="string" data-cmd_id="#updatelasttime_id#" title="Date valeur : #updatelasttime_valueDate# || Date collecte : #updatelasttime_collectDate#">
-                <span class="cmdValue">#updatelasttime_value#</span>
-            </span>
-        </div>
-    </div>
-    </div>
-</div>
-
-<script>
-    (() => {
-        'use strict'
-        
-        console.log('TVRemote: Script loaded');
-        const widgetRoot = document.querySelector('.eqLogic-widget[data-eqLogic_uid="#uid#"]');
-        console.log('TVRemote: Widget found:', widgetRoot);
-
-        if (!widgetRoot) {
-            console.error('TVRemote: Widget not found');
-            return;
-        }
-
-        const eqLogicId = '#id#';
-        console.log('TVRemote: Initializing mobile widget', eqLogicId);
-
-        // Setup click handlers for all buttons with data-cmd_id
-        function setupClickHandlers() {
-            console.log('TVRemote: setupClickHandlers called');
-            
-            // Handle ALL buttons with data-cmd_id (apps + action buttons)
-            const allButtons = widgetRoot.querySelectorAll('[data-cmd_id]');
-            console.log('TVRemote: Found', allButtons.length, 'buttons with data-cmd_id');
-            
-            allButtons.forEach(function (btn) {
-                const cmdId = btn.getAttribute('data-cmd_id');
-                if (cmdId && cmdId !== '') {
-                    btn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('TVRemote: Button clicked, cmdId:', cmdId);
-                        executeCmd(cmdId, this);
-                    });
-                } else {
-                    console.warn('TVRemote: Button without valid cmdId:', btn);
-                }
-            });
-            
-            console.log('TVRemote: All buttons configured');
-        }
-
-        // Execute command with visual feedback
-        function executeCmd(cmdId, btnElement) {
-            if (btnElement) {
-                btnElement.style.opacity = '0.6';
-                setTimeout(function () {
-                    btnElement.style.opacity = '1';
-                }, 200);
+                        // Execute command
+                        jeedom.cmd.execute({ id: cmdId })
+                    })
+                })
             }
 
-            console.log('TVRemote: Executing command', cmdId);
-            jeedom.cmd.execute({
-                id: cmdId,
-                error: function (error) {
-                    console.error('TVRemote: Error executing command:', error);
-                },
-                success: function () {
-                    console.log('TVRemote: Command executed successfully');
-                }
-            });
-        }
+            // ========================================
+            // === VALUE UPDATE HANDLERS ===
+            // ========================================
 
-        // Update binary status icons based on cmdValue
-        function updateBinaryStatus(cmdId) {
-            const icon = widgetRoot.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]');
-            if (icon && icon.dataset.subtype === 'binary') {
-                const valueSpan = icon.querySelector('.cmdValue');
+            const updateBinaryStatus = cmdId => {
+                const icon = widgetRoot.querySelector('.status-icon.cmd[data-cmd_id="' + cmdId + '"]')
+                if (!icon || icon.dataset.subtype !== 'binary') return
+
+                const valueSpan = icon.querySelector('.cmdValue')
                 if (valueSpan) {
-                    const value = valueSpan.textContent.trim();
-                    icon.setAttribute('data-cmd_value', value);
+                    icon.setAttribute('data-cmd_value', valueSpan.textContent.trim())
                 }
             }
-        }
-        
-        // Update any command value (called by Jeedom)
-        function updateCmdValue(cmdId, value, displayValue) {
-            console.log('TVRemote: updateCmdValue called for', cmdId, 'value:', value, 'display:', displayValue);
-            
-            // Find all elements with this cmd_id
-            widgetRoot.querySelectorAll('[data-cmd_id="' + cmdId + '"]').forEach(function(element) {
-                const valueSpan = element.querySelector('.cmdValue');
-                if (valueSpan) {
-                    // Update the displayed value
-                    const newValue = displayValue || value;
-                    valueSpan.textContent = newValue;
-                    console.log('TVRemote: Updated cmdValue for', cmdId, 'to', newValue);
-                    
-                    // Add visual feedback
-                    element.classList.remove('cmd-updated');
-                    void element.offsetWidth; // Force reflow
-                    element.classList.add('cmd-updated');
-                    setTimeout(function() { element.classList.remove('cmd-updated'); }, 2000);
-                }
-                
-                // For binary commands, also update data-cmd_value attribute
-                if (element.classList.contains('status-icon') && element.getAttribute('data-subtype') === 'binary') {
-                    element.setAttribute('data-cmd_value', value);
-                }
-            });
-        }
 
-        // Initialize status updates using Jeedom standard event system
-        function initStatusUpdates() {
-            console.log('TVRemote: initStatusUpdates called');
-            
-            // Initial update for all binary commands
-            widgetRoot.querySelectorAll('.status-icon.cmd[data-subtype="binary"]').forEach(function(icon) {
-                const cmdId = icon.getAttribute('data-cmd_id');
-                if (cmdId) {
-                    updateBinaryStatus(cmdId);
-                }
-            });
+            const updateCmdValue = (cmdId, value, displayValue) => {
+                widgetRoot.querySelectorAll('[data-cmd_id="' + cmdId + '"]').forEach(element => {
+                    const valueSpan = element.querySelector('.cmdValue')
+                    if (valueSpan) {
+                        valueSpan.textContent = displayValue || value
 
-            // Get all cmd elements for initial refresh
-            const cmdElements = widgetRoot.querySelectorAll('.cmd[data-cmd_id]');
-            console.log('TVRemote: Found', cmdElements.length, 'cmd elements');
-            
-            // Force initial refresh using Jeedom's native method
-            if (cmdElements.length > 0) {
-                jeedom.cmd.refreshValue(cmdElements);
-                console.log('TVRemote: Called jeedom.cmd.refreshValue()');
+                        // Visual feedback
+                        element.classList.remove('cmd-updated')
+                        void element.offsetWidth
+                        element.classList.add('cmd-updated')
+                        setTimeout(() => element.classList.remove('cmd-updated'), 2000)
+                    }
+
+                    // Update binary attribute
+                    if (element.classList.contains('status-icon') && element.getAttribute('data-subtype') === 'binary') {
+                        element.setAttribute('data-cmd_value', value)
+                    }
+                })
             }
 
-            // Listen to Jeedom standard cmd::update events on document.body
-            document.body.addEventListener('cmd::update', function(event) {
-                if (!event.detail) return;
-                
-                console.log('TVRemote: cmd::update event received:', event.detail);
-                
-                // Handle both single event and array of events
-                const updates = Array.isArray(event.detail) ? event.detail : [event.detail];
-                
-                updates.forEach(function(update) {
-                    const cmdId = String(update.cmd_id || update.id);
-                    if (!cmdId) return;
-                    
-                    // Check if this command belongs to our widget
-                    const element = widgetRoot.querySelector('[data-cmd_id="' + cmdId + '"]');
-                    if (!element) return;
-                    
-                    const displayValue = update.display_value;
-                    const value = update.value;
-                    
-                    console.log('TVRemote: Updating cmd', cmdId, 'with value:', value, 'display:', displayValue);
-                    
-                    // Update binary status attributes
-                    updateBinaryStatus(cmdId);
-                    
-                    // Update value displays
-                    updateCmdValue(cmdId, value, displayValue);
-                });
-            });
-            
-            console.log('TVRemote: Event listener configured on document.body');
-        }
+            // ========================================
+            // === INITIALIZATION ===
+            // ========================================
 
+            const initStatusUpdates = () => {
+                // Initial binary status update
+                widgetRoot.querySelectorAll('.status-icon.cmd[data-subtype="binary"]').forEach(icon => {
+                    const cmdId = icon.getAttribute('data-cmd_id')
+                    if (cmdId) updateBinaryStatus(cmdId)
+                })
 
-        // Initialize
-        setupClickHandlers();
-        initStatusUpdates();
-    })();
-</script>
+                // Refresh all command values using Jeedom native method
+                const cmdElements = widgetRoot.querySelectorAll('.cmd[data-cmd_id]')
+                if (cmdElements.length > 0) {
+                    jeedom.cmd.refreshValue(cmdElements)
+                }
+
+                // Listen to Jeedom's cmd::update events
+                document.body.addEventListener('cmd::update', event => {
+                    if (!event.detail) return
+
+                    const updates = Array.isArray(event.detail) ? event.detail : [event.detail]
+
+                    updates.forEach(update => {
+                        const cmdId = String(update.cmd_id || update.id)
+                        if (!cmdId) return
+
+                        // Check if command belongs to this widget
+                        const element = widgetRoot.querySelector('[data-cmd_id="' + cmdId + '"]')
+                        if (!element) return
+
+                        // Update values
+                        updateBinaryStatus(cmdId)
+                        updateCmdValue(cmdId, update.value, update.display_value)
+                    })
+                })
+            }
+
+            // Initialize widget
+            setupClickHandlers()
+            initStatusUpdates()
+
+        })();
+    </script>
 </div>
