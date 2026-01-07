@@ -54,6 +54,18 @@
             white-space: nowrap;
         }
 
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .info-icon {
+            font-size: 10px;
+            cursor: help;
+            color: #999;
+            font-style: italic;
+            margin: 0 2px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-item:has(.status-icon[data-cmd_value="1"]) .info-icon {
+            color: #4CAF50;
+        }
+
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon {
             width: 30px;
             height: 30px;
@@ -392,6 +404,14 @@
             color: #777;
         }
 
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .info-icon {
+            color: #ccc;
+        }
+
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .status-item:has(.status-icon[data-cmd_value="1"]) .info-icon {
+            color: #4CAF50;
+        }
+
         @media (max-width: 480px) {
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
                 max-width: 100%;
@@ -524,10 +544,11 @@
             <div class="status-item">
                 <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
                     data-power_on_id="#power_on_id#" data-power_off_id="#power_off_id#"
-                    title="Date valeur : #is_on_valueDate# || Date collecte : #is_on_collectDate# || Cliquer pour allumer/éteindre">
+                    title="Date valeur : #is_on_valueDate#&#10;Date collecte : #is_on_collectDate#&#10;&#10;Cliquer pour allumer/éteindre">
                     <i class="fas fa-power-off"></i>
                     <span class="cmdValue" style="display:none;">#is_on_value#</span>
                 </div>
+                <i class="fas fa-info-circle info-icon"></i>
                 <span class="status-label">Power</span>
             </div>
 
@@ -543,10 +564,11 @@
             <div class="status-item">
                 <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
                     data-mute_on_id="#mute_on_id#" data-mute_off_id="#mute_off_id#"
-                    title="Date valeur : #volume_muted_valueDate# || Date collecte : #volume_muted_collectDate# || Cliquer pour activer/désactiver">
+                    title="Date valeur : #volume_muted_valueDate#&#10;Date collecte : #volume_muted_collectDate#&#10;&#10;Cliquer pour activer/désactiver">
                     <i class="fas fa-volume-off"></i>
                     <span class="cmdValue" style="display:none;">#volume_muted_value#</span>
                 </div>
+                <i class="fas fa-info-circle info-icon"></i>
                 <span class="status-label">Mute</span>
             </div>
         </div>
