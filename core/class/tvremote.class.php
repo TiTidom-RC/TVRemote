@@ -2000,21 +2000,21 @@ class tvremote extends eqLogic {
             }
         }
         
-        // Add command IDs to replace array
-        $replace['#online_id#'] = $cmdMap['online']['id'];
-        $replace['#online_value#'] = $cmdMap['online']['value'];
-        $replace['#adb_connected_id#'] = $cmdMap['adb_connected']['id'];
-        $replace['#adb_connected_value#'] = $cmdMap['adb_connected']['value'];
-        $replace['#is_on_id#'] = $cmdMap['is_on']['id'];
-        $replace['#is_on_value#'] = $cmdMap['is_on']['value'];
-        $replace['#volume_level_id#'] = $cmdMap['volume_level']['id'];
-        $replace['#volume_level_value#'] = $cmdMap['volume_level']['value'];
-        $replace['#volume_muted_id#'] = $cmdMap['volume_muted']['id'];
-        $replace['#volume_muted_value#'] = $cmdMap['volume_muted']['value'];
-        $replace['#current_app_id#'] = $cmdMap['current_app']['id'];
-        $replace['#current_app_value#'] = $cmdMap['current_app']['value'];
-        $replace['#updatelasttime_id#'] = $cmdMap['updatelasttime']['id'];
-        $replace['#updatelasttime_value#'] = $cmdMap['updatelasttime']['value'];
+        // Add command IDs, values and dates to replace array
+        foreach ($cmdMap as $logicalId => $data) {
+            $cmd = $this->getCmd('info', $logicalId);
+            $replace['#' . $logicalId . '_id#'] = $data['id'];
+            $replace['#' . $logicalId . '_value#'] = $data['value'];
+            
+            // Add dates for tooltips
+            if (is_object($cmd)) {
+                $replace['#' . $logicalId . '_valueDate#'] = $cmd->getValueDate();
+                $replace['#' . $logicalId . '_collectDate#'] = $cmd->getCollectDate();
+            } else {
+                $replace['#' . $logicalId . '_valueDate#'] = '';
+                $replace['#' . $logicalId . '_collectDate#'] = '';
+            }
+        }
         
         // Generate apps HTML
         $appsHtml = '';
