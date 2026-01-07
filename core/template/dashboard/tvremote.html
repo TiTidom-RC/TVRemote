@@ -333,8 +333,8 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands {
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 15px;
+            padding: 12px;
             background: #1a1a1a;
             border-radius: 8px;
             border: 1px solid #333;
@@ -342,21 +342,21 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-title {
             color: #aaa;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             text-align: center;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input {
             width: 100%;
-            margin: 5px 0;
-            padding: 8px;
+            margin: 8px 0;
+            padding: 10px;
             background: #2a2a2a;
             border: 1px solid #444;
             border-radius: 5px;
             color: #fff;
-            font-size: 12px;
+            font-size: 13px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus {
@@ -366,15 +366,15 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
             margin-top: 8px;
-            padding: 8px;
+            padding: 10px;
             background: #0a0a0a;
             border: 1px solid #333;
             border-radius: 5px;
             color: #4CAF50;
-            font-size: 11px;
+            font-size: 12px;
             font-family: monospace;
-            min-height: 40px;
-            max-height: 100px;
+            min-height: 50px;
+            max-height: 120px;
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-all;
@@ -382,8 +382,17 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-label {
             color: #999;
-            font-size: 10px;
-            margin-bottom: 3px;
+            font-size: 11px;
+            margin-bottom: 4px;
+            margin-top: 8px;
+            display: block;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-group {
+            display: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-group.visible {
             display: block;
         }
 
@@ -814,21 +823,29 @@
         <div class="advanced-commands">
             <div class="advanced-commands-title">Commandes Avancées</div>
             
-            <label class="cmd-label">KeyCode:</label>
-            <input type="text" class="cmd-input" id="keycode-input-#uid#" placeholder="Ex: KEYCODE_HOME" 
-                data-cmd_id="#keycode_id#">
+            <div class="cmd-group #keycode_visible_class#">
+                <label class="cmd-label">KeyCode:</label>
+                <input type="text" class="cmd-input" id="keycode-input-#uid#" placeholder="Ex: KEYCODE_HOME" 
+                    data-cmd_id="#keycode_id#">
+            </div>
             
-            <label class="cmd-label">AppCode:</label>
-            <input type="text" class="cmd-input" id="appcode-input-#uid#" placeholder="Ex: com.netflix.ninja" 
-                data-cmd_id="#appcode_id#">
+            <div class="cmd-group #appcode_visible_class#">
+                <label class="cmd-label">AppCode:</label>
+                <input type="text" class="cmd-input" id="appcode-input-#uid#" placeholder="Ex: com.netflix.ninja" 
+                    data-cmd_id="#appcode_id#">
+            </div>
             
-            <label class="cmd-label">ADB Shell:</label>
-            <input type="text" class="cmd-input" id="adbshell-input-#uid#" placeholder="Ex: input keyevent 3" 
-                data-cmd_id="#adbshell_id#">
+            <div class="cmd-group #adbshell_visible_class#">
+                <label class="cmd-label">ADB Shell:</label>
+                <input type="text" class="cmd-input" id="adbshell-input-#uid#" placeholder="Ex: input keyevent 3" 
+                    data-cmd_id="#adbshell_id#">
+            </div>
             
-            <label class="cmd-label">Sortie ADB Shell:</label>
-            <div class="cmd-output cmd" data-type="info" data-subtype="string" data-cmd_id="#adb_shell_output_id#">
-                <span class="cmdValue">#adb_shell_output_value#</span>
+            <div class="cmd-group #adb_shell_output_visible_class#">
+                <label class="cmd-label">Sortie ADB Shell:</label>
+                <div class="cmd-output cmd" data-type="info" data-subtype="string" data-cmd_id="#adb_shell_output_id#">
+                    <span class="cmdValue">#adb_shell_output_value#</span>
+                </div>
             </div>
         </div>
     </div>

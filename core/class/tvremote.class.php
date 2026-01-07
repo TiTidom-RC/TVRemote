@@ -2035,10 +2035,25 @@ class tvremote extends eqLogic {
             $cmd = $this->getCmd('action', $logicalId);
             if (is_object($cmd)) {
                 $replace['#' . $logicalId . '_id#'] = $cmd->getId();
+                
+                // Add visibility class for advanced commands
+                if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = $cmd->getIsVisible() ? 'visible' : '';
+                }
             } else {
                 $replace['#' . $logicalId . '_id#'] = '';
+                if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = '';
+                }
             }
         }
+        
+        // Add visibility class for adb_shell_output info command
+        $adbOutputCmd = $this->getCmd('info', 'adb_shell_output');
+        $replace['#adb_shell_output_visible_class#'] = (is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) ? 'visible' : '';
+        // Add visibility class for adb_shell_output info command
+        $adbOutputCmd = $this->getCmd('info', 'adb_shell_output');
+        $replace['#adb_shell_output_visible_class#'] = (is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) ? 'visible' : '';
         
         // Get refresh command ID
         $refreshCmd = $this->getCmd('action', 'refresh');
