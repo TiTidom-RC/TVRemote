@@ -364,11 +364,9 @@
             font-size: 13px;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands input[type="text"].cmd-input.cmd-input.cmd-input:focus {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus {
             outline: none !important;
-            background-color: #383838 !important;
             border: 2px solid #2196F3 !important;
-            border-color: #2196F3 !important;
             box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4) !important;
         }
 
@@ -930,6 +928,14 @@
                             input.value = '' // Clear input after execution
                         }
                     }
+                })
+                
+                // Force background change on focus
+                input.addEventListener('focus', () => {
+                    input.style.setProperty('background-color', '#383838', 'important')
+                })
+                input.addEventListener('blur', () => {
+                    input.style.setProperty('background-color', '#2a2a2a', 'important')
                 })
             }
 
