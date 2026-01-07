@@ -1947,6 +1947,47 @@ class tvremote extends eqLogic {
         $this->disableTVRemoteToDaemon();
         $this->disableADBToDaemon();
     }
+
+    /**
+     * Generate custom HTML widget for the remote control
+     * This method renders a complete remote control interface instead of individual command widgets
+     */
+    public function toHtml($_version = 'dashboard') {
+        $replace = $this->preToHtml($_version);
+        if (!is_array($replace)) {
+            return $replace;
+        }
+        $version = jeedom::versionAlias($_version);
+        
+        // Load the custom template
+        $templatePath = dirname(__FILE__) . '/../template/' . $version . '/tvremote.html';
+        
+        // Fallback to dashboard version if mobile template not found (though we created both)
+        if (!file_exists($templatePath)) {
+            $templatePath = dirname(__FILE__) . '/../template/dashboard/tvremote.html';
+        }
+        
+        if (!file_exists($templatePath)) {
+            log::add('tvremote', 'error', '[toHtml] Template file not found: ' . $templatePath);
+            return parent::toHtml($_version);
+        }
+        
+        // Load template content
+        $html = file_get_contents($templatePath);
+        
+        // Replace placeholders
+        $replace['#id#'] = $this->getId();
+        $replace['#name#'] = $this->getName();
+        $replace['#name_display#'] = $this->getName();
+        $replace['#version#'] = $_version;
+        
+        // Replace all placeholders in the template
+        foreach ($replace as $key => $value) {
+            $html = str_replace($key, $value, $html);
+        }
+        
+        return $html;
+    }
 }
 
 class tvremoteCmd extends cmd {

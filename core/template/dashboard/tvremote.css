@@ -1,0 +1,342 @@
+/* TVRemote Widget CSS */
+.tvremote-widget {
+    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-width: 420px;
+    margin: 10px auto;
+    font-family: 'Roboto', sans-serif;
+}
+
+.tvremote-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #404040;
+}
+
+.tvremote-title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.tvremote-status-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #aaa;
+}
+
+.status-label {
+    white-space: nowrap;
+}
+
+.status-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.status-icon.active {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
+.status-icon.inactive {
+    background: #666;
+    color: #999;
+}
+
+.volume-indicator {
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Control buttons section */
+.control-section {
+    margin: 15px 0;
+}
+
+.control-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.control-row.three-cols {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.remote-btn {
+    background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    padding: 15px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+}
+
+.remote-btn:hover {
+    background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.remote-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.remote-btn.primary {
+    background: linear-gradient(145deg, #2196F3, #1976D2);
+}
+
+.remote-btn.primary:hover {
+    background: linear-gradient(145deg, #42A5F5, #2196F3);
+}
+
+.remote-btn.success {
+    background: linear-gradient(145deg, #4CAF50, #388E3C);
+}
+
+.remote-btn.success:hover {
+    background: linear-gradient(145deg, #66BB6A, #4CAF50);
+}
+
+.remote-btn.center-btn {
+    background: linear-gradient(145deg, #444, #333);
+    border: 3px solid #666;
+    font-size: 24px;
+}
+
+/* Navigation section */
+.nav-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+    max-width: 240px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.nav-btn {
+    background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    width: 70px;
+    height: 70px;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn:hover {
+    background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+    transform: scale(1.05);
+}
+
+.nav-btn:active {
+    transform: scale(0.95);
+}
+
+.nav-btn.center {
+    background: linear-gradient(145deg, #2196F3, #1976D2);
+    border: 3px solid #1565C0;
+}
+
+.nav-placeholder {
+    background: transparent;
+    border: none;
+}
+
+/* Number pad */
+.numpad-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.num-btn {
+    background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.num-btn:hover {
+    background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+    transform: translateY(-2px);
+}
+
+/* HDMI inputs */
+.hdmi-section {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.hdmi-btn {
+    background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hdmi-btn:hover {
+    background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+}
+
+/* Media controls */
+.media-section {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.media-btn {
+    background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.media-btn:hover {
+    background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+}
+
+/* Apps section */
+.apps-section {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+    padding-top: 15px;
+    border-top: 2px solid #404040;
+}
+
+.app-btn {
+    background: #2a2a2a;
+    border: 2px solid #404040;
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+}
+
+.app-btn:hover {
+    border-color: #2196F3;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(33, 150, 243, 0.3);
+}
+
+.app-btn img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Section dividers */
+.section-divider {
+    height: 2px;
+    background: #404040;
+    margin: 15px 0;
+}
+
+/* Current app display */
+.current-app-display {
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    margin: 10px 0;
+    padding: 8px;
+    background: #1a1a1a;
+    border-radius: 8px;
+}
+
+.current-app-label {
+    color: #666;
+    font-weight: bold;
+}
+
+.current-app-value {
+    color: #2196F3;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .tvremote-widget {
+        max-width: 100%;
+        padding: 15px;
+    }
+    
+    .remote-btn, .num-btn {
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    .nav-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+    }
+}

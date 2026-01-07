@@ -1,0 +1,358 @@
+<link rel="stylesheet" type="text/css" href="plugins/tvremote/core/template/dashboard/tvremote.css">
+
+<div class="tvremote-widget eqLogic eqLogic-widget" data-eqlogic_id="#id#" data-version="mobile" style="max-width: 100%;">
+    <div class="tvremote-header">
+        <div class="tvremote-title">#name#</div>
+        
+        <div class="tvremote-status-row">
+            <div class="status-item">
+                <div class="status-icon" data-cmd="online">
+                    <i class="fas fa-signal"></i>
+                </div>
+                <span class="status-label">En Ligne</span>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-icon" data-cmd="adb_connected">
+                    <i class="fas fa-plug"></i>
+                </div>
+                <span class="status-label">ADB</span>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-icon" data-cmd="is_on">
+                    <i class="fas fa-power-off"></i>
+                </div>
+                <span class="status-label">Power</span>
+            </div>
+            
+            <div class="status-item">
+                <div class="volume-indicator" data-cmd="volume_level">--%</div>
+                <span class="status-label">Volume</span>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-icon" data-cmd="volume_muted">
+                    <i class="fas fa-volume-off"></i>
+                </div>
+                <span class="status-label">Mute</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top control row -->
+    <div class="control-section">
+        <div class="control-row">
+            <button class="remote-btn" data-action="menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <button class="remote-btn primary" data-action="volumedown">
+                <i class="fas fa-volume-down"></i>
+            </button>
+            <button class="remote-btn primary" data-action="volumeup">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <button class="remote-btn" data-action="tv">
+                <i class="fas fa-tv"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation pad -->
+    <div class="nav-section">
+        <div class="nav-placeholder"></div>
+        <button class="nav-btn" data-action="up">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <div class="nav-placeholder"></div>
+        
+        <button class="nav-btn" data-action="left">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="nav-btn center" data-action="center">
+            <i class="fas fa-check"></i>
+        </button>
+        <button class="nav-btn" data-action="right">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        
+        <div class="nav-placeholder"></div>
+        <button class="nav-btn" data-action="down">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="nav-placeholder"></div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="control-section">
+        <div class="control-row three-cols">
+            <button class="remote-btn" data-action="back">
+                <i class="fas fa-reply"></i>
+            </button>
+            <button class="remote-btn" data-action="home">
+                <i class="fas fa-home"></i>
+            </button>
+            <button class="remote-btn" data-action="settings">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Number pad -->
+    <div class="numpad-section">
+        <button class="num-btn" data-action="one">1</button>
+        <button class="num-btn" data-action="two">2</button>
+        <button class="num-btn" data-action="three">3</button>
+        
+        <button class="num-btn" data-action="four">4</button>
+        <button class="num-btn" data-action="five">5</button>
+        <button class="num-btn" data-action="six">6</button>
+        
+        <button class="num-btn" data-action="seven">7</button>
+        <button class="num-btn" data-action="eight">8</button>
+        <button class="num-btn" data-action="nine">9</button>
+        
+        <button class="num-btn" data-action="channel_down">
+            <i class="fas fa-minus"></i>
+        </button>
+        <button class="num-btn" data-action="zero">0</button>
+        <button class="num-btn" data-action="channel_up">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- HDMI inputs -->
+    <div class="hdmi-section">
+        <button class="hdmi-btn" data-action="input">Input</button>
+        <button class="hdmi-btn" data-action="hdmi_1">HDMI 1</button>
+        <button class="hdmi-btn" data-action="hdmi_2">HDMI 2</button>
+        <button class="hdmi-btn" data-action="hdmi_3">HDMI 3</button>
+    </div>
+
+    <!-- Media controls -->
+    <div class="media-section">
+        <button class="media-btn" data-action="media_previous">
+            <i class="fas fa-step-backward"></i>
+        </button>
+        <button class="media-btn" data-action="media_rewind">
+            <i class="fas fa-backward"></i>
+        </button>
+        <button class="media-btn" data-action="media_play">
+            <i class="fas fa-play"></i>
+        </button>
+        <button class="media-btn" data-action="media_pause">
+            <i class="fas fa-pause"></i>
+        </button>
+        <button class="media-btn" data-action="media_stop">
+            <i class="fas fa-stop"></i>
+        </button>
+        <button class="media-btn" data-action="media_forward">
+            <i class="fas fa-forward"></i>
+        </button>
+        <button class="media-btn" data-action="media_next">
+            <i class="fas fa-step-forward"></i>
+        </button>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Apps section -->
+    <div class="apps-section" id="apps-section-mobile-#id#">
+        <!-- Apps will be dynamically populated -->
+    </div>
+
+    <!-- Current app display -->
+    <div class="current-app-display">
+        <span class="current-app-label">App actuelle: </span>
+        <span class="current-app-value" data-cmd="current_app">-</span>
+    </div>
+
+    <script>
+    (function() {
+        const eqLogicId = '#id#';
+        const widget = document.querySelector('.tvremote-widget[data-eqlogic_id="' + eqLogicId + '"][data-version="mobile"]');
+        
+        if (!widget) return;
+
+        const cmdMap = {};
+        const appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];
+
+        function initWidget() {
+            jeedom.eqLogic.byId({
+                id: eqLogicId,
+                error: function(error) {
+                    console.error('Error loading equipment:', error);
+                },
+                success: function(data) {
+                    if (data && data.cmds) {
+                        data.cmds.forEach(function(cmd) {
+                            cmdMap[cmd.logicalId] = cmd;
+                        });
+                        
+                        updateStatusIndicators();
+                        populateApps();
+                        setupEventListeners();
+                    }
+                }
+            });
+        }
+
+        function updateStatusIndicators() {
+            updateBinaryStatus('online');
+            updateBinaryStatus('adb_connected');
+            updateBinaryStatus('is_on');
+            
+            const volumeCmd = cmdMap['volume_level'];
+            if (volumeCmd) {
+                const volumeElement = widget.querySelector('[data-cmd="volume_level"]');
+                if (volumeElement) {
+                    jeedom.cmd.displayValue({
+                        cmd_id: volumeCmd.id,
+                        error: function(error) {},
+                        success: function(value) {
+                            volumeElement.textContent = (value || 0) + '%';
+                        }
+                    });
+                }
+            }
+            
+            updateBinaryStatus('volume_muted');
+            
+            const currentAppCmd = cmdMap['current_app'];
+            if (currentAppCmd) {
+                const currentAppElement = widget.querySelector('[data-cmd="current_app"]');
+                if (currentAppElement) {
+                    jeedom.cmd.displayValue({
+                        cmd_id: currentAppCmd.id,
+                        error: function(error) {},
+                        success: function(value) {
+                            currentAppElement.textContent = value || '-';
+                        }
+                    });
+                }
+            }
+        }
+
+        function updateBinaryStatus(logicalId) {
+            const cmd = cmdMap[logicalId];
+            if (cmd) {
+                const statusIcon = widget.querySelector('[data-cmd="' + logicalId + '"]');
+                if (statusIcon) {
+                    jeedom.cmd.displayValue({
+                        cmd_id: cmd.id,
+                        error: function(error) {},
+                        success: function(value) {
+                            if (value == 1) {
+                                statusIcon.classList.add('active');
+                                statusIcon.classList.remove('inactive');
+                            } else {
+                                statusIcon.classList.add('inactive');
+                                statusIcon.classList.remove('active');
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        function populateApps() {
+            const appsContainer = widget.querySelector('#apps-section-mobile-' + eqLogicId);
+            if (!appsContainer) return;
+            
+            appsContainer.innerHTML = '';
+            
+            appLogicalIds.forEach(function(logicalId) {
+                const cmd = cmdMap[logicalId];
+                if (cmd && cmd.isVisible == 1) {
+                    const appBtn = document.createElement('button');
+                    appBtn.className = 'app-btn';
+                    appBtn.dataset.action = logicalId;
+                    
+                    const imgSrc = cmd.configuration && cmd.configuration.image 
+                        ? 'plugins/tvremote/data/images/' + cmd.configuration.image
+                        : 'plugins/tvremote/data/images/' + logicalId + '.png';
+                    
+                    appBtn.innerHTML = '<img src="' + imgSrc + '" alt="' + cmd.name + '" title="' + cmd.name + '">';
+                    
+                    appBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        executeAction(logicalId);
+                    });
+                    
+                    appsContainer.appendChild(appBtn);
+                }
+            });
+        }
+
+        widget.querySelectorAll('[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const action = this.dataset.action;
+                executeAction(action);
+            });
+        });
+
+        function executeAction(logicalId) {
+            const cmd = cmdMap[logicalId];
+            if (cmd && cmd.id) {
+                const btn = widget.querySelector('[data-action="' + logicalId + '"]');
+                if (btn) {
+                    btn.style.opacity = '0.6';
+                    setTimeout(function() {
+                        btn.style.opacity = '1';
+                    }, 200);
+                }
+                
+                jeedom.cmd.execute({
+                    id: cmd.id,
+                    error: function(error) {
+                        console.error('Error executing command:', error);
+                    },
+                    success: function() {}
+                });
+            }
+        }
+
+        function setupEventListeners() {
+            const cmdIds = Object.values(cmdMap).map(cmd => cmd.id);
+            
+            if (typeof jeedom !== 'undefined' && jeedom.cmd && jeedom.cmd.addUpdateFunction) {
+                cmdIds.forEach(function(cmdId) {
+                    jeedom.cmd.addUpdateFunction(cmdId, function(_options) {
+                        const logicalId = Object.keys(cmdMap).find(key => cmdMap[key].id == cmdId);
+                        
+                        if (!logicalId) return;
+                        
+                        if (logicalId === 'volume_level') {
+                            const volumeElement = widget.querySelector('[data-cmd="volume_level"]');
+                            if (volumeElement && _options && _options.display_value !== undefined) {
+                                volumeElement.textContent = _options.display_value + '%';
+                            }
+                        } else if (logicalId === 'current_app') {
+                            const currentAppElement = widget.querySelector('[data-cmd="current_app"]');
+                            if (currentAppElement && _options && _options.display_value !== undefined) {
+                                currentAppElement.textContent = _options.display_value || '-';
+                            }
+                        } else if (['online', 'adb_connected', 'is_on', 'volume_muted'].includes(logicalId)) {
+                            const statusIcon = widget.querySelector('[data-cmd="' + logicalId + '"]');
+                            if (statusIcon && _options && _options.display_value !== undefined) {
+                                if (_options.display_value == 1) {
+                                    statusIcon.classList.add('active');
+                                    statusIcon.classList.remove('inactive');
+                                } else {
+                                    statusIcon.classList.add('inactive');
+                                    statusIcon.classList.remove('active');
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        initWidget();
+    })();
+    </script>
+</div>
