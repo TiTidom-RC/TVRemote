@@ -153,6 +153,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">{{Densité du widget}}
+                                    <sup><i class="fas fa-question-circle tooltips" title="{{Définit la densité d'affichage du widget. 'Par défaut' utilise la configuration globale du plugin.}}"></i></sup>
+                                </label>
+                                <div class="col-sm-6">
+                                    <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="widget_density">
+                                        <option value="default">{{Par défaut (configuration plugin)}}</option>
+                                        <option value="standard">{{Standard}}</option>
+                                        <option value="compact">{{Compact}}</option>
+                                    </select>
+                                </div>
+                            </div>
 
                             <legend><i class="fas fa-cogs"></i> {{Paramètres du TVRemote}}</legend>
                             <div class="form-group">

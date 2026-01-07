@@ -1959,10 +1959,29 @@ class tvremote extends eqLogic {
         }
         $version = jeedom::versionAlias($_version);
         
-        // Load the custom template
-        $templatePath = dirname(__FILE__) . '/../template/' . $version . '/tvremote.html';
+        // Determine widget density
+        $density = $this->getConfiguration('widget_density', 'default');
         
-        // Fallback to dashboard version if mobile template not found (though we created both)
+        // If "default", use global plugin configuration
+        if ($density === 'default') {
+            $density = config::byKey('widget_density', 'tvremote', 'standard');
+        }
+        
+        // Mobile always uses compact
+        if ($version === 'mobile') {
+            $density = 'compact';
+        }
+        
+        // Build template filename
+        $templateName = 'widget.' . $density . '.tvremote.html';
+        $templatePath = dirname(__FILE__) . '/../template/' . $version . '/' . $templateName;
+        
+        // Fallback to tvremote.html if new template not found (backward compatibility)
+        if (!file_exists($templatePath)) {
+            $templatePath = dirname(__FILE__) . '/../template/' . $version . '/tvremote.html';
+        }
+        
+        // Final fallback to dashboard version
         if (!file_exists($templatePath)) {
             $templatePath = dirname(__FILE__) . '/../template/dashboard/tvremote.html';
         }
