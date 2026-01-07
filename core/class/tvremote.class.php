@@ -2006,6 +2006,9 @@ class tvremote extends eqLogic {
         $replace['#version#'] = $_version;
         $replace['#theme_class#'] = $isDarkTheme ? 'theme-dark' : 'theme-light';
         
+        // Add ADB usage configuration
+        $replace['#adb_used#'] = $this->getConfiguration('use_adb', '0');
+        
         // Get command IDs and values for info commands
         $cmdMap = [
             'online' => ['id' => '', 'value' => '0'],

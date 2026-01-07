@@ -17,10 +17,16 @@
             box-sizing: border-box;
             width: 320px;
             min-width: 280px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
             padding: 12px;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            min-height: 0;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-header {
@@ -52,6 +58,7 @@
             gap: 3px;
             font-size: 9px;
             color: #aaa;
+            min-height: 55px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-label {
@@ -71,13 +78,13 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon {
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 16px;
             transition: all 0.3s ease;
             background: #666;
             color: #999;
@@ -95,27 +102,75 @@
             box-shadow: none;
         }
 
+        /* ADB Status - Non utilisé (barré) */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.adb-status[data-adb-used="0"] i::before,
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.adb-status[data-adb-used="false"] i::before {
+            content: "\f127" !important; /* fa-unlink (plug barré) */
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.adb-status[data-adb-used="0"],
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.adb-status[data-adb-used="false"] {
+            background: #444 !important;
+            color: #666 !important;
+            box-shadow: none !important;
+        }
+
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-indicator {
             color: #fff;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
             margin: 8px 0;
+            width: 100%;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .actions-numpad-container {
+            display: contents;
+        }
+
+        /* Ajuster la taille des boutons volume pour correspondre au keypad */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container .remote-btn {
+            width: 45px;
+            height: 45px;
+            min-height: 45px;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        /* Retirer les contraintes de largeur pour le control-section dans le volume-nav-container */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container .control-section {
+            max-width: none;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container .control-row {
+            grid-template-columns: repeat(2, 45px);
+            gap: 5px;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container .remote-btn {
+            width: 45px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-section {
-            margin: 8px 0;
+            margin: 8px auto;
+            max-width: 200px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
+            gap: 5px;
             margin-bottom: 6px;
         }
 
@@ -128,6 +183,8 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row.three-cols {
             grid-template-columns: repeat(3, 1fr);
+            max-width: 200px;
+            margin: 0 auto;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn {
@@ -144,6 +201,7 @@
             align-items: center;
             justify-content: center;
             min-height: 38px;
+            width: 100%;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:hover {
@@ -167,9 +225,9 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-section {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            max-width: 150px;
+            grid-template-columns: repeat(3, 30px);
+            gap: 2.5px;
+            flex-shrink: 0;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn {
@@ -177,9 +235,9 @@
             border: none;
             border-radius: 50%;
             color: #fff;
-            width: 45px;
-            height: 45px;
-            font-size: 16px;
+            width: 30px;
+            height: 30px;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -245,7 +303,7 @@
             border: none;
             border-radius: 6px;
             color: #fff;
-            padding: 8px;
+            padding: 6px 3px;
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
@@ -253,6 +311,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             white-space: nowrap;
             overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn:hover {
@@ -293,16 +352,17 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
             background: #2a2a2a;
-            border: 2px solid #404040;
-            border-radius: 10px;
-            padding: 5px;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 7px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 48px;
+            width: 48px;
+            height: 48px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn:hover {
@@ -361,12 +421,44 @@
             display: block;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-title {
-            color: #aaa;
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details {
+            border: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary {
+            cursor: pointer;
             font-size: 13px;
             font-weight: bold;
-            margin-bottom: 12px;
+            color: #aaa;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            list-style: none;
+            user-select: none;
             text-align: center;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary::before {
+            content: '\25B6';
+            display: inline-block;
+            margin-right: 6px;
+            transition: transform 0.2s;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-content {
+            margin-top: 12px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input {
@@ -559,9 +651,17 @@
            ======================================== */
         
         @container tvremote (min-width: 500px) {
-            /* Désactiver le conteneur volume-nav en mode horizontal */
+            /* Réutiliser le conteneur volume-nav en mode horizontal */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container {
-                display: contents;
+                grid-column: 2;
+                grid-row: 3;
+            }
+
+            /* Widget Info en mode horizontal : colonne 2, après volume-nav */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display {
+                grid-column: 2;
+                grid-row: 3;
+                align-self: end;
             }
 
             /* Widget plus large en mode horizontal */
@@ -575,23 +675,56 @@
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
                 display: grid;
                 grid-template-columns: 0.8fr 1fr 1.2fr;
-                grid-template-rows: auto auto auto auto auto;
+                grid-template-rows: auto auto auto;
                 gap: 10px;
             }
 
-            /* Colonne 1 - Ligne 1 : Status */
+            /* Colonne 1-2 - Ligne 1 : Status */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-status-row {
-                grid-column: 1;
+                grid-column: 1 / 3;
                 grid-row: 1;
             }
 
-            /* Colonne 1 - Ligne 2 : Volume (control-section) */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-section {
-                grid-column: 1;
+            /* Colonne 2 - Ligne 2 : Applications sur 2 lignes */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
+                grid-column: 2;
                 grid-row: 2;
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                gap: 4px;
+                padding-top: 0;
+                border-top: none;
+                margin: 0;
                 justify-self: center;
                 width: 100%;
+                max-width: 240px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .section-divider {
+                display: none;
+            }
+
+            /* Colonne 1 - Ligne 3 : Conteneur Boutons action + Pavé numérique */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .actions-numpad-container {
+                grid-column: 1;
+                grid-row: 3;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .actions-numpad-container .control-section.with-three-cols {
+                width: 100%;
                 max-width: 200px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .actions-numpad-container .numpad-section {
+                width: 100%;
+                max-width: 200px;
+                margin: 0;
             }
 
             /* Réinitialiser control-row à 4 colonnes en mode horizontal */
@@ -604,43 +737,13 @@
                 max-width: 95px;
             }
 
-            /* Colonne 1 - Ligne 3 : Pavé numérique */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .numpad-section {
+            /* Colonne 1 - Ligne 2 : HDMI Sources et Contrôles multimédia */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-media-container {
                 grid-column: 1;
-                grid-row: 3;
-                justify-self: center;
-                width: 100%;
-                max-width: 200px;
-            }
-
-            /* Colonne 2 - Ligne 1 : HDMI Sources */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-section {
-                grid-column: 2;
-                grid-row: 1;
-                justify-self: center;
-            }
-
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn {
-                max-width: 70px;
-            }
-
-            /* Colonne 2 - Ligne 2 : Contrôles multimédia */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-section {
-                grid-column: 2;
                 grid-row: 2;
-                justify-self: center;
-            }
-
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn {
-                max-width: 50px;
-            }
-
-            /* Colonne 2 - Ligne 3 : Keypad (navigation) */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-section {
-                grid-column: 2;
-                grid-row: 3;
-                margin-left: auto;
-                margin-right: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 0;
             }
 
             /* Colonne 3 - Lignes 1-3 : Commandes avancées (toute hauteur) */
@@ -650,33 +753,10 @@
                 margin-top: 0;
             }
 
-            /* Ligne 4 - Pleine largeur : Apps */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .section-divider {
-                grid-column: 1 / 4;
-                grid-row: 4;
-            }
-
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
-                grid-column: 1 / 4;
-                grid-row: 4;
-                padding-top: 0;
-                border-top: none;
-                margin-top: 8px;
-                display: flex;
-                flex-wrap: nowrap;
-                justify-content: center;
-                overflow-x: auto;
-                gap: 8px;
-            }
-
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
-                flex-shrink: 0;
-            }
-
-            /* Ligne 5 - Pleine largeur : Widget Info */
+            /* Colonne 2 - Ligne 3 : Widget Info (même cellule que Volume+Nav) */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display {
-                grid-column: 1 / 4;
-                grid-row: 5;
+                grid-column: 2;
+                grid-row: 3;
             }
         }
 
@@ -794,16 +874,17 @@
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#"
                     title="<i>Date de valeur : #online_valueDate#<br>Date de collecte : #online_collectDate#</i>">
-                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-tv"></i>
                     <span class="cmdValue" style="display:none;">#online_value#</span>
                 </div>
                 <span class="status-label">En Ligne</span>
             </div>
 
             <div class="status-item">
-                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#"
+                <div class="status-icon cmd adb-status" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#"
+                    data-adb-used="#adb_used#"
                     title="<i>Date de valeur : #adb_connected_valueDate#<br>Date de collecte : #adb_connected_collectDate#</i>">
-                    <i class="fas fa-plug"></i>
+                    <i class="fas fa-link"></i>
                     <span class="cmdValue" style="display:none;">#adb_connected_value#</span>
                 </div>
                 <span class="status-label">ADB</span>
@@ -832,7 +913,7 @@
                 <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
                     data-mute_on_id="#mute_on_id#" data-mute_off_id="#mute_off_id#"
                     title="Date de valeur : #volume_muted_valueDate#<br>Date de collecte : #volume_muted_collectDate#<br><br>ℹ️ Cliquer pour activer/désactiver">
-                    <i class="fas fa-volume-off"></i>
+                    <i class="fas fa-volume-mute"></i>
                     <span class="cmdValue" style="display:none;">#volume_muted_value#</span>
                 </div>
                 <span class="status-label">Mute</span>
@@ -841,8 +922,9 @@
 
         <!-- Volume controls and Navigation pad container -->
         <div class="volume-nav-container">
-            <!-- Volume controls in 2x2 grid -->
-            <div class="control-section">
+            <div class="volume-nav-container">
+                <!-- Volume controls in 2x2 grid -->
+                <div class="control-section">
                 <div class="control-row">
                     <button class="remote-btn" data-cmd_id="#menu_id#" title="Menu">
                         <i class="fas fa-bars"></i>
@@ -884,24 +966,27 @@
                 <div class="nav-placeholder"></div>
             </div>
         </div>
-
-        <!-- Action buttons -->
-        <div class="control-section">
-            <div class="control-row three-cols">
-                <button class="remote-btn" data-cmd_id="#back_id#" title="Retour">
-                    <i class="fas fa-reply"></i>
-                </button>
-                <button class="remote-btn" data-cmd_id="#home_id#" title="Accueil">
-                    <i class="fas fa-home"></i>
-                </button>
-                <button class="remote-btn" data-cmd_id="#settings_id#" title="Paramètres">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
         </div>
 
-        <!-- Number pad -->
-        <div class="numpad-section">
+        <!-- Actions and Number pad container -->
+        <div class="actions-numpad-container">
+            <!-- Action buttons -->
+            <div class="control-section with-three-cols">
+                <div class="control-row three-cols">
+                    <button class="remote-btn" data-cmd_id="#back_id#" title="Retour">
+                        <i class="fas fa-reply"></i>
+                    </button>
+                    <button class="remote-btn" data-cmd_id="#home_id#" title="Accueil">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <button class="remote-btn" data-cmd_id="#settings_id#" title="Paramètres">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Number pad -->
+            <div class="numpad-section">
             <button class="num-btn" data-cmd_id="#one_id#">1</button>
             <button class="num-btn" data-cmd_id="#two_id#">2</button>
             <button class="num-btn" data-cmd_id="#three_id#">3</button>
@@ -921,22 +1006,25 @@
             <button class="num-btn" data-cmd_id="#channel_up_id#" title="Channel +">
                 <i class="fas fa-caret-up"></i>
             </button>
+            </div>
         </div>
 
-        <!-- HDMI inputs -->
-        <div class="hdmi-section">
-            <button class="hdmi-btn" data-cmd_id="#input_id#" title="Changer de source">SOURCE</button>
-            <button class="hdmi-btn" data-cmd_id="#hdmi_1_id#" title="Entrée HDMI 1">HDMI 1</button>
-            <button class="hdmi-btn" data-cmd_id="#hdmi_2_id#" title="Entrée HDMI 2">HDMI 2</button>
-            <button class="hdmi-btn" data-cmd_id="#hdmi_3_id#" title="Entrée HDMI 3">HDMI 3</button>
-            <button class="hdmi-btn" data-cmd_id="#hdmi_4_id#" title="Entrée HDMI 4">HDMI 4</button>
-        </div>
+        <!-- HDMI and Media Container -->
+        <div class="hdmi-media-container">
+            <!-- HDMI inputs -->
+            <div class="hdmi-section">
+                <button class="hdmi-btn" data-cmd_id="#input_id#" title="Changer de source">SOURCE</button>
+                <button class="hdmi-btn" data-cmd_id="#hdmi_1_id#" title="Entrée HDMI 1">HDMI 1</button>
+                <button class="hdmi-btn" data-cmd_id="#hdmi_2_id#" title="Entrée HDMI 2">HDMI 2</button>
+                <button class="hdmi-btn" data-cmd_id="#hdmi_3_id#" title="Entrée HDMI 3">HDMI 3</button>
+                <button class="hdmi-btn" data-cmd_id="#hdmi_4_id#" title="Entrée HDMI 4">HDMI 4</button>
+            </div>
 
-        <!-- Media controls -->
-        <div class="media-section">
-            <button class="media-btn" data-cmd_id="#media_previous_id#" title="Précédent">
-                <i class="fas fa-step-backward"></i>
-            </button>
+            <!-- Media controls -->
+            <div class="media-section">
+                <button class="media-btn" data-cmd_id="#media_previous_id#" title="Précédent">
+                    <i class="fas fa-step-backward"></i>
+                </button>
             <button class="media-btn" data-cmd_id="#media_rewind_id#" title="Retour rapide">
                 <i class="fas fa-backward"></i>
             </button>
@@ -955,6 +1043,7 @@
             <button class="media-btn" data-cmd_id="#media_next_id#" title="Suivant">
                 <i class="fas fa-step-forward"></i>
             </button>
+        </div>
         </div>
 
         <div class="section-divider"></div>
@@ -986,30 +1075,33 @@
 
         <!-- Advanced Commands -->
         <div class="advanced-commands #advanced_commands_visible#">
-            <div class="advanced-commands-title">Commandes Avancées</div>
-            
-            <div class="cmd-group #keycode_visible_class#">
-                <label class="cmd-label" for="keycode-input-#uid#">KeyCode:</label>
-                <input type="text" class="cmd-input" id="keycode-input-#uid#" placeholder="Ex: KEYCODE_HOME" 
-                    data-action-cmd-id="#keycode_id#">
-            </div>
-            
-            <div class="cmd-group #appcode_visible_class#">
-                <label class="cmd-label" for="appcode-input-#uid#">AppCode:</label>
-                <input type="text" class="cmd-input" id="appcode-input-#uid#" placeholder="Ex: com.netflix.ninja" 
-                    data-action-cmd-id="#appcode_id#">
-            </div>
-            
-            <div class="cmd-group #adbshell_visible_class#">
-                <label class="cmd-label" for="adbshell-input-#uid#">ADB Shell:</label>
-                <input type="text" class="cmd-input" id="adbshell-input-#uid#" placeholder="Ex: input keyevent 3" 
-                    data-action-cmd-id="#adbshell_id#">
-            </div>
-            
-            <div class="cmd-group #adb_shell_output_visible_class#">
-                <label class="cmd-label">Sortie ADB Shell:</label>
-                <div class="cmd-output cmd" data-type="info" data-subtype="string" data-cmd_id="#adb_shell_output_id#"><span class="cmdValue">#adb_shell_output_value#</span></div>
-            </div>
+            <details class="advanced-commands-details">
+                <summary>Commandes Avancées</summary>
+                <div class="advanced-commands-content">
+                    <div class="cmd-group #keycode_visible_class#">
+                        <label class="cmd-label" for="keycode-input-#uid#">KeyCode:</label>
+                        <input type="text" class="cmd-input" id="keycode-input-#uid#" placeholder="Ex: KEYCODE_HOME" 
+                            data-action-cmd-id="#keycode_id#">
+                    </div>
+                    
+                    <div class="cmd-group #appcode_visible_class#">
+                        <label class="cmd-label" for="appcode-input-#uid#">AppCode:</label>
+                        <input type="text" class="cmd-input" id="appcode-input-#uid#" placeholder="Ex: com.netflix.ninja" 
+                            data-action-cmd-id="#appcode_id#">
+                    </div>
+                    
+                    <div class="cmd-group #adbshell_visible_class#">
+                        <label class="cmd-label" for="adbshell-input-#uid#">ADB Shell:</label>
+                        <input type="text" class="cmd-input" id="adbshell-input-#uid#" placeholder="Ex: input keyevent 3" 
+                            data-action-cmd-id="#adbshell_id#">
+                    </div>
+                    
+                    <div class="cmd-group #adb_shell_output_visible_class#">
+                        <label class="cmd-label">Sortie ADB Shell:</label>
+                        <div class="cmd-output cmd" data-type="info" data-subtype="string" data-cmd_id="#adb_shell_output_id#"><span class="cmdValue">#adb_shell_output_value#</span></div>
+                    </div>
+                </div>
+            </details>
         </div>
     </div>
 
@@ -1019,6 +1111,37 @@
 
             const widgetRoot = document.querySelector('.eqLogic-widget[data-eqLogic_uid="#uid#"]')
             if (!widgetRoot) return
+
+            // ========================================
+            // === ADVANCED COMMANDS PERSISTENCE ===
+            // ========================================
+
+            const initAdvancedCommandsPersistence = () => {
+                const advancedCommandsDetails = widgetRoot.querySelector('.advanced-commands-details')
+                if (!advancedCommandsDetails) {
+                    // Retry after a short delay if element not found
+                    setTimeout(initAdvancedCommandsPersistence, 100)
+                    return
+                }
+                
+                const storageKey = 'tvremote-advanced-commands-#id#'
+                
+                // Restore state from localStorage
+                const savedState = localStorage.getItem(storageKey)
+                
+                if (savedState === 'open') {
+                    advancedCommandsDetails.open = true
+                }
+                
+                // Save state when toggled
+                advancedCommandsDetails.addEventListener('toggle', function() {
+                    const newState = this.open ? 'open' : 'closed'
+                    localStorage.setItem(storageKey, newState)
+                })
+            }
+            
+            // Initialize after DOM is ready
+            setTimeout(initAdvancedCommandsPersistence, 50)
 
             // ========================================
             // === BUTTON HANDLERS ===
@@ -1133,6 +1256,26 @@
             }
         }
 
+        const updateAdbIcon = () => {
+            const adbIcon = widgetRoot.querySelector('.status-icon.adb-status')
+            if (!adbIcon) return
+            
+            const adbUsed = adbIcon.getAttribute('data-adb-used')
+            const adbConnected = adbIcon.getAttribute('data-cmd_value')
+            const iconElement = adbIcon.querySelector('i')
+            
+            if (!iconElement) return
+            
+            // Update icon based on state
+            // ADB not used - show unlink icon (broken link)
+            if (adbUsed !== '1' && adbUsed !== 'true') {
+                iconElement.className = 'fas fa-unlink'
+            } else {
+                // ADB used - show link icon (green if connected, gray if not)
+                iconElement.className = 'fas fa-link'
+            }
+        }
+
         const updateCmdValue = (cmdId, value, displayValue) => {
             widgetRoot.querySelectorAll('[data-cmd_id="' + cmdId + '"]').forEach(element => {
                 const valueSpan = element.querySelector('.cmdValue')
@@ -1149,6 +1292,11 @@
                     // Update binary attribute
                     if (element.classList.contains('status-icon') && element.getAttribute('data-subtype') === 'binary') {
                         element.setAttribute('data-cmd_value', value)
+                        
+                        // Special handling for ADB icon
+                        if (element.classList.contains('adb-status')) {
+                            updateAdbIcon()
+                        }
                     }
                 })
             }
@@ -1163,6 +1311,9 @@
                     const cmdId = icon.getAttribute('data-cmd_id')
                     if (cmdId) updateBinaryStatus(cmdId)
                 })
+                
+                // Initialize ADB icon display
+                updateAdbIcon()
 
                 // Refresh all command values using Jeedom native method
                 const cmdElements = widgetRoot.querySelectorAll('.cmd[data-cmd_id]')
@@ -1187,6 +1338,27 @@
                         // Update values
                         updateBinaryStatus(cmdId)
                         updateCmdValue(cmdId, update.value, update.display_value)
+                    })
+                })
+                
+                // Listen to eqLogic updates (including configuration changes)
+                document.body.addEventListener('eqLogic::update', event => {
+                    if (!event.detail) return
+                    
+                    const updates = Array.isArray(event.detail) ? event.detail : [event.detail]
+                    
+                    updates.forEach(update => {
+                        const eqLogicId = String(update.eqLogic_id || update.id)
+                        if (eqLogicId != '#id#') return
+                        
+                        // If use_adb configuration changed, update the attribute and icon
+                        if (update.configuration && 'use_adb' in update.configuration) {
+                            const adbIcon = widgetRoot.querySelector('.status-icon.adb-status')
+                            if (adbIcon) {
+                                adbIcon.setAttribute('data-adb-used', update.configuration.use_adb)
+                                updateAdbIcon()
+                            }
+                        }
                     })
                 })
             }
