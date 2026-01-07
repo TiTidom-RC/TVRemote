@@ -66,6 +66,18 @@
     color: #999;
 }
 
+/* Gestion automatique des états binaires via data-cmd_value */
+.status-icon.cmd[data-cmd_value="1"] {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
+.status-icon.cmd[data-cmd_value="0"] {
+    background: #666;
+    color: #999;
+}
+
 .volume-indicator {
     color: #fff;
     font-weight: bold;

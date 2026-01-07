@@ -1981,6 +1981,52 @@ class tvremote extends eqLogic {
         $replace['#name_display#'] = $this->getName();
         $replace['#version#'] = $_version;
         
+        // Get command IDs and values for info commands
+        $cmdMap = [
+            'online' => ['id' => '', 'value' => '0'],
+            'adb_connected' => ['id' => '', 'value' => '0'],
+            'is_on' => ['id' => '', 'value' => '0'],
+            'volume_level' => ['id' => '', 'value' => '0'],
+            'volume_muted' => ['id' => '', 'value' => '0'],
+            'current_app' => ['id' => '', 'value' => '-']
+        ];
+        
+        foreach ($cmdMap as $logicalId => $data) {
+            $cmd = $this->getCmd('info', $logicalId);
+            if (is_object($cmd)) {
+                $cmdMap[$logicalId]['id'] = $cmd->getId();
+                $cmdMap[$logicalId]['value'] = $cmd->execCmd();
+            }
+        }
+        
+        // Add command IDs to replace array
+        $replace['#online_id#'] = $cmdMap['online']['id'];
+        $replace['#online_value#'] = $cmdMap['online']['value'];
+        $replace['#adb_connected_id#'] = $cmdMap['adb_connected']['id'];
+        $replace['#adb_connected_value#'] = $cmdMap['adb_connected']['value'];
+        $replace['#is_on_id#'] = $cmdMap['is_on']['id'];
+        $replace['#is_on_value#'] = $cmdMap['is_on']['value'];
+        $replace['#volume_level_id#'] = $cmdMap['volume_level']['id'];
+        $replace['#volume_level_value#'] = $cmdMap['volume_level']['value'];
+        $replace['#volume_muted_id#'] = $cmdMap['volume_muted']['id'];
+        $replace['#volume_muted_value#'] = $cmdMap['volume_muted']['value'];
+        $replace['#current_app_id#'] = $cmdMap['current_app']['id'];
+        $replace['#current_app_value#'] = $cmdMap['current_app']['value'];
+        
+        // Generate apps HTML
+        $appsHtml = '';
+        $appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];
+        foreach ($appLogicalIds as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd) && $cmd->getIsVisible()) {
+                $imgSrc = $cmd->getConfiguration('image', $logicalId . '.png');
+                $appsHtml .= '<button class="app-btn cmd" data-type="action" data-subtype="other" data-cmd_id="' . $cmd->getId() . '" data-logical_id="' . $logicalId . '" title="' . $cmd->getName() . '">';
+                $appsHtml .= '<img src="plugins/tvremote/data/images/' . $imgSrc . '" alt="' . $cmd->getName() . '">';
+                $appsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#apps_html#'] = $appsHtml;
+        
         // Replace all placeholders in the template
         foreach ($replace as $key => $value) {
             $html = str_replace($key, $value, $html);

@@ -6,33 +6,35 @@
         
         <div class="tvremote-status-row">
             <div class="status-item">
-                <div class="status-icon" data-cmd="online">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#" data-cmd_value="#online_value#">
                     <i class="fas fa-signal"></i>
                 </div>
                 <span class="status-label">En Ligne</span>
             </div>
             
             <div class="status-item">
-                <div class="status-icon" data-cmd="adb_connected">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#" data-cmd_value="#adb_connected_value#">
                     <i class="fas fa-plug"></i>
                 </div>
                 <span class="status-label">ADB</span>
             </div>
             
             <div class="status-item">
-                <div class="status-icon" data-cmd="is_on">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#" data-cmd_value="#is_on_value#">
                     <i class="fas fa-power-off"></i>
                 </div>
                 <span class="status-label">Power</span>
             </div>
             
             <div class="status-item">
-                <div class="volume-indicator" data-cmd="volume_level">--%</div>
+                <div class="volume-indicator cmd" data-type="info" data-subtype="numeric" data-cmd_id="#volume_level_id#">
+                    <span class="cmdValue">#volume_level_value#</span>%
+                </div>
                 <span class="status-label">Volume</span>
             </div>
             
             <div class="status-item">
-                <div class="status-icon" data-cmd="volume_muted">
+                <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#" data-cmd_value="#volume_muted_value#">
                     <i class="fas fa-volume-off"></i>
                 </div>
                 <span class="status-label">Mute</span>
@@ -158,13 +160,15 @@
 
     <!-- Apps section -->
     <div class="apps-section" id="apps-section-#id#">
-        <!-- Apps will be dynamically populated -->
+        #apps_html#
     </div>
 
     <!-- Current app display -->
     <div class="current-app-display">
         <span class="current-app-label">App actuelle: </span>
-        <span class="current-app-value" data-cmd="current_app">-</span>
+        <span class="current-app-value cmd" data-type="info" data-subtype="string" data-cmd_id="#current_app_id#">
+            <span class="cmdValue">#current_app_value#</span>
+        </span>
     </div>
 
     <script>
@@ -172,216 +176,78 @@
         const eqLogicId = '#id#';
         const widget = document.querySelector('.tvremote-widget[data-eqlogic_id="' + eqLogicId + '"]');
         
-        if (!widget) return;
+        if (!widget) {
+            console.error('TVRemote: Widget not found for eqLogic', eqLogicId);
+            return;
+        }
 
-        // Map of command logical IDs to their cmd objects
-        const cmdMap = {};
-        const appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];
+        console.log('TVRemote: Initializing widget', eqLogicId);
 
-        // Initialize: fetch all commands for this equipment
-        function initWidget() {
-            // Get all commands via Jeedom API
+        // Setup click handlers for all buttons with data-cmd_id
+        function setupClickHandlers() {
+            // Handle app buttons
+            widget.querySelectorAll('.app-btn[data-cmd_id]').forEach(function(btn) {
+                const cmdId = btn.getAttribute('data-cmd_id');
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    executeCmd(cmdId, this);
+                });
+            });
+
+            // Handle action buttons - need to load cmd map first
             jeedom.eqLogic.byId({
                 id: eqLogicId,
                 error: function(error) {
-                    console.error('Error loading equipment:', error);
+                    console.error('TVRemote: Error loading equipment:', error);
                 },
                 success: function(data) {
                     if (data && data.cmds) {
+                        const cmdMap = {};
                         data.cmds.forEach(function(cmd) {
                             cmdMap[cmd.logicalId] = cmd;
                         });
                         
-                        // Initialize status indicators
-                        updateStatusIndicators();
-                        
-                        // Populate apps section
-                        populateApps();
-                        
-                        // Setup event listeners for real-time updates
-                        setupEventListeners();
+                        // Setup handlers for action buttons (navigation, volume, etc.)
+                        widget.querySelectorAll('[data-action]').forEach(function(btn) {
+                            const logicalId = btn.getAttribute('data-action');
+                            const cmd = cmdMap[logicalId];
+                            if (cmd && cmd.id) {
+                                btn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    executeCmd(cmd.id, this);
+                                });
+                            }
+                        });
                     }
                 }
             });
         }
 
-        // Update status indicators based on command values
-        function updateStatusIndicators() {
-            // Online status
-            updateBinaryStatus('online');
-            
-            // ADB connected status
-            updateBinaryStatus('adb_connected');
-            
-            // Power status
-            updateBinaryStatus('is_on');
-            
-            // Volume level
-            const volumeCmd = cmdMap['volume_level'];
-            if (volumeCmd) {
-                const volumeElement = widget.querySelector('[data-cmd="volume_level"]');
-                if (volumeElement) {
-                    jeedom.cmd.displayValue({
-                        cmd_id: volumeCmd.id,
-                        error: function(error) {},
-                        success: function(value) {
-                            volumeElement.textContent = (value || 0) + '%';
-                        }
-                    });
-                }
+        // Execute command with visual feedback
+        function executeCmd(cmdId, btnElement) {
+            if (btnElement) {
+                btnElement.style.opacity = '0.6';
+                setTimeout(function() {
+                    btnElement.style.opacity = '1';
+                }, 200);
             }
             
-            // Mute status
-            updateBinaryStatus('volume_muted');
-            
-            // Current app
-            const currentAppCmd = cmdMap['current_app'];
-            if (currentAppCmd) {
-                const currentAppElement = widget.querySelector('[data-cmd="current_app"]');
-                if (currentAppElement) {
-                    jeedom.cmd.displayValue({
-                        cmd_id: currentAppCmd.id,
-                        error: function(error) {},
-                        success: function(value) {
-                            currentAppElement.textContent = value || '-';
-                        }
-                    });
-                }
-            }
-        }
-
-        function updateBinaryStatus(logicalId) {
-            const cmd = cmdMap[logicalId];
-            if (cmd) {
-                const statusIcon = widget.querySelector('[data-cmd="' + logicalId + '"]');
-                if (statusIcon) {
-                    jeedom.cmd.displayValue({
-                        cmd_id: cmd.id,
-                        error: function(error) {},
-                        success: function(value) {
-                            if (value == 1) {
-                                statusIcon.classList.add('active');
-                                statusIcon.classList.remove('inactive');
-                            } else {
-                                statusIcon.classList.add('inactive');
-                                statusIcon.classList.remove('active');
-                            }
-                        }
-                    });
-                }
-            }
-        }
-
-        // Populate apps section
-        function populateApps() {
-            const appsContainer = widget.querySelector('#apps-section-' + eqLogicId);
-            if (!appsContainer) return;
-            
-            appsContainer.innerHTML = '';
-            
-            appLogicalIds.forEach(function(logicalId) {
-                const cmd = cmdMap[logicalId];
-                if (cmd && cmd.isVisible == 1) {
-                    const appBtn = document.createElement('button');
-                    appBtn.className = 'app-btn';
-                    appBtn.dataset.action = logicalId;
-                    
-                    const imgSrc = cmd.configuration && cmd.configuration.image 
-                        ? 'plugins/tvremote/data/images/' + cmd.configuration.image
-                        : 'plugins/tvremote/data/images/' + logicalId + '.png';
-                    
-                    appBtn.innerHTML = '<img src="' + imgSrc + '" alt="' + cmd.name + '" title="' + cmd.name + '">';
-                    
-                    appBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        executeAction(logicalId);
-                    });
-                    
-                    appsContainer.appendChild(appBtn);
+            console.log('TVRemote: Executing command', cmdId);
+            jeedom.cmd.execute({
+                id: cmdId,
+                error: function(error) {
+                    console.error('TVRemote: Error executing command:', error);
+                },
+                success: function() {
+                    console.log('TVRemote: Command executed successfully');
                 }
             });
         }
 
-        // Setup event listeners for buttons
-        widget.querySelectorAll('[data-action]').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const action = this.dataset.action;
-                executeAction(action);
-            });
-        });
-
-        // Execute command action
-        function executeAction(logicalId) {
-            const cmd = cmdMap[logicalId];
-            if (cmd && cmd.id) {
-                // Visual feedback
-                const btn = widget.querySelector('[data-action="' + logicalId + '"]');
-                if (btn) {
-                    btn.style.opacity = '0.6';
-                    setTimeout(function() {
-                        btn.style.opacity = '1';
-                    }, 200);
-                }
-                
-                // Execute command
-                jeedom.cmd.execute({
-                    id: cmd.id,
-                    error: function(error) {
-                        console.error('Error executing command:', error);
-                    },
-                    success: function() {
-                        // Command executed successfully
-                    }
-                });
-            }
-        }
-
-        // Setup event listeners for real-time updates
-        function setupEventListeners() {
-            // Listen for command updates
-            const cmdIds = Object.values(cmdMap).map(cmd => cmd.id);
-            
-            if (typeof jeedom !== 'undefined' && jeedom.cmd && jeedom.cmd.addUpdateFunction) {
-                cmdIds.forEach(function(cmdId) {
-                    jeedom.cmd.addUpdateFunction(cmdId, function(_options) {
-                        // Find which logical ID this cmd corresponds to
-                        const logicalId = Object.keys(cmdMap).find(key => cmdMap[key].id == cmdId);
-                        
-                        if (!logicalId) return;
-                        
-                        // Update the appropriate display element
-                        if (logicalId === 'volume_level') {
-                            const volumeElement = widget.querySelector('[data-cmd="volume_level"]');
-                            if (volumeElement && _options && _options.display_value !== undefined) {
-                                volumeElement.textContent = _options.display_value + '%';
-                            }
-                        } else if (logicalId === 'current_app') {
-                            const currentAppElement = widget.querySelector('[data-cmd="current_app"]');
-                            if (currentAppElement && _options && _options.display_value !== undefined) {
-                                currentAppElement.textContent = _options.display_value || '-';
-                            }
-                        } else if (['online', 'adb_connected', 'is_on', 'volume_muted'].includes(logicalId)) {
-                            const statusIcon = widget.querySelector('[data-cmd="' + logicalId + '"]');
-                            if (statusIcon && _options && _options.display_value !== undefined) {
-                                if (_options.display_value == 1) {
-                                    statusIcon.classList.add('active');
-                                    statusIcon.classList.remove('inactive');
-                                } else {
-                                    statusIcon.classList.add('inactive');
-                                    statusIcon.classList.remove('active');
-                                }
-                            }
-                        }
-                    });
-                });
-            }
-        }
-
-        // Initialize the widget
-        initWidget();
+        // Initialize
+        setupClickHandlers();
     })();
     </script>
 </div>
