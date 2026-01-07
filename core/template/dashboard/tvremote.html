@@ -5,10 +5,11 @@
     <style>
         /* TVRemote Widget CSS */
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
-            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            background: var(--eqLogic-bg-color);
+            border: 1px solid var(--eqLogic-border-color);
             border-radius: 15px;
             padding: 0;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--box-shadow);
             font-family: 'Roboto', sans-serif;
             box-sizing: border-box;
             width: 320px;
@@ -23,11 +24,11 @@
             text-align: center;
             margin-bottom: 12px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #404040;
+            border-bottom: 2px solid var(--eqLogic-separator-color, var(--defaultBkg-color));
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-title {
-            color: #ffffff;
+            color: var(--txt-color);
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 8px;
@@ -47,7 +48,7 @@
             align-items: center;
             gap: 3px;
             font-size: 9px;
-            color: #aaa;
+            color: var(--txt-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-label {
@@ -63,24 +64,24 @@
             justify-content: center;
             font-size: 12px;
             transition: all 0.3s ease;
-            background: #666;
-            color: #999;
+            background: var(--sc-lightTxt-color);
+            color: var(--txt-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.cmd[data-cmd_value="1"] {
-            background: #4CAF50 !important;
+            background: var(--al-success-color) !important;
             color: white !important;
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+            box-shadow: 0 0 15px var(--al-success-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.cmd[data-cmd_value="0"] {
-            background: #666 !important;
-            color: #999 !important;
+            background: var(--sc-lightTxt-color) !important;
+            color: var(--txt-color) !important;
             box-shadow: none;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-indicator {
-            color: #fff;
+            color: var(--txt-color);
             font-weight: bold;
             font-size: 12px;
         }
@@ -101,15 +102,15 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn {
-            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
-            border: none;
+            background: var(--btn-default-bg-color);
+            border: 1px solid var(--btn-default-border-color);
             border-radius: 8px;
-            color: #fff;
+            color: var(--btn-default-txt-color);
             padding: 10px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--box-shadow);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -117,22 +118,22 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            background: var(--btn-default-hover-bg-color);
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:active {
             transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn.primary {
-            background: linear-gradient(145deg, #2196F3, #1976D2);
+            background: var(--btn-primary-bg-color);
+            color: var(--btn-primary-txt-color);
+            border-color: var(--btn-primary-border-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn.primary:hover {
-            background: linear-gradient(145deg, #42A5F5, #2196F3);
+            background: var(--btn-primary-hover-bg-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-section {
@@ -146,23 +147,23 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn {
-            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
-            border: none;
+            background: var(--btn-default-bg-color);
+            border: 1px solid var(--btn-default-border-color);
             border-radius: 50%;
-            color: #fff;
+            color: var(--btn-default-txt-color);
             width: 45px;
             height: 45px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--box-shadow);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            background: var(--btn-default-hover-bg-color);
             transform: scale(1.05);
         }
 
@@ -171,8 +172,9 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn.center {
-            background: linear-gradient(145deg, #2196F3, #1976D2);
-            border: 2px solid #1565C0;
+            background: var(--btn-primary-bg-color);
+            color: var(--btn-primary-txt-color);
+            border-color: var(--btn-primary-border-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-placeholder {
@@ -188,20 +190,20 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn {
-            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
-            border: none;
+            background: var(--btn-default-bg-color);
+            border: 1px solid var(--btn-default-border-color);
             border-radius: 8px;
-            color: #fff;
+            color: var(--btn-default-txt-color);
             padding: 10px;
             font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--box-shadow);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            background: var(--btn-default-hover-bg-color);
             transform: translateY(-2px);
         }
 
@@ -213,22 +215,22 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn {
-            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
-            border: none;
+            background: var(--btn-default-bg-color);
+            border: 1px solid var(--btn-default-border-color);
             border-radius: 6px;
-            color: #fff;
+            color: var(--btn-default-txt-color);
             padding: 8px;
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--box-shadow);
             white-space: nowrap;
             overflow: hidden;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            background: var(--btn-default-hover-bg-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-section {
@@ -239,19 +241,19 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn {
-            background: linear-gradient(145deg, #3a3a3a, #2f2f2f);
-            border: none;
+            background: var(--btn-default-bg-color);
+            border: 1px solid var(--btn-default-border-color);
             border-radius: 6px;
-            color: #fff;
+            color: var(--btn-default-txt-color);
             padding: 8px;
             font-size: 13px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--box-shadow);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
+            background: var(--btn-default-hover-bg-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
@@ -260,12 +262,12 @@
             gap: 6px;
             margin: 8px 0;
             padding-top: 8px;
-            border-top: 2px solid #404040;
+            border-top: 2px solid var(--eqLogic-separator-color, var(--defaultBkg-color));
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
-            background: #2a2a2a;
-            border: 2px solid #404040;
+            background: var(--eqLogic-bg-color);
+            border: 2px solid var(--eqLogic-border-color);
             border-radius: 10px;
             padding: 5px;
             cursor: pointer;
@@ -278,9 +280,9 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn:hover {
-            border-color: #2196F3;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.3);
+            background: var(--btn-default-hover-bg-color);
+            border-color: var(--btn-primary-bg-color);
+            transform: translateY(-2px);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn img {
@@ -292,18 +294,19 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .section-divider {
             height: 2px;
-            background: #404040;
+            background: var(--eqLogic-separator-color, var(--defaultBkg-color));
             margin: 8px 0;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display {
             text-align: center;
-            color: #aaa;
+            color: var(--txt-color);
             font-size: 10px;
             margin: 6px 0;
             padding: 6px;
-            background: #1a1a1a;
+            background: var(--eqLogic-bg-color);
             border-radius: 6px;
+            border: 1px solid var(--eqLogic-border-color);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-display>div {
@@ -311,12 +314,13 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-label {
-            color: #666;
+            color: var(--txt-color);
             font-weight: bold;
+            opacity: 0.7;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-value {
-            color: #2196F3;
+            color: var(--btn-primary-bg-color);
             font-weight: bold;
         }
 
