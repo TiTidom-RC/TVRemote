@@ -2016,6 +2016,26 @@ class tvremote extends eqLogic {
             }
         }
         
+        // Get IDs for action commands (navigation, volume, etc.)
+        $actionLogicalIds = ['up', 'down', 'left', 'right', 'center', 'menu', 'volumeup', 'volumedown', 
+                             'tv', 'back', 'home', 'settings', 'one', 'two', 'three', 'four', 'five', 
+                             'six', 'seven', 'eight', 'nine', 'zero', 'channel_up', 'channel_down',
+                             'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4',
+                             'previous', 'rewind', 'play', 'pause', 'stop', 'forward', 'next'];
+        
+        foreach ($actionLogicalIds as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd)) {
+                $replace['#' . $logicalId . '_id#'] = $cmd->getId();
+            } else {
+                $replace['#' . $logicalId . '_id#'] = '';
+            }
+        }
+        
+        // Get refresh command ID
+        $refreshCmd = $this->getCmd('action', 'refresh');
+        $replace['#refresh_id#'] = is_object($refreshCmd) ? $refreshCmd->getId() : '';
+        
         // Generate apps HTML
         $appsHtml = '';
         $appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];
