@@ -1947,6 +1947,148 @@ class tvremote extends eqLogic {
         $this->disableTVRemoteToDaemon();
         $this->disableADBToDaemon();
     }
+
+    /**
+     * Generate custom HTML widget for the remote control
+     * This method renders a complete remote control interface instead of individual command widgets
+     */
+    public function toHtml($_version = 'dashboard') {
+        $replace = $this->preToHtml($_version);
+        if (!is_array($replace)) {
+            return $replace;
+        }
+        $version = jeedom::versionAlias($_version);
+        
+        // Use standard template only
+        $templatePath = dirname(__FILE__) . '/../template/' . $version . '/widget.standard.tvremote.html';
+        
+        if (!file_exists($templatePath)) {
+            log::add('tvremote', 'error', '[toHtml] Template file not found: ' . $templatePath);
+            return parent::toHtml($_version);
+        }
+        
+        // Load template content
+        $html = file_get_contents($templatePath);
+        
+        // Detect current theme
+        $themeConfig = jeedom::getThemeConfig();
+        $currentTheme = ($_version == 'mobile') ? $themeConfig['current_mobile_theme'] : $themeConfig['current_desktop_theme'];
+        $isDarkTheme = (strpos(strtolower($currentTheme), 'dark') !== false || strpos(strtolower($currentTheme), 'night') !== false);
+        
+        // Replace placeholders
+        $replace['#id#'] = $this->getId();
+        $replace['#name#'] = $this->getName();
+        $replace['#name_display#'] = $this->getName();
+        $replace['#version#'] = $_version;
+        $replace['#theme_class#'] = $isDarkTheme ? 'theme-dark' : 'theme-light';
+        
+        // Add ADB usage configuration
+        $replace['#adb_used#'] = $this->getConfiguration('use_adb', '0');
+        
+        // Get command IDs and values for info commands
+        $cmdMap = [
+            'online' => ['id' => '', 'value' => '0'],
+            'adb_connected' => ['id' => '', 'value' => '0'],
+            'is_on' => ['id' => '', 'value' => '0'],
+            'volume_level' => ['id' => '', 'value' => '0'],
+            'volume_muted' => ['id' => '', 'value' => '0'],
+            'current_app' => ['id' => '', 'value' => '-'],
+            'updatelasttime' => ['id' => '', 'value' => ''],
+            'adb_shell_output' => ['id' => '', 'value' => '']
+        ];
+        
+        foreach ($cmdMap as $logicalId => $data) {
+            $cmd = $this->getCmd('info', $logicalId);
+            if (is_object($cmd)) {
+                $cmdMap[$logicalId]['id'] = $cmd->getId();
+                $cmdMap[$logicalId]['value'] = $cmd->execCmd();
+            }
+        }
+        
+        // Add command IDs, values and dates to replace array
+        foreach ($cmdMap as $logicalId => $data) {
+            $cmd = $this->getCmd('info', $logicalId);
+            $replace['#' . $logicalId . '_id#'] = $data['id'];
+            $replace['#' . $logicalId . '_value#'] = $data['value'];
+            
+            // Add dates for tooltips
+            if (is_object($cmd)) {
+                $replace['#' . $logicalId . '_valueDate#'] = $cmd->getValueDate();
+                $replace['#' . $logicalId . '_collectDate#'] = $cmd->getCollectDate();
+            } else {
+                $replace['#' . $logicalId . '_valueDate#'] = '';
+                $replace['#' . $logicalId . '_collectDate#'] = '';
+            }
+        }
+        
+        // Get IDs for action commands (navigation, volume, etc.)
+        $actionLogicalIds = ['up', 'down', 'left', 'right', 'center', 'menu', 'volumeup', 'volumedown', 
+                             'tv', 'back', 'home', 'settings', 'one', 'two', 'three', 'four', 'five', 
+                             'six', 'seven', 'eight', 'nine', 'zero', 'channel_up', 'channel_down',
+                             'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4',
+                             'previous', 'rewind', 'play', 'pause', 'stop', 'forward', 'next',
+                             'mute_on', 'mute_off', 'power_on', 'power_off', 'keycode', 'appcode', 'adbshell'];
+        
+        foreach ($actionLogicalIds as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd)) {
+                $replace['#' . $logicalId . '_id#'] = $cmd->getId();
+                
+                // Add visibility class for advanced commands
+                if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = $cmd->getIsVisible() ? 'visible' : '';
+                }
+            } else {
+                $replace['#' . $logicalId . '_id#'] = '';
+                if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = '';
+                }
+            }
+        }
+        
+        // Add visibility class for adb_shell_output info command
+        $adbOutputCmd = $this->getCmd('info', 'adb_shell_output');
+        $replace['#adb_shell_output_visible_class#'] = (is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) ? 'visible' : '';
+        
+        // Show advanced commands block only if at least one command is visible
+        $hasVisibleAdvancedCmd = false;
+        foreach (['keycode', 'appcode', 'adbshell'] as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd) && $cmd->getIsVisible()) {
+                $hasVisibleAdvancedCmd = true;
+                break;
+            }
+        }
+        if (!$hasVisibleAdvancedCmd && is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) {
+            $hasVisibleAdvancedCmd = true;
+        }
+        $replace['#advanced_commands_visible#'] = $hasVisibleAdvancedCmd ? 'visible' : '';
+        
+        // Get refresh command ID
+        $refreshCmd = $this->getCmd('action', 'refresh');
+        $replace['#refresh_id#'] = is_object($refreshCmd) ? $refreshCmd->getId() : '';
+        
+        // Generate apps HTML
+        $appsHtml = '';
+        $appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];
+        foreach ($appLogicalIds as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd) && $cmd->getIsVisible()) {
+                $imgSrc = $cmd->getConfiguration('image', $logicalId . '.png');
+                $appsHtml .= '<button class="app-btn cmd" data-type="action" data-subtype="other" data-cmd_id="' . $cmd->getId() . '" data-logical_id="' . $logicalId . '" title="' . $cmd->getName() . '">';
+                $appsHtml .= '<img src="plugins/tvremote/data/images/' . $imgSrc . '" alt="' . $cmd->getName() . '">';
+                $appsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#apps_html#'] = $appsHtml;
+        
+        // Replace all placeholders in the template
+        foreach ($replace as $key => $value) {
+            $html = str_replace($key, $value, $html);
+        }
+        
+        return $html;
+    }
 }
 
 class tvremoteCmd extends cmd {

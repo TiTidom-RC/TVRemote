@@ -112,7 +112,11 @@ if (!isConnect()) {
 			            <option value="3.0">{{Lent --- (x3)}}</option>
 			        </select>
 	            </div>
-            </div>        
+            </div>
+        </div>
+    </fieldset>
+    <fieldset>
+        <div>        
             <legend><i class="fas fa-redo"></i> {{Réinitialisation}}</legend>
             <div class="form-group">
                 <label class="col-lg-3 control-label">{{Certificat TVRemote}}

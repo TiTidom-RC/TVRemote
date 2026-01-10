@@ -153,7 +153,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
                                 </div>
                             </div>
-
                             <legend><i class="fas fa-cogs"></i> {{Paramètres du TVRemote}}</legend>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Adresse MAC}}</label>
