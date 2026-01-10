@@ -1,4 +1,4 @@
-<div class="tvremote-widget eqLogic eqLogic-widget allowResize #custom_layout# #eqLogic_class# #class# #category# #theme_class#"
+<div class="tvremote-widget eqLogic eqLogic-widget allowResize col2 #custom_layout# #eqLogic_class# #class# #category# #theme_class#"
     data-eqType="#eqType#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="mobile"
     data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#"
     style="width: #width#;height: #height#;#style#">
@@ -15,8 +15,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             font-family: 'Roboto', sans-serif;
             box-sizing: border-box;
-            width: 320px;
-            min-width: 280px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -25,9 +23,11 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
             padding: 15px;
-            overflow-y: auto;
+            overflow: auto;
             flex: 1 1 auto;
             min-height: 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-header {
@@ -68,7 +68,6 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .info-icon {
             font-size: 11px;
-            cursor: help;
             color: #999;
             font-style: italic;
             margin: 0 2px;
@@ -165,7 +164,7 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-section {
             margin: 10px auto;
-            max-width: 200px;
+            max-width: 95%;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row {
@@ -175,16 +174,9 @@
             margin-bottom: 8px;
         }
 
-        /* Réinitialiser à 4 colonnes en mode horizontal */
-        @container tvremote (min-width: 700px) {
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .control-row.three-cols {
             grid-template-columns: repeat(3, 1fr);
-            max-width: 200px;
+            max-width: 90%;
             margin: 0 auto;
         }
 
@@ -195,20 +187,13 @@
             color: #fff;
             padding: 12px;
             font-size: 18px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 44px;
             width: 100%;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn:active {
@@ -218,10 +203,6 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn.primary {
             background: linear-gradient(145deg, #2196F3, #1976D2);
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn.primary:hover {
-            background: linear-gradient(145deg, #42A5F5, #2196F3);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-section {
@@ -239,17 +220,11 @@
             width: 38px;
             height: 38px;
             font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
-            transform: scale(1.08);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .nav-btn:active {
@@ -271,7 +246,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             margin: 10px auto;
-            max-width: 200px;
+            max-width: 90%;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn {
@@ -282,14 +257,8 @@
             padding: 14px;
             font-size: 17px;
             font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
-            transform: scale(1.02);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn:active {
@@ -311,18 +280,12 @@
             padding: 8px 3px;
             font-size: 13px;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             min-width: 0;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
-            transform: scale(1.02);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn:active {
@@ -343,17 +306,11 @@
             color: #fff;
             padding: 6px 8px;
             font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             min-width: 0;
             height: 32px;
             line-height: 1.2;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn:hover {
-            background: linear-gradient(145deg, #4a4a4a, #3f3f3f);
-            transform: scale(1.05);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .media-btn:active {
@@ -374,20 +331,13 @@
             border: 1px solid #404040;
             border-radius: 8px;
             padding: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 52px;
             height: 52px;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn:hover {
-            border-color: #2196F3;
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn:active {
@@ -449,7 +399,6 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary {
-            cursor: pointer;
             font-size: 14px;
             font-weight: bold;
             color: #aaa;
@@ -474,10 +423,6 @@
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details[open] summary::before {
             transform: rotate(90deg);
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary:hover {
-            background: rgba(255, 255, 255, 0.08);
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-content {
@@ -586,24 +531,10 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn:hover,
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn:hover,
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .num-btn:hover,
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .hdmi-btn:hover,
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .media-btn:hover {
-            background: linear-gradient(145deg, #f8f8f8, #e5e5e5);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn.primary,
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn.center {
             background: linear-gradient(145deg, #2196F3, #1976D2);
             color: white;
-        }
-
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .remote-btn.primary:hover,
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .nav-btn.center:hover {
-            background: linear-gradient(145deg, #42A5F5, #2196F3);
         }
 
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .apps-section {
@@ -613,10 +544,6 @@
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .app-btn {
             background: #f5f5f5;
             border: 2px solid #d0d0d0;
-        }
-
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .app-btn:hover {
-            border-color: #2196F3;
         }
 
         div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .section-divider {
@@ -668,12 +595,45 @@
             color: #4CAF50;
         }
 
+        /* Mode paysage pour smartphones (petits écrans en mode horizontal) */
+        @media (max-height: 500px) and (orientation: landscape) {
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
+                border-radius: 0;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
+                padding: 10px;
+                overflow-y: auto;
+                overflow-x: auto;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-status-row {
+                gap: 6px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-item {
+                font-size: 9px;
+                gap: 2px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-indicator {
+                font-size: 14px;
+                min-height: 28px;
+            }
+        }
+
         /* ========================================
            RESPONSIVE LAYOUT - HORIZONTAL MODE
-           Activé automatiquement à partir de 600px (optimisé pour mobile paysage)
+           Activé automatiquement à partir de 500px (identique au dashboard)
            ======================================== */
         
-        @container tvremote (min-width: 600px) {
+        @container tvremote (min-width: 500px) {
             /* Réutiliser le conteneur volume-nav en mode horizontal */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container {
                 grid-column: 2;
@@ -701,8 +661,12 @@
             /* Widget plus large en mode horizontal */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
                 width: auto;
-                min-width: 650px;
-                max-width: 1000px;
+            }
+
+            /* Activer le scrolling horizontal si nécessaire en mode paysage */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
+                overflow-x: auto;
+                overflow-y: auto;
             }
 
             /* Layout principal en CSS Grid */
@@ -793,22 +757,51 @@
             }
         }
 
-        /* Media query pour petits écrans - Désactivée pour éviter les conflits avec le mode horizontal sur mobile
-           Les boutons sont déjà bien dimensionnés avec les container queries */
-        @media (max-width: 480px) and (min-aspect-ratio: 1/1) {
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
-                max-width: 100%;
-                padding: 15px;
+        /* Optimisations pour petits écrans mobiles (portrait) */
+        @media (max-width: 360px) {
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
+                padding: 12px;
             }
 
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .remote-btn,
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .num-btn {
-                padding: 12px;
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-status-row {
+                gap: 6px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon {
+                width: 32px;
+                height: 32px;
                 font-size: 16px;
             }
 
-            /* Règles de navigation désactivées pour éviter les conflits */
-            /* Les dimensions sont gérées par les container queries */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-item {
+                font-size: 9px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
+                gap: 6px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
+                width: 46px;
+                height: 46px;
+                padding: 6px;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn img {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        /* Mode plein écran pour très petits appareils */
+        @media (max-width: 320px) {
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] {
+                border-radius: 0;
+            }
+
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
+                padding: 10px;
+            }
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name {
@@ -838,6 +831,12 @@
             white-space: nowrap;
         }
 
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-center .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] div.widget-name .tvremote-name-right {
             display: flex;
             flex: 0 1 auto;
@@ -852,13 +851,7 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.clickable {
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.clickable:hover {
-            transform: scale(1.15);
-            opacity: 0.85;
+            transition: transform 0.1s ease;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-icon.clickable:active {
@@ -890,9 +883,7 @@
     <div class="widget-name">
         <div class="tvremote-name-left"></div>
         <div class="tvremote-name-center">
-            <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
-            <a href="#eqLink#" class="reportModeHidden">#name_display# <span
-                    class="object_name">#object_name#</span></a>
+            <span class="name">#name_display# <span class="object_name">#object_name#</span></span>
         </div>
         <div class="tvremote-name-right">
             <span class="cmd refresh cursor" title="Rafraîchir" data-cmd_id="#refresh_id#">
@@ -905,7 +896,7 @@
         <div class="tvremote-status-row">
             <div class="status-item">
                 <div class="status-icon cmd" data-type="info" data-subtype="binary" data-cmd_id="#online_id#"
-                    title="<i>Date de valeur : #online_valueDate#<br>Date de collecte : #online_collectDate#</i>">
+                    title="En Ligne || Date valeur : #online_valueDate# || Date collecte : #online_collectDate#">
                     <i class="fas fa-tv"></i>
                     <span class="cmdValue" style="display:none;">#online_value#</span>
                 </div>
@@ -915,7 +906,7 @@
             <div class="status-item">
                 <div class="status-icon cmd adb-status" data-type="info" data-subtype="binary" data-cmd_id="#adb_connected_id#"
                     data-adb-used="#adb_used#"
-                    title="<i>Date de valeur : #adb_connected_valueDate#<br>Date de collecte : #adb_connected_collectDate#</i>">
+                    title="ADB || Date valeur : #adb_connected_valueDate# || Date collecte : #adb_connected_collectDate#">
                     <i class="fas fa-link"></i>
                     <span class="cmdValue" style="display:none;">#adb_connected_value#</span>
                 </div>
@@ -925,7 +916,7 @@
             <div class="status-item">
                 <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#is_on_id#"
                     data-power_on_id="#power_on_id#" data-power_off_id="#power_off_id#"
-                    title="Date de valeur : #is_on_valueDate#<br>Date de collecte : #is_on_collectDate#<br><br>ℹ️ Cliquer pour allumer/éteindre">
+                    title="Power || Date valeur : #is_on_valueDate# || Date collecte : #is_on_collectDate# || Cliquer pour allumer/éteindre">
                     <i class="fas fa-power-off"></i>
                     <span class="cmdValue" style="display:none;">#is_on_value#</span>
                 </div>
@@ -935,7 +926,7 @@
             <div class="status-item">
                 <div class="volume-indicator cmd" data-type="info" data-subtype="numeric"
                     data-cmd_id="#volume_level_id#"
-                    title="<i>Date de valeur : #volume_level_valueDate#<br>Date de collecte : #volume_level_collectDate#</i>">
+                    title="Volume || Date valeur : #volume_level_valueDate# || Date collecte : #volume_level_collectDate#">
                     <span class="cmdValue">#volume_level_value#</span>%
                 </div>
                 <span class="status-label">Volume</span>
@@ -944,7 +935,7 @@
             <div class="status-item">
                 <div class="status-icon cmd clickable" data-type="info" data-subtype="binary" data-cmd_id="#volume_muted_id#"
                     data-mute_on_id="#mute_on_id#" data-mute_off_id="#mute_off_id#"
-                    title="Date de valeur : #volume_muted_valueDate#<br>Date de collecte : #volume_muted_collectDate#<br><br>ℹ️ Cliquer pour activer/désactiver">
+                    title="Mute || Date valeur : #volume_muted_valueDate# || Date collecte : #volume_muted_collectDate# || Cliquer pour activer/désactiver">
                     <i class="fas fa-volume-mute"></i>
                     <span class="cmdValue" style="display:none;">#volume_muted_value#</span>
                 </div>
@@ -1091,7 +1082,7 @@
                 <span class="widget-info-label">App actuelle: </span>
                 <span class="widget-info-value cmd" data-type="info" data-subtype="string"
                     data-cmd_id="#current_app_id#"
-                    title="<i>Date de valeur : #current_app_valueDate#<br>Date de collecte : #current_app_collectDate#</i>">
+                    title="App actuelle || Date valeur : #current_app_valueDate# || Date collecte : #current_app_collectDate#">
                     <span class="cmdValue">#current_app_value#</span>
                 </span>
             </div>
@@ -1099,7 +1090,7 @@
                 <span class="widget-info-label">Dernière mise à jour: </span>
                 <span class="widget-info-value cmd" data-type="info" data-subtype="string"
                     data-cmd_id="#updatelasttime_id#"
-                    title="<i>Date de valeur : #updatelasttime_valueDate#<br>Date de collecte : #updatelasttime_collectDate#</i>">
+                    title="Dernière mise à jour || Date valeur : #updatelasttime_valueDate# || Date collecte : #updatelasttime_collectDate#">
                     <span class="cmdValue">#updatelasttime_value#</span>
                 </span>
             </div>
