@@ -116,22 +116,6 @@ if (!isConnect()) {
         </div>
     </fieldset>
     <fieldset>
-        <div>
-            <legend><i class="fas fa-paint-brush"></i> {{Apparence}}</legend>
-            <div class="form-group">
-                <label class="col-lg-3 control-label">{{Densité du widget par défaut}}
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Définit la densité par défaut pour tous les nouveaux équipements. Chaque équipement peut surcharger ce réglage individuellement.}}"></i></sup>
-                </label>
-                <div class="col-lg-2">
-                    <select class="configKey form-control" data-l1key="widget_density">
-                        <option value="standard" selected>{{Standard}}</option>
-                        <option value="compact">{{Compact}}</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </fieldset>
-    <fieldset>
         <div>        
             <legend><i class="fas fa-redo"></i> {{Réinitialisation}}</legend>
             <div class="form-group">
