@@ -140,6 +140,11 @@
             display: block;
         }
 
+        /* Masquer les commandes non visibles */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hidden-cmd {
+            display: none !important;
+        }
+
         /* Badge avant le texte pour les labels fixes */
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-label {
             position: relative;
@@ -346,6 +351,7 @@
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
+            justify-items: center;
             gap: 8px;
             margin: 10px 0;
             padding-top: 10px;
@@ -353,6 +359,7 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
+            flex: 0 0 48px;  /* Largeur fixe pour forcer répartition */
             background: #2a2a2a;
             border: 1px solid #404040;
             border-radius: 8px;
@@ -364,6 +371,7 @@
             justify-content: center;
             width: 52px;
             height: 52px;
+            box-sizing: border-box;  /* Inclure padding et border dans width/height */
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn:active {
@@ -715,14 +723,15 @@
                 grid-row: 2;
                 display: grid;
                 grid-template-columns: repeat(5, 1fr);
-                grid-template-rows: repeat(2, 1fr);
-                gap: 6px;
+                justify-items: center;
+                align-content: center;  /* Centrer verticalement quand 1 seule ligne */
+                gap: 4px;
                 padding-top: 0;
                 border-top: none;
                 margin: 0;
-                justify-self: center;
                 width: 100%;
-                max-width: 260px;
+                max-height: 108px;  /* 2 lignes: 52px + 4px gap + 52px */
+                overflow: hidden;
             }
 
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .section-divider {
@@ -767,12 +776,25 @@
                 grid-row: 2;
                 display: flex;
                 flex-direction: column;
+                justify-content: center;  /* Centrer verticalement */
                 gap: 0;
             }
 
             /* Réduire la taille de police des boutons HDMI en mode horizontal */
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .hdmi-btn {
                 font-size: 11px;
+            }
+
+            /* Réduire la taille des apps en mode horizontal */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .app-btn {
+                width: 44px;
+                height: 44px;
+                padding: 8px;
+            }
+
+            /* Ajuster max-height pour apps de 44px */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .apps-section {
+                max-height: 92px;  /* 2 lignes: 44px + 4px gap + 44px */
             }
 
             /* Colonne 3 - Lignes 1-4 : Commandes avancées (toute hauteur) */
@@ -1062,11 +1084,11 @@
         <div class="hdmi-media-container">
             <!-- HDMI inputs -->
             <div class="hdmi-section">
-                <button class="hdmi-btn" data-cmd_id="#input_id#" title="Changer de source">SOURCE</button>
-                <button class="hdmi-btn" data-cmd_id="#hdmi_1_id#" title="Entrée HDMI 1">HDMI 1</button>
-                <button class="hdmi-btn" data-cmd_id="#hdmi_2_id#" title="Entrée HDMI 2">HDMI 2</button>
-                <button class="hdmi-btn" data-cmd_id="#hdmi_3_id#" title="Entrée HDMI 3">HDMI 3</button>
-                <button class="hdmi-btn" data-cmd_id="#hdmi_4_id#" title="Entrée HDMI 4">HDMI 4</button>
+                <button class="hdmi-btn" data-cmd_id="#input_id#" title="Changer de source">INPUT</button>
+                <button class="hdmi-btn #hdmi_1_visible_class#" data-cmd_id="#hdmi_1_id#" title="Entrée HDMI 1">HDMI 1</button>
+                <button class="hdmi-btn #hdmi_2_visible_class#" data-cmd_id="#hdmi_2_id#" title="Entrée HDMI 2">HDMI 2</button>
+                <button class="hdmi-btn #hdmi_3_visible_class#" data-cmd_id="#hdmi_3_id#" title="Entrée HDMI 3">HDMI 3</button>
+                <button class="hdmi-btn #hdmi_4_visible_class#" data-cmd_id="#hdmi_4_id#" title="Entrée HDMI 4">HDMI 4</button>
             </div>
 
             <!-- Media controls -->

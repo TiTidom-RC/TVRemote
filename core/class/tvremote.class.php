@@ -2038,10 +2038,18 @@ class tvremote extends eqLogic {
                 if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
                     $replace['#' . $logicalId . '_visible_class#'] = $cmd->getIsVisible() ? 'visible' : '';
                 }
+                
+                // Add visibility class for HDMI commands
+                if (in_array($logicalId, ['hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = $cmd->getIsVisible() ? '' : 'hidden-cmd';
+                }
             } else {
                 $replace['#' . $logicalId . '_id#'] = '';
                 if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
                     $replace['#' . $logicalId . '_visible_class#'] = '';
+                }
+                if (in_array($logicalId, ['hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = 'hidden-cmd';
                 }
             }
         }
