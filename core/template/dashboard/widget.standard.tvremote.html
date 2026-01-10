@@ -118,6 +118,39 @@
             min-height: 32px;
         }
 
+        /* Badge de mise à jour */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .status-label {
+            position: relative;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .update-badge {
+            display: none;
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(76, 175, 80, 0.6);
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .update-badge.visible {
+            display: block;
+        }
+
+        /* Badge avant le texte pour les labels fixes */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-label {
+            position: relative;
+            display: inline-block;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .widget-info-label .update-badge {
+            left: -10px;
+            right: auto;
+        }
+
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .volume-nav-container {
             display: flex;
             justify-content: space-evenly;
@@ -883,7 +916,7 @@
                     <i class="fas fa-tv"></i>
                     <span class="cmdValue" style="display:none;">#online_value#</span>
                 </div>
-                <span class="status-label">En Ligne</span>
+                <span class="status-label">En Ligne<span class="update-badge"></span></span>
             </div>
 
             <div class="status-item">
@@ -893,7 +926,7 @@
                     <i class="fas fa-link"></i>
                     <span class="cmdValue" style="display:none;">#adb_connected_value#</span>
                 </div>
-                <span class="status-label">ADB</span>
+                <span class="status-label">ADB<span class="update-badge"></span></span>
             </div>
 
             <div class="status-item">
@@ -903,7 +936,7 @@
                     <i class="fas fa-power-off"></i>
                     <span class="cmdValue" style="display:none;">#is_on_value#</span>
                 </div>
-                <span class="status-label">Power</span>
+                <span class="status-label">Power<span class="update-badge"></span></span>
             </div>
 
             <div class="status-item">
@@ -912,7 +945,7 @@
                     title="<i>Date de valeur : #volume_level_valueDate#<br>Date de collecte : #volume_level_collectDate#</i>">
                     <span class="cmdValue">#volume_level_value#</span>%
                 </div>
-                <span class="status-label">Volume</span>
+                <span class="status-label">Volume<span class="update-badge"></span></span>
             </div>
 
             <div class="status-item">
@@ -922,7 +955,7 @@
                     <i class="fas fa-volume-mute"></i>
                     <span class="cmdValue" style="display:none;">#volume_muted_value#</span>
                 </div>
-                <span class="status-label">Mute</span>
+                <span class="status-label">Mute<span class="update-badge"></span></span>
             </div>
         </div>
 
@@ -1062,7 +1095,7 @@
         <!-- Widget info display -->
         <div class="widget-info-display">
             <div>
-                <span class="widget-info-label">App actuelle: </span>
+                <span class="widget-info-label"><span class="update-badge"></span>App actuelle: </span>
                 <span class="widget-info-value cmd" data-type="info" data-subtype="string"
                     data-cmd_id="#current_app_id#"
                     title="<i>Date de valeur : #current_app_valueDate#<br>Date de collecte : #current_app_collectDate#</i>">
@@ -1070,7 +1103,7 @@
                 </span>
             </div>
             <div>
-                <span class="widget-info-label">Dernière mise à jour: </span>
+                <span class="widget-info-label"><span class="update-badge"></span>Dernière mise à jour: </span>
                 <span class="widget-info-value cmd" data-type="info" data-subtype="string"
                     data-cmd_id="#updatelasttime_id#"
                     title="<i>Date de valeur : #updatelasttime_valueDate#<br>Date de collecte : #updatelasttime_collectDate#</i>">
@@ -1282,30 +1315,47 @@
             }
         }
 
+        // Store badge timeouts to manage 5s visibility
+        const badgeTimeouts = new Map()
+
         const updateCmdValue = (cmdId, value, displayValue) => {
             widgetRoot.querySelectorAll('[data-cmd_id="' + cmdId + '"]').forEach(element => {
                 const valueSpan = element.querySelector('.cmdValue')
                 if (valueSpan) {
-                        valueSpan.textContent = displayValue || value
+                    valueSpan.textContent = displayValue || value
 
-                        // Visual feedback
-                        element.classList.remove('cmd-updated')
-                        void element.offsetWidth
-                        element.classList.add('cmd-updated')
-                        setTimeout(() => element.classList.remove('cmd-updated'), 2000)
-                    }
-
-                    // Update binary attribute
-                    if (element.classList.contains('status-icon') && element.getAttribute('data-subtype') === 'binary') {
-                        element.setAttribute('data-cmd_value', value)
-                        
-                        // Special handling for ADB icon
-                        if (element.classList.contains('adb-status')) {
-                            updateAdbIcon()
+                    // Show update badge for all status changes
+                    const container = element.closest('.status-item') || element.closest('div')
+                    const badge = container?.querySelector('.update-badge')
+                    if (badge) {
+                        // Clear previous timeout if exists
+                        if (badgeTimeouts.has(badge)) {
+                            clearTimeout(badgeTimeouts.get(badge))
                         }
+                        
+                        // Show badge
+                        badge.classList.add('visible')
+                        
+                        // Hide after 5 seconds
+                        const timeoutId = setTimeout(() => {
+                            badge.classList.remove('visible')
+                            badgeTimeouts.delete(badge)
+                        }, 5000)
+                        badgeTimeouts.set(badge, timeoutId)
                     }
-                })
-            }
+                }
+
+                // Update binary attribute
+                if (element.classList.contains('status-icon') && element.getAttribute('data-subtype') === 'binary') {
+                    element.setAttribute('data-cmd_value', value)
+                    
+                    // Special handling for ADB icon
+                    if (element.classList.contains('adb-status')) {
+                        updateAdbIcon()
+                    }
+                }
+            })
+        }
 
             // ========================================
             // === INITIALIZATION ===

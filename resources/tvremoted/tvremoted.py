@@ -438,6 +438,20 @@ class EQRemoteADB(object):
                 self._logger.error("[EQRemoteADB][MAIN][%s] ADB Device is None", self._macAddr)
                 return
             
+            # Send initial ADB status: not connected at startup (will connect on-demand or in persistent mode)
+            # Don't send 'online' as we don't know TVRemote connection state here
+            currentTime = int(time.time())
+            currentTimeStr = EQRemote._format_timestamp(currentTime)
+            initial_data = {
+                'mac': self._macAddr,
+                'adb_connected': 0,
+                'updatelasttime': currentTimeStr,
+                'updatelasttimets': currentTime,
+                'realtime': 1
+            }
+            await self._jeedom_publisher.add_change('devicesRT::' + initial_data['mac'], initial_data)
+            self._logger.debug("[EQRemoteADB][MAIN][%s] Sending initial status: ADB not connected", self._macAddr)
+            
             while not self._config.is_ending:
                 try:
                     # Skip connection if not paired or pairing in progress
