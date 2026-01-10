@@ -1962,16 +1962,6 @@ class tvremote extends eqLogic {
         // Use standard template only
         $templatePath = dirname(__FILE__) . '/../template/' . $version . '/widget.standard.tvremote.html';
         
-        // Fallback to tvremote.html if new template not found (backward compatibility)
-        if (!file_exists($templatePath)) {
-            $templatePath = dirname(__FILE__) . '/../template/' . $version . '/tvremote.html';
-        }
-        
-        // Final fallback to dashboard version
-        if (!file_exists($templatePath)) {
-            $templatePath = dirname(__FILE__) . '/../template/dashboard/tvremote.html';
-        }
-        
         if (!file_exists($templatePath)) {
             log::add('tvremote', 'error', '[toHtml] Template file not found: ' . $templatePath);
             return parent::toHtml($_version);
