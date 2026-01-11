@@ -2070,11 +2070,110 @@ class tvremote extends eqLogic {
         if (!$hasVisibleAdvancedCmd && is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) {
             $hasVisibleAdvancedCmd = true;
         }
-        $replace['#advanced_commands_visible#'] = $hasVisibleAdvancedCmd ? 'visible' : '';
+        $replace['#advanced_commands_display#'] = $hasVisibleAdvancedCmd ? 'block' : 'none';
         
         // Get refresh command ID
         $refreshCmd = $this->getCmd('action', 'refresh');
         $replace['#refresh_id#'] = is_object($refreshCmd) ? $refreshCmd->getId() : '';
+        
+        // Generate custom ADB Shell commands HTML
+        $customCmds = [];
+        
+        // Collect action commands with cmdType = adb-shell
+        foreach ($this->getCmd('action') as $cmd) {
+            if ($cmd->getConfiguration('cmdType') === 'adb-shell' && $cmd->getIsVisible()) {
+                $customCmds[] = $cmd;
+            }
+        }
+        
+        // Collect info commands with cmdType = adb-shell
+        foreach ($this->getCmd('info') as $cmd) {
+            if ($cmd->getConfiguration('cmdType') === 'adb-shell' && $cmd->getIsVisible()) {
+                $customCmds[] = $cmd;
+            }
+        }
+        
+        // Sort by order
+        usort($customCmds, function($a, $b) {
+            return $a->getOrder() - $b->getOrder();
+        });
+        
+        // Generate HTML for custom action commands
+        $customActionsHtml = '';
+        foreach ($customCmds as $cmd) {
+            if ($cmd->getType() === 'action') {
+                $icon = $cmd->getDisplay('icon', '<i class="fas fa-terminal"></i>');
+                $cmdName = $cmd->getName();
+                $customActionsHtml .= '<button class="custom-action-btn cmd" data-type="action" data-subtype="' . $cmd->getSubType() . '" data-cmd_id="' . $cmd->getId() . '" title="' . $cmdName . '">';
+                $customActionsHtml .= $icon;
+                $customActionsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#custom_actions_html#'] = $customActionsHtml;
+        $replace['#custom_actions_visible#'] = !empty($customActionsHtml) ? 'visible' : '';
+        
+        // Generate HTML for custom info commands with their refresh buttons
+        $customInfosHtml = '';
+        foreach ($customCmds as $cmd) {
+            if ($cmd->getType() === 'info') {
+                $cmdName = $cmd->getName();
+                $cmdId = $cmd->getId();
+                $cmdValue = $cmd->execCmd();
+                $valueDate = $cmd->getValueDate();
+                $collectDate = $cmd->getCollectDate();
+                
+                // Format tooltip (HTML for dashboard, text for mobile)
+                if ($_version === 'dashboard') {
+                    $tooltip = '<i>' . htmlspecialchars($cmdName, ENT_QUOTES) . '<br>Date de valeur : ' . htmlspecialchars($valueDate, ENT_QUOTES) . '<br>Date de collecte : ' . htmlspecialchars($collectDate, ENT_QUOTES) . '<br><br>' . htmlspecialchars($cmdValue, ENT_QUOTES) . '</i>';
+                } else {
+                    $tooltip = htmlspecialchars($cmdName, ENT_QUOTES) . ' || Date valeur : ' . htmlspecialchars($valueDate, ENT_QUOTES) . ' || Date collecte : ' . htmlspecialchars($collectDate, ENT_QUOTES);
+                }
+                
+                // Find associated refresh command
+                $refreshCmdId = '';
+                foreach ($this->getCmd('action') as $refreshCmd) {
+                    if ($refreshCmd->getConfiguration('cmdType') === 'refresh-cmd' && 
+                        $refreshCmd->getConfiguration('cmdToRefresh') == $cmdId) {
+                        $refreshCmdId = $refreshCmd->getId();
+                        break;
+                    }
+                }
+                
+                $customInfosHtml .= '<div class="custom-info-item">';
+                $customInfosHtml .= '<span class="custom-info-label">' . $cmdName . ':</span>';
+                $customInfosHtml .= '<span class="custom-info-value">';
+                $customInfosHtml .= '<span class="cmdValue cmd" data-type="info" data-subtype="' . $cmd->getSubType() . '" data-cmd_id="' . $cmdId . '" data-cmd-name="' . htmlspecialchars($cmdName, ENT_QUOTES) . '" title="' . $tooltip . '">' . $cmdValue . '</span>';
+                $customInfosHtml .= '</span>';
+                if (!empty($refreshCmdId)) {
+                    $customInfosHtml .= '<span class="custom-refresh-btn cmd cursor" data-type="action" data-subtype="other" data-cmd_id="' . $refreshCmdId . '" title="Rafraîchir ' . $cmdName . '">';
+                    $customInfosHtml .= '<i class="fas fa-sync-alt"></i>';
+                    $customInfosHtml .= '</span>';
+                }
+                $customInfosHtml .= '</div>' . "\n";
+            }
+        }
+        $replace['#custom_infos_html#'] = $customInfosHtml;
+        $replace['#custom_infos_display#'] = !empty($customInfosHtml) ? 'block' : 'none';
+        
+        // Generate HTML for custom action commands (ACTIONS SECOND)
+        $customActionsHtml = '';
+        foreach ($customCmds as $cmd) {
+            if ($cmd->getType() === 'action') {
+                $icon = $cmd->getDisplay('icon', '<i class="fas fa-terminal"></i>');
+                $cmdName = $cmd->getName();
+                $customActionsHtml .= '<button class="custom-action-btn cmd" data-type="action" data-subtype="' . $cmd->getSubType() . '" data-cmd_id="' . $cmd->getId() . '" title="' . $cmdName . '">';
+                $customActionsHtml .= $icon;
+                $customActionsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#custom_actions_html#'] = $customActionsHtml;
+        $replace['#custom_actions_display#'] = !empty($customActionsHtml) ? 'flex' : 'none';
+        
+        // Set visibility flag for custom commands section
+        $replace['#custom_commands_display#'] = (count($customCmds) > 0) ? 'block' : 'none';
+        
+        // Set global visibility flag: visible if advanced commands OR custom commands are visible
+        $replace['#all_commands_display#'] = ($hasVisibleAdvancedCmd || count($customCmds) > 0) ? 'block' : 'none';
         
         // Generate apps HTML
         $appsHtml = '';
