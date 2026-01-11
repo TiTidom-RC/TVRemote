@@ -2172,6 +2172,9 @@ class tvremote extends eqLogic {
         // Set visibility flag for custom commands section
         $replace['#custom_commands_visible#'] = (count($customCmds) > 0) ? 'visible' : '';
         
+        // Set global visibility flag: visible if advanced commands OR custom commands are visible
+        $replace['#all_commands_visible#'] = ($hasVisibleAdvancedCmd || count($customCmds) > 0) ? 'visible' : '';
+        
         // Generate apps HTML
         $appsHtml = '';
         $appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];

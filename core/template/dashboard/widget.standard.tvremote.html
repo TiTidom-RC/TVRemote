@@ -452,7 +452,11 @@
             font-weight: bold;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands {
+        /* ======================== */
+        /* === All Commands (Advanced + Custom) === */
+        /* ======================== */
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands {
             margin-top: 15px;
             padding: 12px;
             background: #1a1a1a;
@@ -461,7 +465,7 @@
             display: none;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands.visible {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands.visible {
             display: block;
         }
 
@@ -505,7 +509,7 @@
             margin-top: 12px;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-input {
             width: 100%;
             margin: 8px 0;
             padding: 10px;
@@ -516,13 +520,13 @@
             font-size: 13px;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-input:focus {
             outline: none !important;
             border: 2px solid #2196F3 !important;
             box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4) !important;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-output {
             margin-top: 8px;
             padding: 10px;
             background: #0a0a0a;
@@ -539,12 +543,12 @@
             text-align: left;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output::selection {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-output::selection {
             background: #4CAF50;
             color: #000;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-label {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-label {
             color: #999;
             font-size: 11px;
             margin-bottom: 4px;
@@ -552,33 +556,17 @@
             display: block;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-group {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-group {
             display: none;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-group.visible {
-            display: block;
-        }
-
-        /* ======================== */
-        /* === Custom Commands === */
-        /* ======================== */
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-section {
-            margin-top: 15px;
-            padding: 12px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            border: 1px solid #333;
-            display: none;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-section.visible {
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands .cmd-group.visible {
             display: block;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-details {
             border: none;
+            margin-top: 15px;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-details summary {
@@ -891,25 +879,25 @@
             color: #4CAF50;
         }
 
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands {
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .all-commands {
             background: #f8f8f8;
             border-color: #d0d0d0;
         }
 
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input {
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .all-commands .cmd-input {
             background: #ffffff;
             border-color: #ccc;
             color: #2c2c2c;
         }
 
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-input:focus,
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands input.cmd-input:focus {
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .all-commands .cmd-input:focus,
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .all-commands input.cmd-input:focus {
             background: #f8f8f8 !important;
             border-color: #2196F3 !important;
             box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15) !important;
         }
 
-        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .advanced-commands .cmd-output {
+        div.eqLogic-widget.theme-light[data-eqLogic_uid="#uid#"] .all-commands .cmd-output {
             background: #f0f0f0;
             border-color: #d0d0d0;
             color: #4CAF50;
@@ -959,6 +947,7 @@
                 grid-template-columns: 0.8fr 1fr 1.2fr;
                 grid-template-rows: auto auto auto min-content;
                 gap: 6px;
+                overflow: visible;
             }
 
             /* Colonne 1-2 - Ligne 1 : Status */
@@ -1051,16 +1040,15 @@
                 /* 2 lignes: 40px + 4px gap + 40px */
             }
 
-            /* Masquer les commandes personnalisées en mode horizontal */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-section {
-                display: none !important;
-            }
-
-            /* Colonne 3 - Lignes 1-4 : Commandes avancées (toute hauteur) */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands {
+            /* Colonne 3 - Lignes 1-4 : Toutes les commandes (toute hauteur) */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands {
                 grid-column: 3;
                 grid-row: 1 / 5;
                 margin-top: 0;
+                height: 0;
+                min-height: 0;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
         }
 
@@ -1380,24 +1368,8 @@
             </div>
         </div>
 
-        <!-- Custom Commands Section -->
-        <div class="custom-commands-section #custom_commands_visible#">
-            <details class="custom-commands-details">
-                <summary>Commandes Personnalisées</summary>
-                <div class="custom-commands-content">
-                    <div class="custom-infos-list #custom_infos_visible#">
-                        #custom_infos_html#
-                    </div>
-
-                    <div class="custom-actions-grid #custom_actions_visible#">
-                        #custom_actions_html#
-                    </div>
-                </div>
-            </details>
-        </div>
-
-        <!-- Advanced Commands -->
-        <div class="advanced-commands #advanced_commands_visible#">
+        <!-- All Commands (Advanced + Custom) -->
+        <div class="all-commands #all_commands_visible#">
             <details class="advanced-commands-details">
                 <summary>Commandes Avancées</summary>
                 <div class="advanced-commands-content">
@@ -1424,6 +1396,19 @@
                         <div class="cmd-output cmd" data-type="info" data-subtype="string"
                             data-cmd_id="#adb_shell_output_id#"><span class="cmdValue">#adb_shell_output_value#</span>
                         </div>
+                    </div>
+                </div>
+            </details>
+
+            <details class="custom-commands-details #custom_commands_visible#">
+                <summary>Commandes Personnalisées</summary>
+                <div class="custom-commands-content">
+                    <div class="custom-infos-list #custom_infos_visible#">
+                        #custom_infos_html#
+                    </div>
+
+                    <div class="custom-actions-grid #custom_actions_visible#">
+                        #custom_actions_html#
                     </div>
                 </div>
             </details>
@@ -1491,6 +1476,34 @@
             // Initialize after DOM is ready
             setTimeout(initAdvancedCommandsPersistence, 50)
             setTimeout(initCustomCommandsPersistence, 50)
+
+            // ========================================
+            // === DYNAMIC HEIGHT FOR ALL-COMMANDS ===
+            // ========================================
+
+            const adjustAllCommandsHeight = () => {
+                const allCommandsDiv = widgetRoot.querySelector('.all-commands')
+                const tvremoteContent = widgetRoot.querySelector('.tvremote-content')
+                
+                if (allCommandsDiv && tvremoteContent) {
+                    // Only apply height constraint in horizontal mode (container width >= 500px)
+                    const widgetWidth = widgetRoot.offsetWidth
+                    
+                    if (widgetWidth >= 500) {
+                        // Horizontal mode: constrain height to grid height
+                        const gridHeight = tvremoteContent.offsetHeight
+                        // Subtract padding (12px top + 12px bottom) and border (1px top + 1px bottom)
+                        const availableHeight = gridHeight - 26
+                        allCommandsDiv.style.height = availableHeight + 'px'
+                    } else {
+                        // Vertical mode: remove height constraint
+                        allCommandsDiv.style.height = ''
+                    }
+                }
+            }
+
+            // Adjust height once on load (after DOM is fully rendered)
+            setTimeout(adjustAllCommandsHeight, 200)
 
             // ========================================
             // === BUTTON HANDLERS ===
@@ -1630,7 +1643,7 @@
 
             const updateCmdValue = (cmdId, value, displayValue, options = {}) => {
                 // Save scroll positions before update
-                const scrollableContainers = widgetRoot.querySelectorAll('.custom-commands-section, [style*="overflow"]')
+                const scrollableContainers = widgetRoot.querySelectorAll('.all-commands, [style*="overflow"]')
                 const scrollPositions = Array.from(scrollableContainers).map(container => ({
                     element: container,
                     scrollTop: container.scrollTop,
