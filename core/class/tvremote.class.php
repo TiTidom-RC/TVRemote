@@ -2070,7 +2070,7 @@ class tvremote extends eqLogic {
         if (!$hasVisibleAdvancedCmd && is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) {
             $hasVisibleAdvancedCmd = true;
         }
-        $replace['#advanced_commands_visible#'] = $hasVisibleAdvancedCmd ? 'visible' : '';
+        $replace['#advanced_commands_display#'] = $hasVisibleAdvancedCmd ? 'block' : 'none';
         
         // Get refresh command ID
         $refreshCmd = $this->getCmd('action', 'refresh');
@@ -2153,7 +2153,7 @@ class tvremote extends eqLogic {
             }
         }
         $replace['#custom_infos_html#'] = $customInfosHtml;
-        $replace['#custom_infos_visible#'] = !empty($customInfosHtml) ? 'visible' : '';
+        $replace['#custom_infos_display#'] = !empty($customInfosHtml) ? 'block' : 'none';
         
         // Generate HTML for custom action commands (ACTIONS SECOND)
         $customActionsHtml = '';
@@ -2167,13 +2167,13 @@ class tvremote extends eqLogic {
             }
         }
         $replace['#custom_actions_html#'] = $customActionsHtml;
-        $replace['#custom_actions_visible#'] = !empty($customActionsHtml) ? 'visible' : '';
+        $replace['#custom_actions_display#'] = !empty($customActionsHtml) ? 'flex' : 'none';
         
         // Set visibility flag for custom commands section
-        $replace['#custom_commands_visible#'] = (count($customCmds) > 0) ? 'visible' : '';
+        $replace['#custom_commands_display#'] = (count($customCmds) > 0) ? 'block' : 'none';
         
         // Set global visibility flag: visible if advanced commands OR custom commands are visible
-        $replace['#all_commands_visible#'] = ($hasVisibleAdvancedCmd || count($customCmds) > 0) ? 'visible' : '';
+        $replace['#all_commands_display#'] = ($hasVisibleAdvancedCmd || count($customCmds) > 0) ? 'block' : 'none';
         
         // Generate apps HTML
         $appsHtml = '';

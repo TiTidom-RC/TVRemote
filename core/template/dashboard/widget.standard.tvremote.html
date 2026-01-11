@@ -462,15 +462,20 @@
             background: #1a1a1a;
             border-radius: 8px;
             border: 1px solid #333;
-            display: none;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands.visible {
-            display: block;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details {
             border: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-details {
+            border: none;
+            margin-top: 15px;
+        }
+
+        /* Remove margin if advanced-commands is hidden */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details[style*="display: none"] + .custom-commands-details {
+            margin-top: 0;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary {
@@ -606,26 +611,16 @@
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-infos-list {
-            display: none;
             background: rgba(0, 0, 0, 0.3);
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 8px;
         }
 
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-infos-list.visible {
-            display: block;
-        }
-
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-actions-grid {
-            display: none;
             flex-wrap: wrap;
             justify-content: center;
             gap: 8px;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-actions-grid.visible {
-            display: flex;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-actions-grid:empty {
@@ -945,9 +940,10 @@
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
                 display: grid;
                 grid-template-columns: 0.8fr 1fr 1.2fr;
-                grid-template-rows: auto auto auto min-content;
+                grid-template-rows: 1fr 1fr 1fr min-content;
                 gap: 6px;
-                overflow: visible;
+                height: 100%;
+                overflow: hidden;
             }
 
             /* Colonne 1-2 - Ligne 1 : Status */
@@ -1045,7 +1041,7 @@
                 grid-column: 3;
                 grid-row: 1 / 5;
                 margin-top: 0;
-                height: 0;
+                height: 100%;
                 min-height: 0;
                 overflow-y: auto;
                 overflow-x: hidden;
@@ -1369,8 +1365,8 @@
         </div>
 
         <!-- All Commands (Advanced + Custom) -->
-        <div class="all-commands #all_commands_visible#">
-            <details class="advanced-commands-details">
+        <div class="all-commands" style="display: #all_commands_display#">
+            <details class="advanced-commands-details" style="display: #advanced_commands_display#">
                 <summary>Commandes Avancées</summary>
                 <div class="advanced-commands-content">
                     <div class="cmd-group #keycode_visible_class#">
@@ -1400,14 +1396,14 @@
                 </div>
             </details>
 
-            <details class="custom-commands-details #custom_commands_visible#">
+            <details class="custom-commands-details" style="display: #custom_commands_display#">
                 <summary>Commandes Personnalisées</summary>
                 <div class="custom-commands-content">
-                    <div class="custom-infos-list #custom_infos_visible#">
+                    <div class="custom-infos-list" style="display: #custom_infos_display#">
                         #custom_infos_html#
                     </div>
 
-                    <div class="custom-actions-grid #custom_actions_visible#">
+                    <div class="custom-actions-grid" style="display: #custom_actions_display#">
                         #custom_actions_html#
                     </div>
                 </div>
@@ -1476,34 +1472,6 @@
             // Initialize after DOM is ready
             setTimeout(initAdvancedCommandsPersistence, 50)
             setTimeout(initCustomCommandsPersistence, 50)
-
-            // ========================================
-            // === DYNAMIC HEIGHT FOR ALL-COMMANDS ===
-            // ========================================
-
-            const adjustAllCommandsHeight = () => {
-                const allCommandsDiv = widgetRoot.querySelector('.all-commands')
-                const tvremoteContent = widgetRoot.querySelector('.tvremote-content')
-                
-                if (allCommandsDiv && tvremoteContent) {
-                    // Only apply height constraint in horizontal mode (container width >= 500px)
-                    const widgetWidth = widgetRoot.offsetWidth
-                    
-                    if (widgetWidth >= 500) {
-                        // Horizontal mode: constrain height to grid height
-                        const gridHeight = tvremoteContent.offsetHeight
-                        // Subtract padding (12px top + 12px bottom) and border (1px top + 1px bottom)
-                        const availableHeight = gridHeight - 26
-                        allCommandsDiv.style.height = availableHeight + 'px'
-                    } else {
-                        // Vertical mode: remove height constraint
-                        allCommandsDiv.style.height = ''
-                    }
-                }
-            }
-
-            // Adjust height once on load (after DOM is fully rendered)
-            setTimeout(adjustAllCommandsHeight, 200)
 
             // ========================================
             // === BUTTON HANDLERS ===

@@ -428,15 +428,20 @@
             background: #1a1a1a;
             border-radius: 8px;
             border: 1px solid #333;
-            display: none;
-        }
-
-        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands.visible {
-            display: block;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details {
             border: none;
+        }
+
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .custom-commands-details {
+            border: none;
+            margin-top: 15px;
+        }
+
+        /* Remove margin if advanced-commands is hidden */
+        div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details[style*="display: none"] + .custom-commands-details {
+            margin-top: 0;
         }
 
         div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands-details summary {
@@ -917,8 +922,10 @@
             div.eqLogic-widget[data-eqLogic_uid="#uid#"] .tvremote-content {
                 display: grid;
                 grid-template-columns: 0.8fr 1fr 1.2fr;
-                grid-template-rows: auto auto auto min-content;
+                grid-template-rows: 1fr 1fr 1fr min-content;
                 gap: 8px;
+                height: 100%;
+                overflow: hidden;
             }
 
             /* Colonne 1-2 - Ligne 1 : Status */
@@ -1011,11 +1018,15 @@
                 /* 2 lignes: 44px + 4px gap + 44px */
             }
 
-            /* Colonne 3 - Lignes 1-4 : Commandes avancées (toute hauteur) */
-            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .advanced-commands {
+            /* Colonne 3 - Lignes 1-4 : Toutes les commandes (toute hauteur) */
+            div.eqLogic-widget[data-eqLogic_uid="#uid#"] .all-commands {
                 grid-column: 3;
                 grid-row: 1 / 5;
                 margin-top: 0;
+                height: 100%;
+                min-height: 0;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
         }
 
@@ -1363,8 +1374,8 @@
         </div>
 
         <!-- All Commands (Advanced + Custom) -->
-        <div class="all-commands #all_commands_visible#">
-            <details class="advanced-commands-details">
+        <div class="all-commands" style="display: #all_commands_display#">
+            <details class="advanced-commands-details" style="display: #advanced_commands_display#">
                 <summary>Commandes Avancées</summary>
                 <div class="advanced-commands-content">
                     <div class="cmd-group #keycode_visible_class#">
@@ -1394,14 +1405,14 @@
                 </div>
             </details>
 
-            <details class="custom-commands-details #custom_commands_visible#">
+            <details class="custom-commands-details" style="display: #custom_commands_display#">
                 <summary>Commandes Personnalisées</summary>
                 <div class="custom-commands-content">
-                    <div class="custom-infos-list #custom_infos_visible#">
+                    <div class="custom-infos-list" style="display: #custom_infos_display#">
                         #custom_infos_html#
                     </div>
 
-                    <div class="custom-actions-grid #custom_actions_visible#">
+                    <div class="custom-actions-grid" style="display: #custom_actions_display#">
                         #custom_actions_html#
                     </div>
                 </div>
