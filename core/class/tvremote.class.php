@@ -35,7 +35,7 @@ class tvremote extends eqLogic {
      */
     // public static $_encryptConfigKey = array('voiceRSSAPIKey');
 
-    /* ************************ Methodes statiques : Démon & Dépendances *************************** */
+    /* ************************ Méthodes statiques : Démon & Dépendances *************************** */
 
     public static function backupExclude() {
 		return [
@@ -51,15 +51,15 @@ class tvremote extends eqLogic {
         $script_restorePyEnv = 0;
         $script_restoreVenv = 0;
 
-        if (config::byKey('debugInstallUpdates', 'tvremote') == '1') {
+        if (config::byKey('debugInstallUpdates', 'tvremote') === '1') {
             $script_sysUpdates = 1;
             config::save('debugInstallUpdates', '0', 'tvremote');
         }
-        if (config::byKey('debugRestorePyEnv', 'tvremote') == '1') {
+        if (config::byKey('debugRestorePyEnv', 'tvremote') === '1') {
             $script_restorePyEnv = 1;
             config::save('debugRestorePyEnv', '0', 'tvremote');
         }
-        if (config::byKey('debugRestoreVenv', 'tvremote') == '1') {
+        if (config::byKey('debugRestoreVenv', 'tvremote') === '1') {
             $script_restoreVenv = 1;
             config::save('debugRestoreVenv', '0', 'tvremote');
         }
@@ -71,6 +71,7 @@ class tvremote extends eqLogic {
         $return = array();
         $return['log'] = log::getPathToLog(__CLASS__ . '_update');
         $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependency';
+        
         if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependency')) {
             $return['state'] = 'in_progress';
         } else {
@@ -106,7 +107,7 @@ class tvremote extends eqLogic {
     public static function deamon_start() {
         self::deamon_stop();
         $deamon_info = self::deamon_info();
-        if ($deamon_info['launchable'] != 'ok') {
+        if ($deamon_info['launchable'] !== 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
 
@@ -163,7 +164,7 @@ class tvremote extends eqLogic {
     public static function sendToDaemon($params) {
         try {
             $deamon_info = self::deamon_info();
-            if ($deamon_info['state'] != 'ok') {
+            if ($deamon_info['state'] !== 'ok') {
                 event::add('jeedom::alert', array(
                     'level' => 'danger',
                     'page' => 'tvremote',
@@ -183,7 +184,7 @@ class tvremote extends eqLogic {
         }
     }
 
-    /* ************************ Methodes static : PLUGIN *************************** */
+    /* ************************ Static Methods : PLUGIN *************************** */
 
     public static function getPluginVersion() {
         $pluginVersion = '0.0.0';
@@ -229,11 +230,24 @@ class tvremote extends eqLogic {
                 return false;
             }
             $lines = explode("\n", $data);
-            $nonEmptyLines = array_filter($lines, function($line) {
-                return trim($line) !== '';
-            });
-            $pythonDepString = join("|", $nonEmptyLines);
-            $pythonDepNum = count($nonEmptyLines);
+            $packages = array();
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '' || strpos($line, '#') === 0) {
+                    continue; // Ignore les lignes vides et les commentaires
+                }
+                // Retire les extras [async], [dev], etc.
+                $line = preg_replace('/\[[^\]]*\]/', '', $line);
+                // Normalise le nom du package : remplace - par _ (convention pip)
+                // Exemple: adb-shell==0.4.4 devient adb_shell==0.4.4
+                if (preg_match('/^([a-zA-Z0-9_-]+)(.*)$/', $line, $matches)) {
+                    $packageName = str_replace('-', '_', $matches[1]);
+                    $versionPart = $matches[2]; // ==0.4.4, >=1.0, etc.
+                    $packages[] = $packageName . $versionPart;
+                }
+            }
+            $pythonDepString = join("|", $packages);
+            $pythonDepNum = count($packages);
         }
         catch (\Exception $e) {
             log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
@@ -289,7 +303,8 @@ class tvremote extends eqLogic {
 
     public static function changeScanState($_scanState)
     {
-        if ($_scanState == "scanOn") {
+        log::add('tvremote', 'debug', '[changeScanState] Received state: ' . $_scanState);
+        if ($_scanState === "scanOn") {
             $value = array('cmd' => 'scanOn');
             self::sendToDaemon($value);
         } else {
@@ -333,6 +348,36 @@ class tvremote extends eqLogic {
         }
     }
 
+    public static function sendBeginPairingAdb($_mac=null, $_host=null)
+    {
+        if (is_null($_mac)) {
+            log::add('tvremote', 'debug', '[sendBeginPairingAdb] MAC is missing :: KO');
+            throw new Exception(__('MAC manquante', __FILE__));
+        }
+        
+        // Verify ADB prerequisites
+        $eqLogic = tvremote::byLogicalId($_mac, 'tvremote');
+        
+        if (!$eqLogic->getIsEnable()) {
+            log::add('tvremote', 'error', '[sendBeginPairingAdb] Équipement désactivé :: ' . $eqLogic->getHumanName());
+            throw new Exception(__('L\'équipement doit être activé pour procéder à l\'appairage ADB', __FILE__));
+        }
+        
+        if ($eqLogic->getConfiguration('use_adb', 0) != 1) {
+            log::add('tvremote', 'error', '[sendBeginPairingAdb] ADB non activé :: ' . $eqLogic->getHumanName());
+            throw new Exception(__('L\'option "Activer ADB" doit être cochée pour procéder à l\'appairage', __FILE__));
+        }
+        
+        $value = array(
+            'cmd' => 'sendBeginPairingAdb',
+            'mac' => $_mac,
+            'host' => $_host
+        );
+        self::sendToDaemon($value);
+        log::add('tvremote', 'info', '[sendBeginPairingAdb] Demande d\'appairage ADB envoyée :: MAC=' . $_mac . ' Host=' . $_host);
+        return 'OK';
+    }
+
     public static function createAndUpdTVRemoteFromScan($_data)
     {
         if (!isset($_data['mac'])) {
@@ -364,10 +409,9 @@ class tvremote extends eqLogic {
             $eqLogic->setConfiguration('lastscan', $_data['lastscan']);
             $eqLogic->save();
 
-            event::add('jeedom::alert', array(
-                'level' => 'success',
-                'page' => 'tvremote',
-                'message' => __('[FROM_SCAN] TVRemote AJOUTE :: ', __FILE__) . $_data['friendly_name'],
+            event::add('tvremote::scanResult', array(
+                'friendly_name' => $_data['friendly_name'],
+                'isNew' => 1
             ));
             log::add('tvremote', 'info', '[FROM_SCAN] TVRemote AJOUTE :: ' . $_data['friendly_name']);
             return $eqLogic;
@@ -383,10 +427,9 @@ class tvremote extends eqLogic {
             $newtvremote->setConfiguration('lastscan', $_data['lastscan']);
             $newtvremote->save();
 
-            event::add('jeedom::alert', array(
-                'level' => 'warning',
-                'page' => 'tvremote',
-                'message' => __('[FROM_SCAN] TVRemote MAJ :: ', __FILE__) . $_data['friendly_name'],
+            event::add('tvremote::scanResult', array(
+                'friendly_name' => $_data['friendly_name'],
+                'isNew' => 0
             ));
             log::add('tvremote', 'info', '[FROM_SCAN] TVRemote MAJ :: ' . $_data['friendly_name']);
             return $newtvremote;
@@ -409,19 +452,27 @@ class tvremote extends eqLogic {
             log::add('tvremote', 'error', '[SendOnStart] Démon non lancé (>10s) :: KO');
             return false;
         }
+        /** @var tvremote $eqLogic */
         foreach(self::byType('tvremote') as $eqLogic) {
             if ($eqLogic->getIsEnable()) {
                 $eqLogic->enableTVRemoteToDaemon();
+                
+                // Also enable ADB if use_adb option is enabled
+                $use_adb = $eqLogic->getConfiguration('use_adb', 0);
+                if ($use_adb == 1) {
+                    $eqLogic->enableADBToDaemon();
+                }
             }
             else {
                 $eqLogic->disableTVRemoteToDaemon();
+                $eqLogic->disableADBToDaemon();
             }   
         }
     }
 
     public function enableTVRemoteToDaemon()
     {
-        if ($this->getLogicalId() != '') {
+        if ($this->getLogicalId() !== '') {
             $value = array(
                 'cmd' => 'addtvremote',
                 'mac' => $this->getLogicalId(),
@@ -434,9 +485,25 @@ class tvremote extends eqLogic {
 
     }
 
+    public function enableADBToDaemon()
+    {
+        if ($this->getLogicalId() !== '') {
+            $value_adb = array(
+                'cmd' => 'addtvremote_adb',
+                'mac' => $this->getLogicalId(),
+                'host' => $this->getConfiguration('host'),
+                'friendly_name' => $this->getConfiguration('friendly_name'),
+                'adb_paired' => $this->getConfiguration('adb_paired_status', 0),
+                'adb_persistent_connection' => $this->getConfiguration('adb_persistent_connection', 0),
+                'adb_idle_timeout' => $this->getConfiguration('adb_idle_timeout', 5)
+            );
+            self::sendToDaemon($value_adb);
+        }
+    }
+
     public function disableTVRemoteToDaemon()
     {
-        if ($this->getLogicalId() != '') {
+        if ($this->getLogicalId() !== '') {
             $value = array(
                 'cmd' => 'removetvremote',
                 'mac' => $this->getLogicalId(),
@@ -445,6 +512,19 @@ class tvremote extends eqLogic {
                 'friendly_name' => $this->getConfiguration('friendly_name')
             );
             self::sendToDaemon($value);
+        }
+    }
+
+    public function disableADBToDaemon()
+    {
+        if ($this->getLogicalId() !== '') {
+            $value_adb = array(
+                'cmd' => 'removetvremote_adb',
+                'mac' => $this->getLogicalId(),
+                'host' => $this->getConfiguration('host'),
+                'friendly_name' => $this->getConfiguration('friendly_name')
+            );
+            self::sendToDaemon($value_adb);
         }
     }
 
@@ -476,7 +556,6 @@ class tvremote extends eqLogic {
             # message::add('tvremote', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' / ' . $device_host . ') :: ' . $pairing_exc, '', 'pairingExc' . $pairingExc->getId());
             # $pairingExc->setConfiguration('pairingState', $_data['pairing_value']);
             # $pairingExc->save();
-
         }
     }
 
@@ -492,6 +571,61 @@ class tvremote extends eqLogic {
             return false;
         }
         else {
+            // Get friendly name for logs
+            $friendlyName = $rtdevice->getConfiguration('friendly_name', $rtdevice->getName());
+            
+            // Auto-detect pairing status from device data
+            $needsSave = false;
+            $tvremoteStatusChanged = false;
+            $adbStatusChanged = false;
+            
+            // Detect TVRemote pairing: if we receive device info (online=1, is_on exists), pairing is valid
+            if (key_exists('online', $_data) && $_data['online'] === 1 && key_exists('is_on', $_data)) {
+                $currentStatus = $rtdevice->getConfiguration('tvremote_paired_status', 0);
+                if ($currentStatus == 0) {
+                    log::add('tvremote', 'info', '[REALTIME][REMOTE] Détection Automatique :: TVRemote appairé et connecté pour ' . $friendlyName . ' - passage du statut à 1');
+                    $rtdevice->setConfiguration('tvremote_paired_status', 1);
+                    $needsSave = true;
+                    $tvremoteStatusChanged = true;
+                }
+            }
+            
+            // Detect ADB pairing: if adb_connected=1, pairing is valid
+            if (key_exists('adb_connected', $_data) && $_data['adb_connected'] === 1) {
+                $currentStatus = $rtdevice->getConfiguration('adb_paired_status', 0);
+                if ($currentStatus == 0) {
+                    log::add('tvremote', 'info', '[REALTIME][REMOTE] Détection Automatique :: ADB appairé et connecté pour ' . $friendlyName . ' - passage du statut à 1');
+                    $rtdevice->setConfiguration('adb_paired_status', 1);
+                    $needsSave = true;
+                    $adbStatusChanged = true;
+                }
+            }
+            
+            // Save configuration if pairing status was updated
+            if ($needsSave) {
+                $rtdevice->save();
+                
+                // Send JavaScript events to update UI
+                if ($tvremoteStatusChanged) {
+                    event::add('tvremote::tvremotePairingResult', array(
+                        'mac' => $_data['mac'],
+                        'friendly_name' => $friendlyName,
+                        'tvremote_paired' => 1,
+                        'message' => 'Appairage TVRemote Détecté',
+                        'auto_detected' => true
+                    ));
+                }
+                if ($adbStatusChanged) {
+                    event::add('tvremote::adbPairingResult', array(
+                        'mac' => $_data['mac'],
+                        'friendly_name' => $friendlyName,
+                        'adb_paired' => 1,
+                        'message' => 'Appairage ADB Détecté',
+                        'auto_detected' => true
+                    ));
+                }
+            }
+            
             foreach($rtdevice->getCmd('info') as $cmd) {
                 $logicalId = $cmd->getLogicalId();
                 if (key_exists($logicalId, $_data)) {
@@ -505,19 +639,61 @@ class tvremote extends eqLogic {
         }
     }
 
-    public static function actionTVRemote($mac=null, $action=null, $message=null) {
-        log::add('tvremote', 'debug', '[ActionTVRemote] Infos :: ' . $mac . ' / ' . $action . " / " . $message);
+    public static function actionTVRemote($mac=null, $action=null, $message=null, $options=null) {
+        log::add('tvremote', 'debug', '[ActionTVRemote] Infos :: ' . $mac . ' / ' . $action . " / " . $message . " / options=" . $options);
+        
         $value = array(
             'cmd' => 'action', 
             'cmd_action' => $action, 
             'value' => $message, 
-            'mac' => $mac
+            'mac' => $mac,
+            'options' => $options
         );
+        
         log::add('tvremote', 'debug', '[ActionTVRemote] ArrayToSend :: ' . json_encode($value));
         self::sendToDaemon($value);
     }
 
-    /* ************************ Methodes static : JEEDOM *************************** */
+    public static function customCmdDecoder($customCmd=null) {
+        log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd :: ' . $customCmd);
+        try {
+            $data = json_decode("{" . $customCmd . "}", true);
+            log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Data :: ' . json_encode($data));
+            $resAction = '';
+            $resCmd = array();
+            $resOptions = array();
+
+            # Commande et Valeur
+            if (array_key_exists('action', $data)) {
+                $resAction = $data['action'];
+            }
+            // Value is optional - only add if present
+            if (array_key_exists('value', $data)) {
+                $resCmd['message'] = $data['value'];
+            }
+
+            # Options
+            $optionKeys = ['protocol'];
+            foreach ($optionKeys as $key) {
+                if (array_key_exists($key, $data)) {
+                    $resOptions[$key] = $data[$key];
+                }
+            }
+
+            // Only add title if there are options
+            if (!empty($resOptions)) {
+                $resCmd['title'] = substr(json_encode($resOptions), 1, -1);
+                log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Title :: ' . $resCmd['title']);
+            }
+            return [$resAction, $resCmd];
+        }
+        catch (Exception $e) {
+            log::add('tvremote', 'error', '[customCmdDecoder] CustomCmd Decoder Exception :: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /* ************************ Static Methods : JEEDOM *************************** */
 
     /*
      * Fonction exécutée automatiquement toutes les minutes par Jeedom
@@ -579,7 +755,8 @@ class tvremote extends eqLogic {
             $cmd->setEqLogic_id($this->getId());
 	        $cmd->setLogicalId('refresh');
             $cmd->setType('action');
-            $cmd->setSubType('other');    
+            $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -595,6 +772,23 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('online');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
+	        $cmd->setIsVisible(1);
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'adb_connected');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Connexion ADB', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('adb_connected');
+            $cmd->setType('info');
+            $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -610,6 +804,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('is_on');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -626,6 +821,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('power_on');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-volume-mute"></i>');
             $cmd->setValue($power_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -645,6 +841,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('power_off');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-volume-off"></i>');
             $cmd->setValue($power_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -667,6 +864,7 @@ class tvremote extends eqLogic {
             $cmd->setUnite('%');
             $cmd->setConfiguration('minValue', 0);
             $cmd->setConfiguration('maxValue', 100);
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'core::tile');
             $cmd->setTemplate('mobile', 'core::tile');
 	        $cmd->setIsVisible(1);
@@ -684,6 +882,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volume_muted');
             $cmd->setType('info');
             $cmd->setSubType('binary');
+            $cmd->setConfiguration('cmdType', 'plugin');
 	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
@@ -700,6 +899,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('mute_on');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-mute"></i>');
             $cmd->setValue($mute_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -719,6 +919,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('mute_off');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-off"></i>');
             $cmd->setValue($mute_cmd_id);
 	        $cmd->setIsVisible(1);
@@ -738,6 +939,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('menu');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-bars"></i>');
 	        $cmd->setIsVisible(1);
@@ -755,6 +957,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumedown');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-down icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -771,6 +974,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('volumeup');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-volume-up icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -787,6 +991,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('tv');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-tv"></i>');
 	        $cmd->setIsVisible(1);
@@ -804,6 +1009,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('info');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-info-circle"></i>');
 	        $cmd->setIsVisible(1);
@@ -821,6 +1027,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('up');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-up icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -837,6 +1044,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('settings');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-cogs"></i>');
 	        $cmd->setIsVisible(1);
@@ -854,6 +1062,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('left');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-left icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -870,6 +1079,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('center');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-dot-circle"></i>');
             $cmd->setDisplay('icon', '<i class="fas fa-check-circle"></i>');
 	        $cmd->setIsVisible(1);
@@ -887,6 +1097,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('right');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-right icon_blue"></i>');
 	        $cmd->setIsVisible(1);
@@ -904,6 +1115,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('back');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -921,6 +1133,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('down');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-arrow-circle-down icon_blue"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -937,6 +1150,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('home');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-home"></i>');
 	        $cmd->setIsVisible(1);
@@ -954,6 +1168,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('one');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -971,6 +1186,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('two');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -987,6 +1203,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('three');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1004,6 +1221,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('four');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1021,6 +1239,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('five');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1037,6 +1256,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('six');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1054,6 +1274,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('seven');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1071,6 +1292,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('eight');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1087,6 +1309,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('nine');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1104,6 +1327,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('channel_down');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-minus-square icon_blue"></i>');
 	        $cmd->setIsVisible(1);
@@ -1121,6 +1345,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('zero');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1137,6 +1362,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('channel_up');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-plus-square icon_blue"></i>');
 	        $cmd->setIsVisible(1);
@@ -1155,6 +1381,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('input');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1172,6 +1399,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_1');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1188,6 +1416,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_2');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1204,6 +1433,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_3');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1220,6 +1450,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('hdmi_4');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             # $cmd->setDisplay('icon', '<i class="fas fa-reply"></i>');
 	        $cmd->setIsVisible(1);
@@ -1237,6 +1468,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_previous');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-step-backward"></i>');
 	        $cmd->setIsVisible(1);
@@ -1254,6 +1486,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_rewind');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-backward"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1270,6 +1503,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_play');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-play"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1286,6 +1520,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_pause');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-pause"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1302,6 +1537,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_stop');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-stop"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1318,6 +1554,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_forward');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('icon', '<i class="fas fa-forward"></i>');
 	        $cmd->setIsVisible(1);
             $cmd->setOrder($orderCmd++);
@@ -1334,6 +1571,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('media_next');
             $cmd->setType('action');
             $cmd->setSubType('other');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setDisplay('icon', '<i class="fas fa-step-forward"></i>');
 	        $cmd->setIsVisible(1);
@@ -1342,23 +1580,6 @@ class tvremote extends eqLogic {
         } else {
             $orderCmd++;
         }
-
-        /* $cmd = $this->getCmd(null, 'media_eject');
-        if (!is_object($cmd)) {
-	        $cmd = new tvremoteCmd();
-            $cmd->setName(__('Media Eject', __FILE__));
-            $cmd->setEqLogic_id($this->getId());
-	        $cmd->setLogicalId('media_eject');
-            $cmd->setType('action');
-            $cmd->setSubType('other');
-            $cmd->setDisplay('forceReturnLineAfter', '1');
-            $cmd->setDisplay('icon', '<i class="fas fa-eject"></i>');
-	        $cmd->setIsVisible(1);
-            $cmd->setOrder($orderCmd++);
-            $cmd->save();
-        } else {
-            $orderCmd++;
-        } */
 
         $cmd = $this->getCmd(null, 'oqee');
         if (!is_object($cmd)) {
@@ -1370,6 +1591,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'oqee.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineBefore', '1');
@@ -1390,6 +1612,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'youtube.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1409,6 +1632,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'netflix.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1428,6 +1652,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'primevideo.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1447,6 +1672,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'disneyplus.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1466,6 +1692,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'mycanal.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1485,6 +1712,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'plex.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1504,6 +1732,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'appletv.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1523,6 +1752,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'orangetv.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
 	        $cmd->setIsVisible(1);
@@ -1542,6 +1772,7 @@ class tvremote extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('type', 'application');
             $cmd->setConfiguration('image', 'molotov.png');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setTemplate('dashboard', 'tvremote::tvremote-app');
             $cmd->setTemplate('mobile', 'tvremote::tvremote-app');
             $cmd->setDisplay('forceReturnLineAfter', '1');
@@ -1560,6 +1791,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('current_app');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(1);
@@ -1577,6 +1809,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('updatelasttime');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(1);
@@ -1594,6 +1827,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('updatelasttimets');
             $cmd->setType('info');
             $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(0);
@@ -1611,6 +1845,7 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('customcmd');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setDisplay('forceReturnLineAfter', '1');
 	        $cmd->setIsVisible(0);
@@ -1629,9 +1864,10 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('keycode');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineBefore', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "Key Code"));
+            $cmd->setDisplay('parameters', array("title_placeholder" => "Options", "message_placeholder" => "Key Code"));
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
@@ -1646,9 +1882,44 @@ class tvremote extends eqLogic {
 	        $cmd->setLogicalId('appcode');
             $cmd->setType('action');
             $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
             $cmd->setDisplay('forceReturnLineAfter', '1');
             $cmd->setIsVisible(0);
-            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "App Code"));
+            $cmd->setDisplay('parameters', array("title_placeholder" => "Options", "message_placeholder" => "App Code"));
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'adbshell');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('ADB Shell', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('adbshell');
+            $cmd->setType('action');
+            $cmd->setSubType('message');
+            $cmd->setConfiguration('cmdType', 'plugin');
+            $cmd->setDisplay('forceReturnLineAfter', '1');
+            $cmd->setIsVisible(0);
+            $cmd->setDisplay('parameters', array("title_disable" => "1", "title_placeholder" => "Options", "message_placeholder" => "ADB Command"));
+            $cmd->setOrder($orderCmd++);
+            $cmd->save();
+        } else {
+            $orderCmd++;
+        }
+
+        $cmd = $this->getCmd(null, 'adb_shell_output');
+        if (!is_object($cmd)) {
+	        $cmd = new tvremoteCmd();
+            $cmd->setName(__('Sortie ADB Shell', __FILE__));
+            $cmd->setEqLogic_id($this->getId());
+	        $cmd->setLogicalId('adb_shell_output');
+            $cmd->setType('info');
+            $cmd->setSubType('string');
+            $cmd->setConfiguration('cmdType', 'plugin');
+	        $cmd->setIsVisible(0);
             $cmd->setOrder($orderCmd++);
             $cmd->save();
         } else {
@@ -1657,14 +1928,273 @@ class tvremote extends eqLogic {
 
         if ($this->getIsEnable()) {
             $this->enableTVRemoteToDaemon();
+            
+            // Manage ADB based on use_adb option
+            $use_adb = $this->getConfiguration('use_adb', 0);
+            if ($use_adb == 1) {
+                $this->enableADBToDaemon();
+            } else {
+                $this->disableADBToDaemon();
+            }
         } else {
             $this->disableTVRemoteToDaemon();
+            $this->disableADBToDaemon();
         }
     }
 
     // Fonction exécutée automatiquement avant la suppression de l'équipement
     public function preRemove() {
         $this->disableTVRemoteToDaemon();
+        $this->disableADBToDaemon();
+    }
+
+    /**
+     * Generate custom HTML widget for the remote control
+     * This method renders a complete remote control interface instead of individual command widgets
+     */
+    public function toHtml($_version = 'dashboard') {
+        $replace = $this->preToHtml($_version);
+        if (!is_array($replace)) {
+            return $replace;
+        }
+        $version = jeedom::versionAlias($_version);
+        
+        // Use standard template only
+        $templatePath = dirname(__FILE__) . '/../template/' . $version . '/widget.standard.tvremote.html';
+        
+        if (!file_exists($templatePath)) {
+            log::add('tvremote', 'error', '[toHtml] Template file not found: ' . $templatePath);
+            return parent::toHtml($_version);
+        }
+        
+        // Load template content
+        $html = file_get_contents($templatePath);
+        
+        // Detect current theme
+        $themeConfig = jeedom::getThemeConfig();
+        $currentTheme = ($_version == 'mobile') ? $themeConfig['current_mobile_theme'] : $themeConfig['current_desktop_theme'];
+        $isDarkTheme = (strpos(strtolower($currentTheme), 'dark') !== false || strpos(strtolower($currentTheme), 'night') !== false);
+        
+        // Replace placeholders
+        $replace['#id#'] = $this->getId();
+        $replace['#name#'] = $this->getName();
+        $replace['#name_display#'] = $this->getName();
+        $replace['#version#'] = $_version;
+        $replace['#theme_class#'] = $isDarkTheme ? 'theme-dark' : 'theme-light';
+        
+        // Add ADB usage configuration
+        $replace['#adb_used#'] = $this->getConfiguration('use_adb', '0');
+        
+        // Get command IDs and values for info commands
+        $cmdMap = [
+            'online' => ['id' => '', 'value' => '0'],
+            'adb_connected' => ['id' => '', 'value' => '0'],
+            'is_on' => ['id' => '', 'value' => '0'],
+            'volume_level' => ['id' => '', 'value' => '0'],
+            'volume_muted' => ['id' => '', 'value' => '0'],
+            'current_app' => ['id' => '', 'value' => '-'],
+            'updatelasttime' => ['id' => '', 'value' => ''],
+            'adb_shell_output' => ['id' => '', 'value' => '']
+        ];
+        
+        foreach ($cmdMap as $logicalId => $data) {
+            $cmd = $this->getCmd('info', $logicalId);
+            if (is_object($cmd)) {
+                $cmdMap[$logicalId]['id'] = $cmd->getId();
+                $cmdMap[$logicalId]['value'] = $cmd->execCmd();
+            }
+        }
+        
+        // Add command IDs, values and dates to replace array
+        foreach ($cmdMap as $logicalId => $data) {
+            $cmd = $this->getCmd('info', $logicalId);
+            $replace['#' . $logicalId . '_id#'] = $data['id'];
+            $replace['#' . $logicalId . '_value#'] = $data['value'];
+            
+            // Add dates for tooltips
+            if (is_object($cmd)) {
+                $replace['#' . $logicalId . '_valueDate#'] = $cmd->getValueDate();
+                $replace['#' . $logicalId . '_collectDate#'] = $cmd->getCollectDate();
+            } else {
+                $replace['#' . $logicalId . '_valueDate#'] = '';
+                $replace['#' . $logicalId . '_collectDate#'] = '';
+            }
+        }
+        
+        // Get IDs for action commands (navigation, volume, etc.)
+        $actionLogicalIds = ['up', 'down', 'left', 'right', 'center', 'menu', 'volumeup', 'volumedown', 
+                             'tv', 'back', 'home', 'settings', 'one', 'two', 'three', 'four', 'five', 
+                             'six', 'seven', 'eight', 'nine', 'zero', 'channel_up', 'channel_down',
+                             'input', 'hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4',
+                             'previous', 'rewind', 'play', 'pause', 'stop', 'forward', 'next',
+                             'mute_on', 'mute_off', 'power_on', 'power_off', 'keycode', 'appcode', 'adbshell'];
+        
+        foreach ($actionLogicalIds as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd)) {
+                $replace['#' . $logicalId . '_id#'] = $cmd->getId();
+                
+                // Add visibility class for advanced commands
+                if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = $cmd->getIsVisible() ? 'visible' : '';
+                }
+                
+                // Add visibility class for HDMI commands
+                if (in_array($logicalId, ['hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = $cmd->getIsVisible() ? '' : 'hidden-cmd';
+                }
+            } else {
+                $replace['#' . $logicalId . '_id#'] = '';
+                if (in_array($logicalId, ['keycode', 'appcode', 'adbshell'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = '';
+                }
+                if (in_array($logicalId, ['hdmi_1', 'hdmi_2', 'hdmi_3', 'hdmi_4'])) {
+                    $replace['#' . $logicalId . '_visible_class#'] = 'hidden-cmd';
+                }
+            }
+        }
+        
+        // Add visibility class for adb_shell_output info command
+        $adbOutputCmd = $this->getCmd('info', 'adb_shell_output');
+        $replace['#adb_shell_output_visible_class#'] = (is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) ? 'visible' : '';
+        
+        // Show advanced commands block only if at least one command is visible
+        $hasVisibleAdvancedCmd = false;
+        foreach (['keycode', 'appcode', 'adbshell'] as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd) && $cmd->getIsVisible()) {
+                $hasVisibleAdvancedCmd = true;
+                break;
+            }
+        }
+        if (!$hasVisibleAdvancedCmd && is_object($adbOutputCmd) && $adbOutputCmd->getIsVisible()) {
+            $hasVisibleAdvancedCmd = true;
+        }
+        $replace['#advanced_commands_display#'] = $hasVisibleAdvancedCmd ? 'block' : 'none';
+        
+        // Get refresh command ID
+        $refreshCmd = $this->getCmd('action', 'refresh');
+        $replace['#refresh_id#'] = is_object($refreshCmd) ? $refreshCmd->getId() : '';
+        
+        // Generate custom ADB Shell commands HTML
+        $customCmds = [];
+        
+        // Collect action commands with cmdType = adb-shell
+        foreach ($this->getCmd('action') as $cmd) {
+            if ($cmd->getConfiguration('cmdType') === 'adb-shell' && $cmd->getIsVisible()) {
+                $customCmds[] = $cmd;
+            }
+        }
+        
+        // Collect info commands with cmdType = adb-shell
+        foreach ($this->getCmd('info') as $cmd) {
+            if ($cmd->getConfiguration('cmdType') === 'adb-shell' && $cmd->getIsVisible()) {
+                $customCmds[] = $cmd;
+            }
+        }
+        
+        // Sort by order
+        usort($customCmds, function($a, $b) {
+            return $a->getOrder() - $b->getOrder();
+        });
+        
+        // Generate HTML for custom action commands
+        $customActionsHtml = '';
+        foreach ($customCmds as $cmd) {
+            if ($cmd->getType() === 'action') {
+                $icon = $cmd->getDisplay('icon', '<i class="fas fa-terminal"></i>');
+                $cmdName = $cmd->getName();
+                $customActionsHtml .= '<button class="custom-action-btn cmd" data-type="action" data-subtype="' . $cmd->getSubType() . '" data-cmd_id="' . $cmd->getId() . '" title="' . $cmdName . '">';
+                $customActionsHtml .= $icon;
+                $customActionsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#custom_actions_html#'] = $customActionsHtml;
+        $replace['#custom_actions_visible#'] = !empty($customActionsHtml) ? 'visible' : '';
+        
+        // Generate HTML for custom info commands with their refresh buttons
+        $customInfosHtml = '';
+        foreach ($customCmds as $cmd) {
+            if ($cmd->getType() === 'info') {
+                $cmdName = $cmd->getName();
+                $cmdId = $cmd->getId();
+                $cmdValue = $cmd->execCmd();
+                $valueDate = $cmd->getValueDate();
+                $collectDate = $cmd->getCollectDate();
+                
+                // Format tooltip (HTML for dashboard, text for mobile)
+                if ($_version === 'dashboard') {
+                    $tooltip = '<i>' . htmlspecialchars($cmdName, ENT_QUOTES) . '<br>Date de valeur : ' . htmlspecialchars($valueDate, ENT_QUOTES) . '<br>Date de collecte : ' . htmlspecialchars($collectDate, ENT_QUOTES) . '<br><br>' . htmlspecialchars($cmdValue, ENT_QUOTES) . '</i>';
+                } else {
+                    $tooltip = htmlspecialchars($cmdName, ENT_QUOTES) . ' || Date valeur : ' . htmlspecialchars($valueDate, ENT_QUOTES) . ' || Date collecte : ' . htmlspecialchars($collectDate, ENT_QUOTES);
+                }
+                
+                // Find associated refresh command
+                $refreshCmdId = '';
+                foreach ($this->getCmd('action') as $refreshCmd) {
+                    if ($refreshCmd->getConfiguration('cmdType') === 'refresh-cmd' && 
+                        $refreshCmd->getConfiguration('cmdToRefresh') == $cmdId) {
+                        $refreshCmdId = $refreshCmd->getId();
+                        break;
+                    }
+                }
+                
+                $customInfosHtml .= '<div class="custom-info-item">';
+                $customInfosHtml .= '<span class="custom-info-label">' . $cmdName . ':</span>';
+                $customInfosHtml .= '<span class="custom-info-value">';
+                $customInfosHtml .= '<span class="cmdValue cmd" data-type="info" data-subtype="' . $cmd->getSubType() . '" data-cmd_id="' . $cmdId . '" data-cmd-name="' . htmlspecialchars($cmdName, ENT_QUOTES) . '" title="' . $tooltip . '">' . $cmdValue . '</span>';
+                $customInfosHtml .= '</span>';
+                if (!empty($refreshCmdId)) {
+                    $customInfosHtml .= '<span class="custom-refresh-btn cmd cursor" data-type="action" data-subtype="other" data-cmd_id="' . $refreshCmdId . '" title="Rafraîchir ' . $cmdName . '">';
+                    $customInfosHtml .= '<i class="fas fa-sync-alt"></i>';
+                    $customInfosHtml .= '</span>';
+                }
+                $customInfosHtml .= '</div>' . "\n";
+            }
+        }
+        $replace['#custom_infos_html#'] = $customInfosHtml;
+        $replace['#custom_infos_display#'] = !empty($customInfosHtml) ? 'block' : 'none';
+        
+        // Generate HTML for custom action commands (ACTIONS SECOND)
+        $customActionsHtml = '';
+        foreach ($customCmds as $cmd) {
+            if ($cmd->getType() === 'action') {
+                $icon = $cmd->getDisplay('icon', '<i class="fas fa-terminal"></i>');
+                $cmdName = $cmd->getName();
+                $customActionsHtml .= '<button class="custom-action-btn cmd" data-type="action" data-subtype="' . $cmd->getSubType() . '" data-cmd_id="' . $cmd->getId() . '" title="' . $cmdName . '">';
+                $customActionsHtml .= $icon;
+                $customActionsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#custom_actions_html#'] = $customActionsHtml;
+        $replace['#custom_actions_display#'] = !empty($customActionsHtml) ? 'flex' : 'none';
+        
+        // Set visibility flag for custom commands section
+        $replace['#custom_commands_display#'] = (count($customCmds) > 0) ? 'block' : 'none';
+        
+        // Set global visibility flag: visible if advanced commands OR custom commands are visible
+        $replace['#all_commands_display#'] = ($hasVisibleAdvancedCmd || count($customCmds) > 0) ? 'block' : 'none';
+        
+        // Generate apps HTML
+        $appsHtml = '';
+        $appLogicalIds = ['oqee', 'youtube', 'netflix', 'primevideo', 'disneyplus', 'mycanal', 'plex', 'appletv', 'orangetv', 'molotov'];
+        foreach ($appLogicalIds as $logicalId) {
+            $cmd = $this->getCmd('action', $logicalId);
+            if (is_object($cmd) && $cmd->getIsVisible()) {
+                $imgSrc = $cmd->getConfiguration('image', $logicalId . '.png');
+                $appsHtml .= '<button class="app-btn cmd" data-type="action" data-subtype="other" data-cmd_id="' . $cmd->getId() . '" data-logical_id="' . $logicalId . '" title="' . $cmd->getName() . '">';
+                $appsHtml .= '<img src="plugins/tvremote/data/images/' . $imgSrc . '" alt="' . $cmd->getName() . '">';
+                $appsHtml .= '</button>' . "\n";
+            }
+        }
+        $replace['#apps_html#'] = $appsHtml;
+        
+        // Replace all placeholders in the template
+        foreach ($replace as $key => $value) {
+            $html = str_replace($key, $value, $html);
+        }
+        
+        return $html;
     }
 }
 
@@ -1674,6 +2204,19 @@ class tvremoteCmd extends cmd {
 
     public static $_widgetPossibility = array('custom' => true);
 
+    /**
+     * Refresh an info command by executing its ADB Shell command
+     * Similar to SSH-Manager refreshInfo()
+     */
+    public function refreshInfo() {
+        if ($this->getType() != 'info' || trim($this->getConfiguration('adb-shell-command')) == '') {
+            log::add('tvremote', 'warning', '[' . $this->getEqLogic()->getName() . '][' . $this->getName() . '] Refresh :: Type not info or ADB Shell Command empty');
+            return;
+        }
+        
+        log::add('tvremote', 'debug', '[' . $this->getEqLogic()->getName() . '][' . $this->getName() . '] Refreshing info command');
+        $this->getEqLogic()->checkAndUpdateCmd($this, $this->execute());
+    }
 
     // Exécution d'une commande
     public function execute($_options = array()) {
@@ -1682,28 +2225,121 @@ class tvremoteCmd extends cmd {
         
         log::add('tvremote', 'debug', '[CMD] LogicalId :: ' . $logicalId);
 
-        if ( $this->getType() == "action" ) {
-            if (in_array($logicalId, ["keycode", "appcode"])) {
+        if ( $this->getType() === "action" ) {
+            // Check if this is a custom ADB Shell command
+            $adbShellCommand = $this->getConfiguration('adb-shell-command', '');
+            if (!empty(trim($adbShellCommand))) {
+                log::add('tvremote', 'debug', '[CMD] Custom ADB Shell Command :: ' . $adbShellCommand);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC)) {
+                    // Force protocol to ADB for custom shell commands
+                    $options = '"protocol":"adb"';
+                    tvremote::actionTVRemote($deviceMAC, 'shell', $adbShellCommand, $options);
+                    return true;
+                }
+            }
+            
+            // Check if this is a refresh command for a specific info command
+            $cmdToRefresh = $this->getConfiguration('cmdToRefresh', '');
+            if (!empty($cmdToRefresh)) {
+                /** @var tvremoteCmd $cmd */
+                $cmd = cmd::byId($cmdToRefresh);
+                if (is_object($cmd)) {
+                    log::add('tvremote', 'info', '[' . $eqLogic->getName() . '][' . $cmd->getName() . '] ' . __('Refresh de la commande', __FILE__));
+                    $cmd->refreshInfo();
+                    return;
+                }
+            }
+            
+            // Gestion de customcmd en premier
+            if (in_array($logicalId, ["customcmd"])) {
+                if (isset($_options['message'])) {
+                    log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                    $decoded = tvremote::customCmdDecoder($_options['message']);
+                    if ($decoded !== null) {
+                        [$logicalId, $_options] = $decoded;
+                        log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' (Custom Decoded Message) :: ' . json_encode($_options));
+                    } else {
+                        log::add('tvremote', 'error', '[CMD] Échec du décodage de customcmd');
+                        return false;
+                    }
+                }
+                else {
+                    log::add('tvremote', 'debug', '[CMD] Il manque un paramètre pour lancer la commande '. $logicalId);
+                    return false;
+                }
+            }
+            
+            // Extraire message et title (options) des options, comme dans TTSCast
+            $message = isset($_options['message']) ? $_options['message'] : null;
+            $options = isset($_options['title']) ? $_options['title'] : null;
+            
+            if (in_array($logicalId, ["keycode", "appcode", "adbshell"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
-                if (isset($deviceMAC) && isset($_options['message'])) {
-                    tvremote::actionTVRemote($deviceMAC, $logicalId, $_options['message']);
+                if (isset($deviceMAC) && isset($message)) {
+                    // Pour adbshell, forcer protocol=adb et changer logicalId en shell
+                    if ($logicalId === "adbshell") {
+                        $logicalId = "shell";
+                        // Ajouter protocol:adb aux options si pas déjà présent
+                        if (empty($options)) {
+                            $options = '"protocol":"adb"';
+                        } else {
+                            // Vérifier si protocol est déjà défini
+                            if (strpos($options, '"protocol"') === false) {
+                                $options = '"protocol":"adb",' . $options;
+                            }
+                        }
+                    }
+                    tvremote::actionTVRemote($deviceMAC, $logicalId, $message, $options);
                 }
                 else {
                     log::add('tvremote', 'debug', '[CMD - Key/App Code] Il manque un paramètre pour lancer la commande '. $logicalId);
                 }                
-            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "appletv", "orangetv", "molotov", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero", "media_next", "media_stop", "media_pause", "media_play", "media_rewind", "media_forward", "media_previous"])) {
+            } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "appletv", "orangetv", "molotov", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero", "media_next", "media_stop", "media_pause", "media_play", "media_rewind", "media_forward", "media_previous", "shell"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
-                    tvremote::actionTVRemote($deviceMAC, $logicalId);
+                    // Pour shell, le message est requis
+                    if ($logicalId === "shell") {
+                        if (isset($message)) {
+                            tvremote::actionTVRemote($deviceMAC, $logicalId, $message, $options);
+                        } else {
+                            log::add('tvremote', 'debug', '[CMD - Shell] Il manque le paramètre message pour la commande shell');
+                        }
+                    } else {
+                        tvremote::actionTVRemote($deviceMAC, $logicalId, null, $options);
+                    }
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
                 log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                // Refresh all info commands with custom ADB Shell commands
+                foreach ($eqLogic->getCmd('info') as $cmd) {
+                    $adbShellCommand = $cmd->getConfiguration('adb-shell-command', '');
+                    if (!empty(trim($adbShellCommand))) {
+                        log::add('tvremote', 'info', '[' . $eqLogic->getName() . '][' . $cmd->getName() . '] Refresh All');
+                        /** @var tvremoteCmd $cmd */
+                        $cmd->refreshInfo();
+                    }
+                }
             }
             else {
                 throw new Exception(__('Commande Action non implémentée actuellement', __FILE__));    
             }
+		} elseif ($this->getType() === "info") {
+            // Handle info commands with custom ADB Shell commands
+            $adbShellCommand = $this->getConfiguration('adb-shell-command', '');
+            if (!empty(trim($adbShellCommand))) {
+                log::add('tvremote', 'debug', '[CMD-INFO] Custom ADB Shell Info :: ' . $adbShellCommand);
+                $deviceMAC = $eqLogic->getLogicalId();
+                if (isset($deviceMAC)) {
+                    $options = '"protocol":"adb","cmd_id":"' . $this->getId() . '"';
+                    tvremote::actionTVRemote($deviceMAC, 'shell', $adbShellCommand, $options);
+                    // The result will be updated via jeetvremote.php callback
+                    return $this->execCmd();
+                }
+            }
+            throw new Exception(__('Commande Info non implémentée actuellement', __FILE__));
 		} else {
 			throw new Exception(__('Commande non implémentée actuellement', __FILE__));
 		}

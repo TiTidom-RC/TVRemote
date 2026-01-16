@@ -71,7 +71,7 @@ if (!isConnect()) {
             <div class="form-group">
                 <label class="col-lg-3 control-label">{{Force la réinitialisation de PyEnv}}
                     <sup><i class="fas fa-ban tooltips" style="color:var(--al-danger-color)!important;" title="{{Les dépendances devront être relancées après la sauvegarde de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitilsation de l'environnement Python utilisé par le plugin}}"></i></sup>
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitialisation de l'environnement Python utilisé par le plugin}}"></i></sup>
                 </label>
                 <div class="col-lg-2">
                     <input type="checkbox" class="configKey" data-l1key="debugRestorePyEnv" />
@@ -80,7 +80,7 @@ if (!isConnect()) {
             <div class="form-group">
                 <label class="col-lg-3 control-label">{{Force la réinitialisation de Venv}}
                     <sup><i class="fas fa-ban tooltips" style="color:var(--al-danger-color)!important;" title="{{Les dépendances devront être relancées après la sauvegarde de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitilsation de l'environnement Venv utilisé par le plugin}}"></i></sup>
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Permet de forcer la réinitialisation de l'environnement Venv utilisé par le plugin}}"></i></sup>
                 </label>
                 <div class="col-lg-2">
                     <input type="checkbox" class="configKey" data-l1key="debugRestoreVenv" />
@@ -112,15 +112,28 @@ if (!isConnect()) {
 			            <option value="3.0">{{Lent --- (x3)}}</option>
 			        </select>
 	            </div>
-            </div>        
-            <legend><i class="fas fa-tv"></i> {{Remote TV (Télécommande)}}</legend>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset>
+        <div>        
+            <legend><i class="fas fa-redo"></i> {{Réinitialisation}}</legend>
             <div class="form-group">
-                <label class="col-lg-3 control-label">{{Effacer le Certificat / Clé}}
-                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>    
-                    <sup><i class="fas fa-question-circle tooltips" title="{{Effacer le certificat et la clé générés au premier appairage à un équipement}}"></i></sup>
+                <label class="col-lg-3 control-label">{{Certificat TVRemote}}
+                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après cette action}}"></i></sup>    
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Supprime le certificat et la clé générés lors du premier appairage. Nécessite un nouvel appairage de tous les équipements TVRemote}}"></i></sup>
                 </label>
                 <div class="col-lg-1">
-                    <a class="btn btn-danger customclass-resettvcertkey"><i class="fas fa-trash-alt"></i> {{Effacer Cert/Key}}</a>
+                    <a class="btn btn-danger customclass-resettvcertkey"><i class="fas fa-trash-alt"></i> {{Supprimer}}</a>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-lg-3 control-label">{{Certificat ADB}}
+                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après cette action}}"></i></sup>    
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Supprime le certificat généré pour ADB. Nécessite un nouvel appairage de tous les équipements ADB}}"></i></sup>
+                </label>
+                <div class="col-lg-1">
+                    <a class="btn btn-danger customclass-resetadbkeys"><i class="fas fa-trash-alt"></i> {{Supprimer}}</a>
                 </div>
             </div>
         </div>
@@ -128,24 +141,33 @@ if (!isConnect()) {
 </form>
 
 <script>
-    $('.customclass-resettvcertkey').on('click', function () {
-        $.ajax({
-            type: "POST",
-            url: "plugins/tvremote/core/ajax/tvremote.ajax.php",
-            data: {
-                action: "resetTVCertKey"
-            },
-            dataType: 'json',
-            error: function (request, status, error) {
-                handleAjaxError(request, status, error);
-            },
-            success: function (data) {
-                if (data.state != 'ok') {
-                    $('#div_alert').showAlert({ message: data.result, level: 'danger' });
-                    return;
-                }
-                $('#div_alert').showAlert({ message: '{{Reset TV Cert (OK)}} :: ' + data.result, level: 'success' });
+(function() {
+  'use strict'
+  
+  const AJAX_URL = 'plugins/tvremote/core/ajax/tvremote.ajax.php'
+  
+  function setupResetButton(selector, action, successMessage) {
+    for (const element of document.querySelectorAll(selector)) {
+      element.addEventListener('click', () => {
+        domUtils.ajax({
+          type: 'POST',
+          url: AJAX_URL,
+          data: { action },
+          dataType: 'json',
+          error: (request, status, error) => handleAjaxError(request, status, error),
+          success: (data) => {
+            if (data.state !== 'ok') {
+              jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+              return
             }
-        });
-    });
+            jeedomUtils.showAlert({ message: `${successMessage} :: ${data.result}`, level: 'success' })
+          }
+        })
+      })
+    }
+  }
+  
+  setupResetButton('.customclass-resettvcertkey', 'resetTVCertKey', '{{Reset TV Cert (OK)}}')
+  setupResetButton('.customclass-resetadbkeys', 'resetAdbKeys', '{{Reset ADB Keys (OK)}}')
+})()
 </script>

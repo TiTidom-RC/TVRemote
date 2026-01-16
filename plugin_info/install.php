@@ -56,7 +56,7 @@ function tvremote_install() {
     $dependencyInfo = tvremote::dependancy_info();
     if (!isset($dependencyInfo['state'])) {
         message::add('tvremote', __('Veuillez vérifier les dépendances', __FILE__));
-    } elseif ($dependencyInfo['state'] == 'nok') {
+    } elseif ($dependencyInfo['state'] === 'nok') {
         try {
             $plugin = plugin::byId('tvremote');
             $plugin->dependancy_install();
@@ -71,7 +71,7 @@ function tvremote_update() {
     $pluginVersion = tvremote::getPluginVersion();
     config::save('pluginVersion', $pluginVersion, 'tvremote');
 
-    if (config::byKey('disableUpdateMsg', 'tvremote', '0') == '0') {
+    if (config::byKey('disableUpdateMsg', 'tvremote', '0') === '0') {
         message::removeAll('tvremote');
         message::add('tvremote', 'Mise à jour du plugin TV Remote (Version : ' . $pluginVersion . ')', null, null);
     }
@@ -106,7 +106,7 @@ function tvremote_update() {
     $dependencyInfo = tvremote::dependancy_info();
     if (!isset($dependencyInfo['state'])) {
         message::add('tvremote', __('Veuillez vérifier les dépendances', __FILE__));
-    } elseif ($dependencyInfo['state'] == 'nok') {
+    } elseif ($dependencyInfo['state'] === 'nok') {
         try {
             $plugin = plugin::byId('tvremote');
             $plugin->dependancy_install();
