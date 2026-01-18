@@ -239,7 +239,7 @@ class tvremote extends eqLogic {
                 // Normalise le nom du package : remplace - par _ (convention pip)
                 // Exemple: adb-shell==0.4.4 devient adb_shell==0.4.4
                 if (preg_match('/^([a-zA-Z0-9_-]+)(.*)$/', $line, $matches)) {
-                    $packageName = str_replace('-', '_', $matches[1]);
+                    $packageName = preg_replace('/[-_]/', '[-_]', $matches[1]);
                     $versionPart = $matches[2]; // ==0.4.4, >=1.0, etc.
                     $packages[] = $packageName . $versionPart;
                 }
