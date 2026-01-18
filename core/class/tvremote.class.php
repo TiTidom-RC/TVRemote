@@ -77,12 +77,27 @@ class tvremote extends eqLogic {
         } else {
             if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests|python3\-setuptools|python3\-dev|python3\-venv"') < 4) {
                 $return['state'] = 'nok';
+                log::add('tvremote', 'debug', '[Dependancy] System packages missing (python3-requests, python3-setuptools, python3-dev, or python3-venv)');
             } elseif (!file_exists(self::PYTHON3_PATH)) {
                 $return['state'] = 'nok';
-            } elseif (exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewc "' . config::byKey('pythonDepString', 'tvremote', '', true) . '"') < config::byKey('pythonDepNum', 'tvremote', 0, true)) {
-                $return['state'] = 'nok';
+                log::add('tvremote', 'debug', '[Dependancy] Python venv executable not found at: ' . self::PYTHON3_PATH);
             } else {
-                $return['state'] = 'ok';
+                $expectedCount = config::byKey('pythonDepNum', 'tvremote', 0, true);
+                $pythonDepString = config::byKey('pythonDepString', 'tvremote', '', true);
+                $cmd = system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewci "' . $pythonDepString . '"';
+                $foundCount = exec($cmd);
+
+                if ($foundCount < $expectedCount) {
+                    $return['state'] = 'nok';
+                    log::add('tvremote', 'debug', '[Dependancy] Missing Dependencies. Found: ' . $foundCount . ' / Expected: ' . $expectedCount);
+                    log::add('tvremote', 'debug', '[Dependancy] Regex used: ' . $pythonDepString);
+                    // Log actual pip freeze content for debugging
+                    $pipFreeze = shell_exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze');
+                    log::add('tvremote', 'debug', '[Dependancy] Pip Freeze Output: ' . str_replace(PHP_EOL, ' | ', trim($pipFreeze)));
+                } else {
+                    $return['state'] = 'ok';
+                    log::add('tvremote', 'debug', '[Dependancy] All found ! State : OK');
+                }
             }
         }
         return $return;
@@ -244,6 +259,7 @@ class tvremote extends eqLogic {
                     $packages[] = $packageName . $versionPart;
                 }
             }
+            $packages = array_unique($packages);
             $pythonDepString = join("|", $packages);
             $pythonDepNum = count($packages);
         } catch (\Exception $e) {
