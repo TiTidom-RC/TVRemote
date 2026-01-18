@@ -77,10 +77,10 @@ class tvremote extends eqLogic {
         } else {
             if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests|python3\-setuptools|python3\-dev|python3\-venv"') < 4) {
                 $return['state'] = 'nok';
-                log::add('tvremote', 'debug', '[Dependancy] System packages missing (python3-requests, python3-setuptools, python3-dev, or python3-venv)');
+                log::add('tvremote', 'debug', '[Python-Dep] System packages missing (python3-requests, python3-setuptools, python3-dev, or python3-venv)');
             } elseif (!file_exists(self::PYTHON3_PATH)) {
                 $return['state'] = 'nok';
-                log::add('tvremote', 'debug', '[Dependancy] Python venv executable not found at: ' . self::PYTHON3_PATH);
+                log::add('tvremote', 'debug', '[Python-Dep] Python venv executable not found at: ' . self::PYTHON3_PATH);
             } else {
                 $expectedCount = config::byKey('pythonDepNum', 'tvremote', 0, true);
                 $pythonDepString = config::byKey('pythonDepString', 'tvremote', '', true);
@@ -89,14 +89,14 @@ class tvremote extends eqLogic {
 
                 if ($foundCount < $expectedCount) {
                     $return['state'] = 'nok';
-                    log::add('tvremote', 'debug', '[Dependancy] Missing Dependencies. Found: ' . $foundCount . ' / Expected: ' . $expectedCount);
-                    log::add('tvremote', 'debug', '[Dependancy] Regex used: ' . $pythonDepString);
+                    log::add('tvremote', 'debug', '[Python-Dep] Missing Dependencies. Found: ' . $foundCount . ' / Expected: ' . $expectedCount);
+                    log::add('tvremote', 'debug', '[Python-Dep] Regex used: ' . $pythonDepString);
                     // Log actual pip freeze content for debugging
                     $pipFreeze = shell_exec(system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze');
-                    log::add('tvremote', 'debug', '[Dependancy] Pip Freeze Output: ' . str_replace(PHP_EOL, ' | ', trim($pipFreeze)));
+                    log::add('tvremote', 'debug', '[Python-Dep] Pip Freeze Output: ' . str_replace(PHP_EOL, ' | ', trim($pipFreeze)));
                 } else {
                     $return['state'] = 'ok';
-                    log::add('tvremote', 'debug', '[Dependancy] All found ! State : OK');
+                    log::add('tvremote', 'debug', '[Python-Dep] All found ! State : OK');
                 }
             }
         }
@@ -265,7 +265,7 @@ class tvremote extends eqLogic {
         } catch (\Exception $e) {
             log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
         }
-        log::add('tvremote', 'debug', '[Python-Dep] PythonDepString / PythonDepNum :: ' . $pythonDepString . " / " . $pythonDepNum);
+        log::add('tvremote', 'debug', '[Python-Dep] Validated dependencies regex : ' . $pythonDepString . " / Expected packages count : " . $pythonDepNum);
         config::save('pythonDepString', $pythonDepString, 'tvremote');
         config::save('pythonDepNum', $pythonDepNum, 'tvremote');
         return true;
