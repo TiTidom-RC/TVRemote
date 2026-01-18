@@ -84,6 +84,7 @@ class tvremote extends eqLogic {
             } else {
                 $expectedCount = config::byKey('pythonDepNum', 'tvremote', 0, true);
                 $pythonDepString = config::byKey('pythonDepString', 'tvremote', '', true);
+
                 $cmd = system::getCmdSudo() . self::PYTHON3_PATH . ' -m pip freeze | grep -Ewci "' . $pythonDepString . '"';
                 $foundCount = exec($cmd);
 
@@ -96,7 +97,7 @@ class tvremote extends eqLogic {
                     log::add('tvremote', 'debug', '[Python-Dep] Pip Freeze Output: ' . str_replace(PHP_EOL, ' | ', trim($pipFreeze)));
                 } else {
                     $return['state'] = 'ok';
-                    log::add('tvremote', 'debug', '[Python-Dep] Dependencies checked. State : OK');
+                    log::add('tvremote', 'debug', '[Python-Dep] Dependencies installed. State : OK');
                 }
             }
         }
@@ -251,8 +252,8 @@ class tvremote extends eqLogic {
                 }
                 // Retire les extras [async], [dev], etc.
                 $line = preg_replace('/\[[^\]]*\]/', '', $line);
-                // Normalise le nom du package : remplace - par _ (convention pip)
-                // Exemple: adb-shell==0.4.4 devient adb_shell==0.4.4
+                // Normalise le nom du package pour regex : remplace - ou _ par [-_] (pour supporter les incohérences pip)
+                // Exemple: adb-shell==0.4.4 devient adb[-_]shell==0.4.4
                 if (preg_match('/^([a-zA-Z0-9_-]+)(.*)$/', $line, $matches)) {
                     $packageName = preg_replace('/[-_]/', '[-_]', $matches[1]);
                     $versionPart = $matches[2]; // ==0.4.4, >=1.0, etc.
@@ -262,12 +263,19 @@ class tvremote extends eqLogic {
             $packages = array_unique($packages);
             $pythonDepString = join("|", $packages);
             $pythonDepNum = count($packages);
+
+            if (config::byKey('pythonDepString', 'tvremote') != $pythonDepString) {
+                config::save('pythonDepString', $pythonDepString, 'tvremote');
+            }
+            if (config::byKey('pythonDepNum', 'tvremote') != $pythonDepNum) {
+                config::save('pythonDepNum', $pythonDepNum, 'tvremote');
+            }
         } catch (\Exception $e) {
             log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
+            return false;
         }
         log::add('tvremote', 'debug', '[Python-Dep] Validated dependencies regex : ' . $pythonDepString . " / Expected packages count : " . $pythonDepNum);
-        config::save('pythonDepString', $pythonDepString, 'tvremote');
-        config::save('pythonDepNum', $pythonDepNum, 'tvremote');
+
         return true;
     }
 
