@@ -96,7 +96,7 @@ class tvremote extends eqLogic {
                     log::add('tvremote', 'debug', '[Python-Dep] Pip Freeze Output: ' . str_replace(PHP_EOL, ' | ', trim($pipFreeze)));
                 } else {
                     $return['state'] = 'ok';
-                    log::add('tvremote', 'debug', '[Python-Dep] All found ! State : OK');
+                    log::add('tvremote', 'debug', '[Python-Dep] Dependencies checked. State : OK');
                 }
             }
         }
