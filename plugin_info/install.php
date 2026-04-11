@@ -114,6 +114,32 @@ function tvremote_update() {
             message::add('tvremote', __('Une erreur est survenue à la mise à jour automatique des dépendances. Vérifiez les logs et relancez les dépendances manuellement', __FILE__));
         }
     }
+
+    // Nettoyage des anciens fichiers et répertoires obsolètes
+    $pluginDir = dirname(__DIR__);
+    try {
+        $pathsToRemove = array(
+            // Accepte fichiers ET répertoires (rm -rf) — ajouter ici les chemins à supprimer à chaque mise à jour
+            $pluginDir . '/core/php/.htaccess',
+        );
+        foreach ($pathsToRemove as $path) {
+            log::add('tvremote', 'debug', '[CLEANUP] Vérification du chemin : ' . $path);
+            if (file_exists($path)) {
+                $output = array();
+                $returnVar = 0;
+                exec('rm -rf ' . escapeshellarg($path) . ' 2>&1', $output, $returnVar);
+                if ($returnVar !== 0) {
+                    log::add('tvremote', 'warning', '[CLEANUP_KO] Echec suppression "' . $path . '" (Code: ' . $returnVar . ') : ' . implode(' ', $output));
+                } else {
+                    log::add('tvremote', 'info', '[CLEANUP_OK] Chemin supprimé : ' . $path);
+                }
+            } else {
+                log::add('tvremote', 'debug', '[CLEANUP_NA] Chemin non trouvé, aucune action : ' . $path);
+            }
+        }
+    } catch (Exception $e) {
+        log::add('tvremote', 'warning', '[CLEANUP_KO] Erreur lors du nettoyage : ' . $e->getMessage());
+    }
 }
 
 // Fonction exécutée automatiquement après la suppression du plugin
