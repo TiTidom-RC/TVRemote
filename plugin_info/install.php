@@ -115,6 +115,14 @@ function tvremote_update() {
         }
     }
 
+    // Migration v1.3.17 : initialisation de enable_ime pour les équipements existants
+    foreach (eqLogic::byType('tvremote') as $_eqLogic) {
+        if ($_eqLogic->getConfiguration('enable_ime', '') === '') {
+            $_eqLogic->setConfiguration('enable_ime', 1);
+            $_eqLogic->save();
+        }
+    }
+
     // Nettoyage des anciens fichiers et répertoires obsolètes
     $pluginDir = dirname(__DIR__);
     try {
