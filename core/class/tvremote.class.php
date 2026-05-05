@@ -423,6 +423,7 @@ class tvremote extends eqLogic {
             $eqLogic->setConfiguration('host', $_data['host']);
             $eqLogic->setConfiguration('port', $_data['port']);
             $eqLogic->setConfiguration('lastscan', $_data['lastscan']);
+            $eqLogic->setConfiguration('enable_ime', 1);
             $eqLogic->save();
 
             event::add('tvremote::scanResult', array(
