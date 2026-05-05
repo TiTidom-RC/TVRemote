@@ -206,7 +206,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Clavier Virtuel (IME)}}
                                     <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>
-                                    <sup><i class="fas fa-question-circle tooltips" title="{{Coché (par défaut) : Permet de récupérer la « Current App » (Nom de l'application en cours) et d'envoyer du texte via le clavier virtuel.<br>Décoché : A utiliser si votre TV affiche « Utiliser le clavier sur votre smartphone » au lieu du clavier intégré.}}"></i></sup>
+                                    <sup><i class="fas fa-question-circle tooltips" title="{{Activer (par défaut) : Permet l'usage de la commande « Current App » (Application en cours) et d'envoyer du texte.<br>Désactiver : Si votre TV affiche « Utiliser le clavier sur votre smartphone » au lieu du clavier intégré.}}"></i></sup>
                                 </label>
                                 <div class="col-sm-6">
                                     <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="enable_ime" checked />{{Activer}}</label>
