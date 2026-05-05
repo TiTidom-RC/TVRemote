@@ -202,11 +202,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                     <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="lastscan" readonly />
                                 </div>
                             </div>
-                            <legend><i class="fas fa-sliders-h"></i> {{Compatibilité}}</legend>
+                            <legend><i class="fas fa-sliders-h"></i> {{Paramètres avancés}}</legend>
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">{{Clavier Virtuel (IME)}}
                                     <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>
-                                    <sup><i class="fas fa-question-circle tooltips" title="{{Coché : le clavier virtuel de la télécommande est activé (nécessaire pour la remontée de l'application active).<br>Décoché : désactive le clavier virtuel, à utiliser si votre TV affiche systématiquement « Utiliser le clavier sur votre smartphone » au lieu du clavier GBoard.}}"></i></sup>
+                                    <sup><i class="fas fa-question-circle tooltips" title="{{Coché (par défaut) : Permet de récupérer la « Current App » (Nom de l'application en cours) et d'envoyer du texte via le clavier virtuel.<br>Décoché : A utiliser si votre TV affiche « Utiliser le clavier sur votre smartphone » au lieu du clavier intégré.}}"></i></sup>
                                 </label>
                                 <div class="col-sm-6">
                                     <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="enable_ime" checked />{{Activer}}</label>
