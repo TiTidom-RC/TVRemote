@@ -485,6 +485,11 @@ class tvremote extends eqLogic {
     }
 
     public function enableTVRemoteToDaemon() {
+        $deamon_info = self::deamon_info();
+        if ($deamon_info['state'] !== 'ok') {
+            log::add('tvremote', 'debug', '[enableTVRemoteToDaemon] Démon non démarré, envoi ignoré pour ' . $this->getLogicalId());
+            return;
+        }
         if ($this->getLogicalId() !== '') {
             $value = array(
                 'cmd' => 'addtvremote',
@@ -499,6 +504,11 @@ class tvremote extends eqLogic {
     }
 
     public function enableADBToDaemon() {
+        $deamon_info = self::deamon_info();
+        if ($deamon_info['state'] !== 'ok') {
+            log::add('tvremote', 'debug', '[enableADBToDaemon] Démon non démarré, envoi ignoré pour ' . $this->getLogicalId());
+            return;
+        }
         if ($this->getLogicalId() !== '') {
             $value_adb = array(
                 'cmd' => 'addtvremote_adb',
@@ -514,6 +524,11 @@ class tvremote extends eqLogic {
     }
 
     public function disableTVRemoteToDaemon() {
+        $deamon_info = self::deamon_info();
+        if ($deamon_info['state'] !== 'ok') {
+            log::add('tvremote', 'debug', '[disableTVRemoteToDaemon] Démon non démarré, envoi ignoré pour ' . $this->getLogicalId());
+            return;
+        }
         if ($this->getLogicalId() !== '') {
             $value = array(
                 'cmd' => 'removetvremote',
@@ -527,6 +542,11 @@ class tvremote extends eqLogic {
     }
 
     public function disableADBToDaemon() {
+        $deamon_info = self::deamon_info();
+        if ($deamon_info['state'] !== 'ok') {
+            log::add('tvremote', 'debug', '[disableADBToDaemon] Démon non démarré, envoi ignoré pour ' . $this->getLogicalId());
+            return;
+        }
         if ($this->getLogicalId() !== '') {
             $value_adb = array(
                 'cmd' => 'removetvremote_adb',
