@@ -490,7 +490,8 @@ class tvremote extends eqLogic {
                 'mac' => $this->getLogicalId(),
                 'host' => $this->getConfiguration('host'),
                 'port' => $this->getConfiguration('port'),
-                'friendly_name' => $this->getConfiguration('friendly_name')
+                'friendly_name' => $this->getConfiguration('friendly_name'),
+                'enable_ime' => $this->getConfiguration('enable_ime', 1)
             );
             self::sendToDaemon($value);
         }
