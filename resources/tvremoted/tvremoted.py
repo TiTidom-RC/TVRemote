@@ -47,12 +47,13 @@ except ImportError as e:
 class EQRemote(object):
     """This is the Remote Device class"""
 
-    def __init__(self, _mac, _host, _config: Config, _jeedom_publisher) -> None:
+    def __init__(self, _mac, _host, _config: Config, _jeedom_publisher, _enable_ime: bool = True) -> None:
         # Standard Init of class
         self._config = _config
         self._remote = None
         self._macAddr = _mac
         self._host = _host
+        self._enable_ime = _enable_ime
         self._logger = logging.getLogger(__name__)
         self._jeedom_publisher = _jeedom_publisher
         self._loop = asyncio.get_running_loop()
@@ -79,7 +80,7 @@ class EQRemote(object):
         try:
             self._logger.debug("[EQRemote][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
             
-            self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host)
+            self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host, enable_ime=self._enable_ime)
             
             if self._remote is None:
                 self._logger.error("[EQRemote][Remote] Object Creation Failed :: Object is None !")
@@ -983,7 +984,9 @@ class TVRemoted:
                         # Create new device
                         self._config.remote_mac.append(message['mac'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote MAC :: %s', str(self._config.remote_mac))
-                        device = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher)
+                        _enable_ime = int(message.get('enable_ime', 1)) != 0
+                        self._logger.debug('[DAEMON][SOCKET] TVRemote %s (%s) :: IME (virtual keyboard) %s', message['friendly_name'], message['mac'], 'enabled' if _enable_ime else 'disabled')
+                        device = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher, _enable_ime)
                         self._config.remote_devices[message['mac']] = device
                         # Launch main loop as async task (non-blocking)
                         device._main_task = asyncio.create_task(device.main())
