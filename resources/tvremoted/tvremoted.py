@@ -78,7 +78,7 @@ class EQRemote(object):
         You should start the asyncio task with this function like this: `asyncio.createtask(myEQRemote.main())`
         """
         try:
-            self._logger.debug("[EQRemote][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
+            self._logger.info("[EQRemote][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
             
             self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host, enable_ime=self._enable_ime)
             
@@ -421,7 +421,7 @@ class EQRemoteADB(object):
         You should start the asyncio task with this function like this: `asyncio.create_task(myEQRemoteADB.main())`
         """
         try:
-            self._logger.debug("[EQRemoteADB][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
+            self._logger.info("[EQRemoteADB][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
             
             # Small initial delay to let the network and device stabilize after daemon start
             await asyncio.sleep(2)
@@ -952,28 +952,28 @@ class TVRemoted:
                     else:
                         self._logger.warning('[DAEMON][SOCKET] Unknown Action :: %s', message['cmd_action'])
             elif message['cmd'] == "scanOn":
-                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOn') 
+                self._logger.info('[DAEMON][SOCKET] ScanState = scanOn') 
                 self._config.scanmode = True
                 self._config.scanmode_start = int(time.time())
                 if self._jeedom_publisher is not None:
                     await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOn'})
             elif message['cmd'] == "scanOff":
-                self._logger.debug('[DAEMON][SOCKET] ScanState = scanOff')
+                self._logger.info('[DAEMON][SOCKET] ScanState = scanOff')
                 self._config.scanmode = False
                 if self._jeedom_publisher is not None:
                     await self._jeedom_publisher.send_to_jeedom({'scanState': 'scanOff'})
             elif message['cmd'] == "sendBeginPairing":
-                self._logger.debug('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s / %s', message['mac'], message['host'], message['port'])
+                self._logger.info('[DAEMON][SOCKET] Begin Pairing for (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
                 await self._pairing(message['mac'], message['host'], message['port'])
             elif message['cmd'] == "sendBeginPairingAdb":
-                self._logger.debug('[DAEMON][SOCKET] Begin ADB Pairing for (Mac :: %s) :: %s', message['mac'], message['host'])
+                self._logger.info('[DAEMON][SOCKET] Begin ADB Pairing for (Mac :: %s) :: %s', message['mac'], message['host'])
                 await self._pairing_adb(message['mac'], message['host'])
             elif message['cmd'] == "sendPairCode":
                 self._logger.debug('[DAEMON][SOCKET] Received Pairing Code (Mac :: %s) :: %s', message['mac'], message['paircode'])
                 self._config.pairing_code = message['paircode']
             elif message['cmd'] == "addtvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
-                    self._logger.debug('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    self._logger.info('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
                     if message['host'] not in self._config.known_hosts:
                         self._config.known_hosts.append(message['host'])
                         self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to KNOWN Devices :: %s', str(self._config.known_hosts))
@@ -996,7 +996,7 @@ class TVRemoted:
                         self._logger.debug('[DAEMON][SOCKET] TVRemote device %s already exists', message['mac'])
             elif message['cmd'] == "removetvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
-                    self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    self._logger.info('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
                     if message['host'] in self._config.known_hosts:
                         self._config.known_hosts.remove(message['host'])
                         self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from KNOWN Devices :: %s', str(self._config.known_hosts))
@@ -1020,7 +1020,7 @@ class TVRemoted:
                             del self._config.remote_devices[message['mac']]
             elif message['cmd'] == "addtvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
-                    self._logger.debug('[DAEMON][SOCKET] Add ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
+                    self._logger.info('[DAEMON][SOCKET] Add ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
                     # Ensure ADB keys exist before adding device
                     await self.ensure_adb_keys(notify_jeedom=False)
                     if message['host'] not in self._config.known_hosts_adb:
@@ -1063,7 +1063,7 @@ class TVRemoted:
                             self._logger.debug('[DAEMON][SOCKET] Device %s already exists, updated paired=%s, persistent=%s', message['mac'], device._adb_paired, device._persistent_connection)
             elif message['cmd'] == "removetvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
-                    self._logger.debug('[DAEMON][SOCKET] Remove ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
+                    self._logger.info('[DAEMON][SOCKET] Remove ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
                     if message['host'] in self._config.known_hosts_adb:
                         self._config.known_hosts_adb.remove(message['host'])
                         self._logger.debug('[DAEMON][SOCKET] Remove ADB from KNOWN Devices :: %s', str(self._config.known_hosts_adb))
@@ -1118,7 +1118,7 @@ class TVRemoted:
         
         try:
             try:
-                self._logger.debug("[PAIRING][START][%s] Start Pairing...", _mac)
+                self._logger.info("[PAIRING][START][%s] Start Pairing...", _mac)
                 await remote.async_start_pairing()
             except CannotConnect as e:
                 self._logger.warning("[PAIRING][START][%s] Cannot connect (device may be offline) :: %s", _mac, e)
@@ -1517,7 +1517,7 @@ class TVRemoted:
         This function can be called from outside to stop the daemon if needed`
         You need to close your remote connexions and cancel background tasks if any here.
         """
-        self._logger.debug('[CLOSE] Cancelling all tasks')
+        self._logger.info('[CLOSE] Cancelling all tasks')
         
         # Collect all tasks to cancel
         tasks_to_cancel = []
@@ -1557,6 +1557,7 @@ class TVRemoted:
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
+    parser.add_argument("--tvloglevel", help="Log Level for TV libraries (zeroconf, androidtvremote2, adb_shell)", type=str, default='daemon')
     parser.add_argument("--pluginversion", help="Plugin Version", type=str)
     parser.add_argument("--socketport", help="Port for TVRemote server", type=str)
     parser.add_argument("--cyclefactor", help="Cycle Factor", type=str)
@@ -1591,12 +1592,18 @@ config = Config(**vars(args))
 Utils.init_logger(config.log_level)
 _LOGGER = logging.getLogger(__name__)
 logging.getLogger('asyncio').setLevel(logging.WARNING)
+if config.tv_log_level != 'daemon':
+    _tv_level = Utils.convert_log_level(config.tv_log_level)
+    logging.getLogger('zeroconf').setLevel(_tv_level)
+    logging.getLogger('androidtvremote2').setLevel(_tv_level)
+    logging.getLogger('adb_shell').setLevel(_tv_level)
 
 try:
     _LOGGER.info('[DAEMON] Starting Daemon')
     _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
     _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
     _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
+    _LOGGER.info('[DAEMON] TV Log Level: %s', config.tv_log_level)
     _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
     _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
     _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)
