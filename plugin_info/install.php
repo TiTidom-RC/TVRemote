@@ -40,6 +40,9 @@ function tvremote_install() {
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
     }
+    if (config::byKey('tvLogLevel', 'tvremote') == '') {
+        config::save('tvLogLevel', 'daemon', 'tvremote');
+    }
     if (config::byKey('debugInstallUpdates', 'tvremote') == '') {
         config::save('debugInstallUpdates', '0', 'tvremote');
     }
@@ -89,6 +92,9 @@ function tvremote_update() {
     }
     if (config::byKey('cyclefactor', 'tvremote') == '') {
         config::save('cyclefactor', '1.0', 'tvremote');
+    }
+    if (config::byKey('tvLogLevel', 'tvremote') == '') {
+        config::save('tvLogLevel', 'daemon', 'tvremote');
     }
     if (config::byKey('debugInstallUpdates', 'tvremote') == '') {
         config::save('debugInstallUpdates', '0', 'tvremote');

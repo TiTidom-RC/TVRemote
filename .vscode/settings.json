@@ -85,6 +85,7 @@
         "tunein",
         "tvhosts",
         "TVHOSTS",
+        "tvloglevel",
         "tvremote",
         "tvremoted",
         "updatelasttime",

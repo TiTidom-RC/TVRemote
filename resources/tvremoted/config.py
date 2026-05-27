@@ -123,6 +123,10 @@ class Config(object):
         return self._kwargs.get('loglevel', 'error')
 
     @property
+    def tv_log_level(self):
+        return self._kwargs.get('tvloglevel', 'daemon')
+
+    @property
     def api_key(self):
         return self._kwargs.get('apikey', '')
 

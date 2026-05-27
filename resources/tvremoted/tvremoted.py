@@ -1557,6 +1557,7 @@ class TVRemoted:
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
+    parser.add_argument("--tvloglevel", help="Log Level for TV libraries (zeroconf, androidtvremote2, adb_shell)", type=str, default='daemon')
     parser.add_argument("--pluginversion", help="Plugin Version", type=str)
     parser.add_argument("--socketport", help="Port for TVRemote server", type=str)
     parser.add_argument("--cyclefactor", help="Cycle Factor", type=str)
@@ -1591,12 +1592,18 @@ config = Config(**vars(args))
 Utils.init_logger(config.log_level)
 _LOGGER = logging.getLogger(__name__)
 logging.getLogger('asyncio').setLevel(logging.WARNING)
+if config.tv_log_level != 'daemon':
+    _tv_level = Utils.convert_log_level(config.tv_log_level)
+    logging.getLogger('zeroconf').setLevel(_tv_level)
+    logging.getLogger('androidtvremote2').setLevel(_tv_level)
+    logging.getLogger('adb_shell').setLevel(_tv_level)
 
 try:
     _LOGGER.info('[DAEMON] Starting Daemon')
     _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
     _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
     _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
+    _LOGGER.info('[DAEMON] TV Log Level: %s', config.tv_log_level)
     _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
     _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
     _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)

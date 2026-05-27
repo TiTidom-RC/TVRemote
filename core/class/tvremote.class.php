@@ -137,6 +137,7 @@ class tvremote extends eqLogic {
         $path = realpath(__DIR__ . '/../../resources/tvremoted');
         $cmd = self::PYTHON3_PATH . " {$path}/tvremoted.py";
         $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
+        $cmd .= ' --tvloglevel ' . config::byKey('tvLogLevel', __CLASS__, 'daemon');
         $cmd .= ' --pluginversion ' . config::byKey('pluginVersion', __CLASS__, '0.0.0');
         $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '55112');
         $cmd .= ' --cyclefactor ' . config::byKey('cyclefactor', __CLASS__, '1.0');
