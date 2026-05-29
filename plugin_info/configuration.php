@@ -113,6 +113,22 @@ if (!isConnect()) {
 			        </select>
 	            </div>
             </div>
+            <div class="form-group">
+                <label class="col-lg-3 control-label">{{Niveau de log des lib TV}}
+                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Niveau de log des librairies TV du démon. Par défaut, hérite du niveau de log global.}}"></i></sup>
+                </label>
+                <div class="col-lg-2">
+                    <select class="configKey form-control" data-l1key="tvLogLevel">
+                        <option value="daemon" selected>{{Identique au démon (défaut)}}</option>
+                        <option value="debug">{{Debug}}</option>
+                        <option value="info">{{Info}}</option>
+                        <option value="warning">{{Warning}}</option>
+                        <option value="error">{{Error}}</option>
+                        <option value="critical">{{Critical}}</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </fieldset>
     <fieldset>
