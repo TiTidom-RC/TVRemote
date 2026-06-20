@@ -29,6 +29,7 @@ class Config(object):
         self.log_filters_enabled: bool = False
         self.log_filters: list = []  # [{ "pattern": str, "level": str, "enabled": bool }]
         self.log_filters_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data/filters/logfilters.json'))
+
         self.remote_mac_adb = []  # MAC addresses for ADB
         self.remote_names = []  # Names for AndroidTVRemote2
         self.remote_names_adb = []  # Names for ADB
