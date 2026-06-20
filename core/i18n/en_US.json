@@ -1,7 +1,8 @@
 {
     "plugins\/tvremote\/core\/ajax\/tvremote.ajax.php": {
         "401 - Accès non autorisé": "401 - Unauthorized access",
-        "Aucune méthode correspondante à": "No corresponding method for"
+        "Aucune méthode correspondante à": "No corresponding method for",
+        "Format de données invalide": "Invalid data format"
     },
     "plugins\/tvremote\/core\/class\/tvremote.class.php": {
         "0": "0",
@@ -36,6 +37,7 @@
         "HDMI 3": "HDMI 3",
         "HDMI 4": "HDMI 4",
         "Home": "Home",
+        "Impossible d\\'enregistrer le fichier logfilters.json": "Unable to save the logfilters.json file",
         "Impossible de lancer le démon, vérifiez le log": "Unable to start daemon, check log",
         "Info": "Info",
         "Input": "Input",
@@ -84,6 +86,13 @@
     "plugins\/tvremote\/core\/php\/jeetvremote.php": {
         "Vous n\\'etes pas autorisé à effectuer cette action": "You are not authorized to perform this action"
     },
+    "plugins\/tvremote\/desktop\/js\/logfilters.tvremote.js": {
+        "Erreur lors de la sauvegarde": "Error while saving",
+        "Ex: Cannot connect (device may be offline)": "Example: Cannot connect (device may be offline)",
+        "Filtres sauvegardés": "Saved filters",
+        "Redémarrez le démon pour appliquer les changements": "Restart the daemon to apply the changes",
+        "Supprimer": "Delete"
+    },
     "plugins\/tvremote\/desktop\/js\/tvremote.js": {
         "ADB Shell": "ADB Shell",
         "Afficher": "Display",
@@ -115,6 +124,18 @@
         "Unité": "Unit",
         "Échec de l'appairage ADB pour": "ADB pairing failed for",
         "Échec de l'appairage TVRemote pour": "TVRemote pairing failed for"
+    },
+    "plugins\/tvremote\/desktop\/modal\/logfilters.tvremote.php": {
+        "401 - Accès non autorisé": "401 - Unauthorized access",
+        "Actif": "Active",
+        "Ajouter": "Add",
+        "Définissez les patterns à intercepter et le niveau de log à appliquer. Cochez\/décochez pour activer\/désactiver une règle sans la perdre.": "Define the patterns to intercept and the logging level to apply. Check or uncheck the box to enable or disable a rule without losing it.",
+        "Niveau cible": "Target level",
+        "Pattern (sous-chaîne du message de log)": "Pattern (substring of the log message)",
+        "Sauvegarder": "Save",
+        "Suggestions :": "Suggestions:",
+        "Tout activer": "Turn everything on",
+        "Tout désactiver": "Turn everything off"
     },
     "plugins\/tvremote\/desktop\/php\/tvremote.php": {
         "401 - Accès non autorisé": "401 - Unauthorized access",
@@ -196,6 +217,8 @@
         "Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.": "You have 5 minutes to enter the code after clicking Pair."
     },
     "plugins\/tvremote\/plugin_info\/configuration.php": {
+        "Active la personnalisation des niveaux de log. Les filtres sont définis dans la fenêtre de gestion dédiée.": "Active customization of log levels. Filters are defined in the dedicated management window.",
+        "Activer les filtres de logs": "Enable log filters",
         "Certificat ADB": "ADB certificate",
         "Certificat TVRemote": "TVRemote certificate",
         "Cocher cette case désactivera les messages de mise à jour du plugin dans le centre de message": "Checking this box will disable plugin update messages in the message center.",
@@ -206,10 +229,12 @@
         "Désactiver les messages de MàJ": "Disable update messages",
         "Error": "Error",
         "Facteur multiplicateur des cycles du démon (Défaut = x1)": "Demon cycle multiplication factor (Default = x1)",
+        "Filtres de logs": "Log filters",
         "Force la réinitialisation de PyEnv": "Force PyEnv reset",
         "Force la réinitialisation de Venv": "Force reset Venv",
         "Force les mises à jour Systèmes": "Force system updates",
         "Fréquence des cycles": "Cycle frequency",
+        "Gérer les filtres": "Manage filters",
         "Identique au démon (défaut)": "Same as the (default) daemon",
         "Info": "Info",
         "Le démon devra être redémarré après cette action": "The daemon will need to be restarted after this action.",
