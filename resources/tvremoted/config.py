@@ -25,6 +25,10 @@ class Config(object):
         self.known_hosts = []  # Hosts for AndroidTVRemote2
         self.known_hosts_adb = []  # Hosts for ADB
         self.remote_mac = []  # MAC addresses for AndroidTVRemote2
+
+        self.log_filters_enabled: bool = False
+        self.log_filters: list = []  # [{ "pattern": str, "level": str, "enabled": bool }]
+        self.log_filters_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data/filters/logfilters.json'))
         self.remote_mac_adb = []  # MAC addresses for ADB
         self.remote_names = []  # Names for AndroidTVRemote2
         self.remote_names_adb = []  # Names for ADB
@@ -125,6 +129,10 @@ class Config(object):
     @property
     def tv_log_level(self):
         return self._kwargs.get('tvloglevel', 'daemon')
+
+    @property
+    def log_filters_enabled_arg(self):
+        return self._kwargs.get('logfiltersenabled', '0')
 
     @property
     def api_key(self):
