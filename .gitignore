@@ -1,3 +1,6 @@
+# Plugin Configuration
+data/filters/*.json
+
 # IDE & Editors
 .vscode/*
 !.vscode/settings.json

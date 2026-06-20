@@ -55,6 +55,11 @@ function tvremote_install() {
     if (config::byKey('disableUpdateMsg', 'tvremote') == '') {
         config::save('disableUpdateMsg', '0', 'tvremote');
     }
+    if (config::byKey('logFiltersEnabled', 'tvremote') == '') {
+        config::save('logFiltersEnabled', '0', 'tvremote');
+    }
+
+    tvremote::createLogFiltersFile();
 
     $dependencyInfo = tvremote::dependancy_info();
     if (!isset($dependencyInfo['state'])) {
@@ -108,6 +113,11 @@ function tvremote_update() {
     if (config::byKey('disableUpdateMsg', 'tvremote') == '') {
         config::save('disableUpdateMsg', '0', 'tvremote');
     }
+    if (config::byKey('logFiltersEnabled', 'tvremote') == '') {
+        config::save('logFiltersEnabled', '0', 'tvremote');
+    }
+
+    tvremote::createLogFiltersFile();
 
     $dependencyInfo = tvremote::dependancy_info();
     if (!isset($dependencyInfo['state'])) {

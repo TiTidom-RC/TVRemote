@@ -65,6 +65,16 @@ try {
         ajax::success(tvremote::sendBeginPairingAdb(init('mac'), init('host')));
     }
 
+    if (init('action') == 'saveLogFilters') {
+        $data = init('logFiltersData');
+        $filters = json_decode(is_string($data) ? $data : '[]', true);
+        if (!is_array($filters)) {
+            ajax::error(__('Format de données invalide', __FILE__));
+        }
+        tvremote::saveLogFilters($filters);
+        ajax::success();
+    }
+
     throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
     /*     * *********Catch exception*************** */
 } catch (Exception $e) {
