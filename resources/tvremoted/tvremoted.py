@@ -1657,6 +1657,7 @@ try:
     _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
     _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
     _LOGGER.info('[DAEMON] TV Log Level: %s', config.tv_log_level)
+    _LOGGER.info('[DAEMON] Log Filters Enabled: %s | rules: %d', config.log_filters_enabled, len(config.log_filters))
     _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
     _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
     _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)
