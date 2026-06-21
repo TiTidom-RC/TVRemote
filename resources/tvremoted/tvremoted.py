@@ -171,7 +171,7 @@ class EQRemote(object):
                 self._logger.debug(traceback.format_exc())
 
             def is_available_updated(is_available: bool) -> None:
-                self._logger.info("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
+                self._logger.debug("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -193,7 +193,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
 
             def is_on_updated(is_on: bool) -> None:
-                self._logger.info("[EQRemote][Is_On][%s] Notification :: %s", self._macAddr, is_on)
+                self._logger.debug("[EQRemote][Is_On][%s] Notification :: %s", self._macAddr, is_on)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -215,7 +215,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
                 
             def current_app_updated(current_app: str) -> None:
-                self._logger.info("[EQRemote][Current_App][%s] Notification :: %s", self._macAddr, current_app)
+                self._logger.debug("[EQRemote][Current_App][%s] Notification :: %s", self._macAddr, current_app)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -236,7 +236,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
 
             def volume_info_updated(volume_info: VolumeInfo) -> None:
-                self._logger.info("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
+                self._logger.debug("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -690,7 +690,7 @@ class EQRemoteADB(object):
             
             # Connect on-demand if not already connected
             if not self._persistent_connection and not self._connected:
-                self._logger.info("[EQRemoteADB][SendCommand] On-demand mode: connecting...")
+                self._logger.debug("[EQRemoteADB][SendCommand] On-demand mode: connecting...")
                 if self._adb is None:
                     self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
                 
