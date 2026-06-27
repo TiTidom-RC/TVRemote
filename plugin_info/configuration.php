@@ -129,6 +129,20 @@ if (!isConnect()) {
                     </select>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-lg-3 control-label">{{Activer les filtres de logs}}
+                    <sup><i class="fas fa-exclamation-triangle tooltips" style="color:var(--al-warning-color)!important;" title="{{Le démon devra être redémarré après la modification de ce paramètre}}"></i></sup>
+                    <sup><i class="fas fa-question-circle tooltips" title="{{Active la personnalisation des niveaux de log. Les filtres sont définis dans la fenêtre de gestion dédiée.}}"></i></sup>
+                </label>
+                <div class="col-lg-1">
+                    <input type="checkbox" class="configKey" data-l1key="logFiltersEnabled" />
+                </div>
+                <div class="col-lg-2">
+                    <a class="btn btn-primary customclass-openlogfilters">
+                        <i class="fas fa-filter"></i> {{Gérer les filtres}}
+                    </a>
+                </div>
+            </div>
         </div>
     </fieldset>
     <fieldset>
@@ -185,5 +199,17 @@ if (!isConnect()) {
   
   setupResetButton('.customclass-resettvcertkey', 'resetTVCertKey', '{{Reset TV Cert (OK)}}')
   setupResetButton('.customclass-resetadbkeys', 'resetAdbKeys', '{{Reset ADB Keys (OK)}}')
+
+  // Filtres de logs
+  document.querySelector('.customclass-openlogfilters')?.addEventListener('click', function() {
+    jeeDialog.dialog({
+      id: 'md_logFiltersTvremote',
+      title: '{{Filtres de logs}}',
+      contentUrl: 'index.php?v=d&plugin=tvremote&modal=logfilters.tvremote',
+      width: '65%',
+      height: '60%',
+      top: '18vh'
+    })
+  })
 })()
 </script>

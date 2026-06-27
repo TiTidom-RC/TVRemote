@@ -171,7 +171,7 @@ class EQRemote(object):
                 self._logger.debug(traceback.format_exc())
 
             def is_available_updated(is_available: bool) -> None:
-                self._logger.info("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
+                self._logger.debug("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -193,7 +193,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
 
             def is_on_updated(is_on: bool) -> None:
-                self._logger.info("[EQRemote][Is_On][%s] Notification :: %s", self._macAddr, is_on)
+                self._logger.debug("[EQRemote][Is_On][%s] Notification :: %s", self._macAddr, is_on)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -215,7 +215,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
                 
             def current_app_updated(current_app: str) -> None:
-                self._logger.info("[EQRemote][Current_App][%s] Notification :: %s", self._macAddr, current_app)
+                self._logger.debug("[EQRemote][Current_App][%s] Notification :: %s", self._macAddr, current_app)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -236,7 +236,7 @@ class EQRemote(object):
                     self._logger.debug(traceback.format_exc())
 
             def volume_info_updated(volume_info: VolumeInfo) -> None:
-                self._logger.info("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
+                self._logger.debug("[EQRemote][Volume_Info][%s] Notification :: %s", self._macAddr, volume_info)
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -690,7 +690,7 @@ class EQRemoteADB(object):
             
             # Connect on-demand if not already connected
             if not self._persistent_connection and not self._connected:
-                self._logger.info("[EQRemoteADB][SendCommand] On-demand mode: connecting...")
+                self._logger.debug("[EQRemoteADB][SendCommand] On-demand mode: connecting...")
                 if self._adb is None:
                     self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
                 
@@ -1554,10 +1554,44 @@ class TVRemoted:
 
 # ----------------------------------------------------------------------------
 
+class PatternRemapFilter(logging.Filter):
+    """Remappe le niveau de log des records dont le message contient un pattern configuré."""
+
+    _LEVEL_MAP = {
+        'DEBUG':   logging.DEBUG,
+        'INFO':    logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR':   logging.ERROR,
+    }
+
+    def __init__(self, entries: list) -> None:
+        super().__init__()
+        self._rules = [
+            (e['pattern'], e['level'].upper())
+            for e in entries
+            if e.get('enabled', True) and e.get('pattern', '').strip()
+        ]
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        for pattern, level in self._rules:
+            if pattern in msg:
+                if level == 'DROP':
+                    return False
+                target = self._LEVEL_MAP.get(level)
+                if target is not None:
+                    record.levelno = target
+                    record.levelname = level
+                return True
+        return True
+
+# ----------------------------------------------------------------------------
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='TVRemote Daemon for Jeedom plugin')
     parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
     parser.add_argument("--tvloglevel", help="Log Level for TV libraries (zeroconf, androidtvremote2, adb_shell)", type=str, default='daemon')
+    parser.add_argument("--logfiltersenabled", help="Enable log filters", type=str, default='0')
     parser.add_argument("--pluginversion", help="Plugin Version", type=str)
     parser.add_argument("--socketport", help="Port for TVRemote server", type=str)
     parser.add_argument("--cyclefactor", help="Cycle Factor", type=str)
@@ -1598,12 +1632,32 @@ if config.tv_log_level != 'daemon':
     logging.getLogger('androidtvremote2').setLevel(_tv_level)
     logging.getLogger('adb_shell').setLevel(_tv_level)
 
+if config.log_filters_enabled_arg != '0':
+    config.log_filters_enabled = True
+
+if config.log_filters_enabled:
+    try:
+        with open(config.log_filters_file_path, 'r', encoding='utf-8') as _f:
+            config.log_filters = json.load(_f)
+    except FileNotFoundError:
+        logging.warning('[DAEMON][LOGFILTERS] Fichier introuvable : %s', config.log_filters_file_path)
+    except Exception as _e:
+        logging.warning('[DAEMON][LOGFILTERS] Erreur lecture filtres : %s', _e)
+
+if config.log_filters_enabled and config.log_filters:
+    _remap_filter = PatternRemapFilter(config.log_filters)
+    for _handler in logging.root.handlers:
+        _handler.addFilter(_remap_filter)
+    _active_count = sum(1 for r in config.log_filters if r.get('enabled', True))
+    logging.info('[DAEMON][LOGFILTERS] %d filtre(s) actif(s) sur %d', _active_count, len(config.log_filters))
+
 try:
     _LOGGER.info('[DAEMON] Starting Daemon')
     _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
     _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
     _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
     _LOGGER.info('[DAEMON] TV Log Level: %s', config.tv_log_level)
+    _LOGGER.info('[DAEMON] Log Filters Enabled: %s | rules: %d', config.log_filters_enabled, len(config.log_filters))
     _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
     _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
     _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)

@@ -1,7 +1,8 @@
 {
     "plugins\/tvremote\/core\/ajax\/tvremote.ajax.php": {
         "401 - Accès non autorisé": "401 - Acesso não autorizado",
-        "Aucune méthode correspondante à": "Nenhum método correspondente a"
+        "Aucune méthode correspondante à": "Nenhum método correspondente a",
+        "Format de données invalide": "Formato de dados inválido"
     },
     "plugins\/tvremote\/core\/class\/tvremote.class.php": {
         "0": "0",
@@ -36,6 +37,7 @@
         "HDMI 3": "HDMI 3",
         "HDMI 4": "HDMI 4",
         "Home": "Casa",
+        "Impossible d\\'enregistrer le fichier logfilters.json": "Não é possível guardar o ficheiro logfilters.json",
         "Impossible de lancer le démon, vérifiez le log": "Não é possível iniciar o daemon, verificar o registo",
         "Info": "Informação",
         "Input": "Entrada",
@@ -84,6 +86,13 @@
     "plugins\/tvremote\/core\/php\/jeetvremote.php": {
         "Vous n\\'etes pas autorisé à effectuer cette action": "Não está autorizado a efetuar esta ação"
     },
+    "plugins\/tvremote\/desktop\/js\/logfilters.tvremote.js": {
+        "Erreur lors de la sauvegarde": "Erro ao guardar",
+        "Ex: Cannot connect (device may be offline)": "Ex.: Não é possível estabelecer ligação (o dispositivo pode estar offline)",
+        "Filtres sauvegardés": "Filtros guardados",
+        "Redémarrez le démon pour appliquer les changements": "Reinicie o daemon para aplicar as alterações",
+        "Supprimer": "Eliminar"
+    },
     "plugins\/tvremote\/desktop\/js\/tvremote.js": {
         "ADB Shell": "ADB Shell",
         "Afficher": "Ver",
@@ -115,6 +124,18 @@
         "Unité": "Unidade",
         "Échec de l'appairage ADB pour": "Falha no emparelhamento ADB para",
         "Échec de l'appairage TVRemote pour": "Falha no emparelhamento do TVRemote para"
+    },
+    "plugins\/tvremote\/desktop\/modal\/logfilters.tvremote.php": {
+        "401 - Accès non autorisé": "401 - Acesso não autorizado",
+        "Actif": "Ativo",
+        "Ajouter": "Adicionar",
+        "Définissez les patterns à intercepter et le niveau de log à appliquer. Cochez\/décochez pour activer\/désactiver une règle sans la perdre.": "Defina os padrões a interceptar e o nível de registo a aplicar. Assinale\/desassinale para ativar\/desativar uma regra sem a perder.",
+        "Niveau cible": "Nível pretendido",
+        "Pattern (sous-chaîne du message de log)": "Padrão (subcadeia da mensagem de registo)",
+        "Sauvegarder": "Guardar",
+        "Suggestions :": "Sugestões:",
+        "Tout activer": "Ativar tudo",
+        "Tout désactiver": "Desativar tudo"
     },
     "plugins\/tvremote\/desktop\/php\/tvremote.php": {
         "401 - Accès non autorisé": "401 - Acesso não autorizado",
@@ -196,6 +217,8 @@
         "Vous disposez de 5 minutes pour entrer le code après avoir cliqué sur Appairer.": "Tem 5 minutos para introduzir o código depois de clicar em Emparelhar."
     },
     "plugins\/tvremote\/plugin_info\/configuration.php": {
+        "Active la personnalisation des niveaux de log. Les filtres sont définis dans la fenêtre de gestion dédiée.": "Ativa a personalização dos níveis de registo. Os filtros são definidos na janela de gestão dedicada.",
+        "Activer les filtres de logs": "Ativar os filtros de registos",
         "Certificat ADB": "Certificado ADB",
         "Certificat TVRemote": "Certificado TVRemote",
         "Cocher cette case désactivera les messages de mise à jour du plugin dans le centre de message": "Marcar esta caixa desativará as mensagens de atualização do plugin no centro de mensagens.",
@@ -206,10 +229,12 @@
         "Désactiver les messages de MàJ": "Desativar mensagens de atualização",
         "Error": "Erro",
         "Facteur multiplicateur des cycles du démon (Défaut = x1)": "Fator de multiplicação do ciclo de demonstração (Predefinição = x1)",
+        "Filtres de logs": "Filtros de registos",
         "Force la réinitialisation de PyEnv": "Forçar reinicialização do PyEnv",
         "Force la réinitialisation de Venv": "Forçar a reposição do Venv",
         "Force les mises à jour Systèmes": "Forçar actualizações do sistema",
         "Fréquence des cycles": "Frequência do ciclo",
+        "Gérer les filtres": "Gerir os filtros",
         "Identique au démon (défaut)": "Idêntico ao daemon (padrão)",
         "Info": "Informação",
         "Le démon devra être redémarré après cette action": "O daemon deverá ser reiniciado após esta ação.",
