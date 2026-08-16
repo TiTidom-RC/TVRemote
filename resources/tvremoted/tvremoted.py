@@ -133,10 +133,7 @@ class EQRemote(object):
             self._remote.keep_reconnecting()
             
             try:
-                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
-                self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
-                self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
-                self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s | Is_On :: %s | Current_App :: %s | Volume_Info :: %s", self._macAddr, self._remote.device_info, self._remote.is_on, self._remote.current_app, self._remote.volume_info)
             
                 # UpdateLastTime
                 currentTime = int(time.time())
