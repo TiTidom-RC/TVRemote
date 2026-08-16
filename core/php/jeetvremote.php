@@ -69,17 +69,14 @@ try {
             tvremote::sendOnStartTVRemoteToDaemon();
         }
     } elseif (isset($result['devices'])) {
-        log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Devices');
+        log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Devices :: ' . count($result['devices']) . ' device(s) reçu(s)');
         foreach ($result['devices'] as $key => $data) {
             if (!isset($data['mac'])) {
-                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: [MAC] non défini !');
                 continue;
             }
             if ($data['scanmode'] !== 1) {
-                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: NoScanMode');
                 continue;
             }
-            log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Device :: ' . $data['friendly_name']);
             $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
             if (!is_object($tv_remote)) {    
                 log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote NEW détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
@@ -126,13 +123,12 @@ try {
             }
         }
     } elseif (isset($result['devicesRT'])) {
-        log::add('tvremote','debug','[CALLBACK] TVRemote Devices RealTime');
+        $macs = array_column($result['devicesRT'], 'mac');
+        log::add('tvremote','debug','[CALLBACK] TVRemote Devices RealTime :: ' . count($result['devicesRT']) . ' event(s) reçu(s) :: ' . implode(', ', $macs));
         foreach ($result['devicesRT'] as $key => $data) {
             if (!isset($data['mac'])) {
-                log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: [MAC] non défini !');
                 continue;
             }
-            log::add('tvremote','debug','[CALLBACK] TVRemote RealTime :: ' . $data['mac']);
             if ($data['realtime'] !== 1) {
                 continue;
             }
