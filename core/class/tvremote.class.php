@@ -676,16 +676,17 @@ class tvremote extends eqLogic {
                 }
             }
 
+            $updatedFields = array();
             foreach ($rtdevice->getCmd('info') as $cmd) {
                 $logicalId = $cmd->getLogicalId();
                 if (key_exists($logicalId, $_data)) {
-                    log::add('tvremote', 'debug', '[REALTIME][REMOTE] Device cmd event :: ' . $logicalId . ' = ' . $_data[$logicalId]);
                     $cmd->event($_data[$logicalId]);
+                    $updatedFields[] = $logicalId . '=' . $_data[$logicalId];
                 } else {
-                    log::add('tvremote', 'debug', '[REALTIME][REMOTE] Device cmd NON EXIST :: ' . $logicalId);
                     continue;
                 }
             }
+            log::add('tvremote', 'debug', '[REALTIME][REMOTE] ' . $_data['mac'] . ' :: ' . implode(', ', $updatedFields));
         }
     }
 

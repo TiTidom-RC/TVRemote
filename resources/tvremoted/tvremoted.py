@@ -133,10 +133,7 @@ class EQRemote(object):
             self._remote.keep_reconnecting()
             
             try:
-                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s", self._macAddr, self._remote.device_info)
-                self._logger.info("[EQRemote][MAIN][%s] Is_On :: %s", self._macAddr, self._remote.is_on)
-                self._logger.info("[EQRemote][MAIN][%s] Current_App :: %s", self._macAddr, self._remote.current_app)
-                self._logger.info("[EQRemote][MAIN][%s] Volume_Info :: %s", self._macAddr, self._remote.volume_info)
+                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s | Is_On :: %s | Current_App :: %s | Volume_Info :: %s", self._macAddr, self._remote.device_info, self._remote.is_on, self._remote.current_app, self._remote.volume_info)
             
                 # UpdateLastTime
                 currentTime = int(time.time())
@@ -974,16 +971,17 @@ class TVRemoted:
             elif message['cmd'] == "addtvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
                     self._logger.info('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    _changes = []
                     if message['host'] not in self._config.known_hosts:
                         self._config.known_hosts.append(message['host'])
-                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to KNOWN Devices :: %s', str(self._config.known_hosts))
+                        _changes.append('host')
                     if message['friendly_name'] not in self._config.remote_names:
                         self._config.remote_names.append(message['friendly_name'])
-                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote Names :: %s', str(self._config.remote_names))
+                        _changes.append('friendly_name')
                     if message['mac'] not in self._config.remote_mac:
                         # Create new device
                         self._config.remote_mac.append(message['mac'])
-                        self._logger.debug('[DAEMON][SOCKET] Add TVRemote (AndroidTVRemote2) to Remote MAC :: %s', str(self._config.remote_mac))
+                        _changes.append('mac')
                         _enable_ime = int(message.get('enable_ime', 1)) != 0
                         self._logger.debug('[DAEMON][SOCKET] TVRemote %s (%s) :: IME (virtual keyboard) %s', message['friendly_name'], message['mac'], 'enabled' if _enable_ime else 'disabled')
                         device = EQRemote(message['mac'], message['host'], self._config, self._jeedom_publisher, _enable_ime)
@@ -994,18 +992,20 @@ class TVRemoted:
                     else:
                         # Device already exists, just log it
                         self._logger.debug('[DAEMON][SOCKET] TVRemote device %s already exists', message['mac'])
+                    self._logger.debug('[DAEMON][SOCKET] Add TVRemote :: fields = %s | known_hosts (%d) | remote_names (%d) | remote_mac (%d)', ', '.join(_changes) or 'none', len(self._config.known_hosts), len(self._config.remote_names), len(self._config.remote_mac))
             elif message['cmd'] == "removetvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
                     self._logger.info('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
+                    _changes = []
                     if message['host'] in self._config.known_hosts:
                         self._config.known_hosts.remove(message['host'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from KNOWN Devices :: %s', str(self._config.known_hosts))
+                        _changes.append('host')
                     if message['friendly_name'] in self._config.remote_names:
                         self._config.remote_names.remove(message['friendly_name'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from Remote Names :: %s', str(self._config.remote_names))
+                        _changes.append('friendly_name')
                     if message['mac'] in self._config.remote_mac:
                         self._config.remote_mac.remove(message['mac'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove TVRemote (AndroidTVRemote2) from Remote MAC :: %s', str(self._config.remote_mac))
+                        _changes.append('mac')
                         device = self._config.remote_devices.get(message['mac'])
                         if device:
                             # Cancel main loop task if running
@@ -1018,22 +1018,24 @@ class TVRemoted:
                             # Remove device
                             await device.remove()
                             del self._config.remote_devices[message['mac']]
+                    self._logger.debug('[DAEMON][SOCKET] Remove TVRemote :: fields = %s | known_hosts (%d) | remote_names (%d) | remote_mac (%d)', ', '.join(_changes) or 'none', len(self._config.known_hosts), len(self._config.remote_names), len(self._config.remote_mac))
             elif message['cmd'] == "addtvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
                     self._logger.info('[DAEMON][SOCKET] Add ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
                     # Ensure ADB keys exist before adding device
                     await self.ensure_adb_keys(notify_jeedom=False)
+                    _changes = []
                     if message['host'] not in self._config.known_hosts_adb:
                         self._config.known_hosts_adb.append(message['host'])
-                        self._logger.debug('[DAEMON][SOCKET] Add ADB to KNOWN Devices :: %s', str(self._config.known_hosts_adb))
+                        _changes.append('host')
                     if message['friendly_name'] not in self._config.remote_names_adb:
                         self._config.remote_names_adb.append(message['friendly_name'])
-                        self._logger.debug('[DAEMON][SOCKET] Add ADB to Remote Names :: %s', str(self._config.remote_names_adb))
+                        _changes.append('friendly_name')
                     
                     if message['mac'] not in self._config.remote_mac_adb:
                         # Create new device
                         self._config.remote_mac_adb.append(message['mac'])
-                        self._logger.debug('[DAEMON][SOCKET] Add ADB to Remote MAC :: %s', str(self._config.remote_mac_adb))
+                        _changes.append('mac')
                         device = EQRemoteADB(message['mac'], message['host'], self._config, self._jeedom_publisher)
                         self._config.remote_devices_adb[message['mac']] = device
                         
@@ -1061,18 +1063,20 @@ class TVRemoted:
                                 device._last_activity = time.time()
                             
                             self._logger.debug('[DAEMON][SOCKET] Device %s already exists, updated paired=%s, persistent=%s', message['mac'], device._adb_paired, device._persistent_connection)
+                    self._logger.debug('[DAEMON][SOCKET] Add ADB :: fields = %s | known_hosts_adb (%d) | remote_names_adb (%d) | remote_mac_adb (%d)', ', '.join(_changes) or 'none', len(self._config.known_hosts_adb), len(self._config.remote_names_adb), len(self._config.remote_mac_adb))
             elif message['cmd'] == "removetvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
                     self._logger.info('[DAEMON][SOCKET] Remove ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
+                    _changes = []
                     if message['host'] in self._config.known_hosts_adb:
                         self._config.known_hosts_adb.remove(message['host'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove ADB from KNOWN Devices :: %s', str(self._config.known_hosts_adb))
+                        _changes.append('host')
                     if message['friendly_name'] in self._config.remote_names_adb:
                         self._config.remote_names_adb.remove(message['friendly_name'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove ADB from Remote Names :: %s', str(self._config.remote_names_adb))
+                        _changes.append('friendly_name')
                     if message['mac'] in self._config.remote_mac_adb:
                         self._config.remote_mac_adb.remove(message['mac'])
-                        self._logger.debug('[DAEMON][SOCKET] Remove ADB from Remote MAC :: %s', str(self._config.remote_mac_adb))
+                        _changes.append('mac')
                         device = self._config.remote_devices_adb.get(message['mac'])
                         if device:
                             # Cancel main loop task if running
@@ -1085,6 +1089,7 @@ class TVRemoted:
                             # Remove device
                             await device.remove()
                             del self._config.remote_devices_adb[message['mac']]
+                    self._logger.debug('[DAEMON][SOCKET] Remove ADB :: fields = %s | known_hosts_adb (%d) | remote_names_adb (%d) | remote_mac_adb (%d)', ', '.join(_changes) or 'none', len(self._config.known_hosts_adb), len(self._config.remote_names_adb), len(self._config.remote_mac_adb))
                         
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
