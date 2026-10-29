@@ -1587,6 +1587,9 @@ class PatternRemapFilter(logging.Filter):
                 if target is not None:
                     record.levelno = target
                     record.levelname = level
+                    # Le seuil du logger a été contrôlé avant ce filtre, sur le niveau d'origine : on le réapplique au nouveau niveau,
+                    # sinon un message abaissé sous ce seuil resterait affiché (simplement réétiqueté) au lieu d'être masqué
+                    return target >= logging.getLogger(record.name).getEffectiveLevel()
                 return True
         return True
 
