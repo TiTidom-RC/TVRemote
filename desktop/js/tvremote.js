@@ -521,10 +521,11 @@ const changeScanState = (_scanState) => {
         if (adbStatus) {
           updatePairingStatusBadge(adbStatus, true)
         }
-      } else if (adb_paired === 0) {
+      } else {
         const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
         jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
-        if (adbStatus) {
+        // Badge changé seulement sur un refus de la TV (adb_paired = 0) ; sans conclusion (TV injoignable…), l'appairage connu reste affiché
+        if (adbStatus && adb_paired === 0) {
           updatePairingStatusBadge(adbStatus, false)
         }
       }

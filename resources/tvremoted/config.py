@@ -246,6 +246,16 @@ class Config(object):
         return 20
     
     @property
+    def adb_start_delay(self):
+        """Pause au démarrage d'un appareil ADB, le temps que le réseau et la TV soient prêts (secondes)"""
+        return 2
+
+    @property
+    def adb_loop_interval(self):
+        """Période de la boucle d'un appareil ADB : appairage, connexion, heartbeat, inactivité (secondes)"""
+        return 5
+
+    @property
     def adb_idle_timeout_default(self):
         """Default idle timeout for on-demand connection mode (minutes)
         After this period of inactivity, ADB connection will be closed to save resources"""

@@ -195,6 +195,27 @@ try {
         } else {
             log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing :: Equipment not found in Jeedom :: ' . $result['mac']);
         }
+    } elseif (isset($result['adb_pairing_failed'])) {
+        // Échec sans conclusion sur l'appairage (TV injoignable, appairage déjà en cours…) : affiché, statut d'appairage inchangé
+        if (!isset($result['mac'])) {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Failed :: [MAC] non défini !');
+            return;
+        }
+        $tv_remote = tvremote::byLogicalId($result['mac'], 'tvremote');
+        if (is_object($tv_remote)) {
+            $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
+            $message = isset($result['message']) ? $result['message'] : '';
+            log::add('tvremote', 'warning', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $message);
+            event::add('tvremote::adbPairingResult', array(
+                'mac' => $result['mac'],
+                'friendly_name' => $friendlyName,
+                'adb_paired' => null,
+                'message' => $message,
+                'auto_detected' => false
+            ));
+        } else {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Failed :: Equipment not found in Jeedom :: ' . $result['mac']);
+        }
     } elseif (isset($result['pairing_value'])) {
         log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error');
         

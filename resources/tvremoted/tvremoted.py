@@ -43,6 +43,16 @@ try:
 except ImportError as e: 
     print("[DAEMON][IMPORT] Exception Error: importing module adb_shell ::", e)
     sys.exit(1)
+
+
+def load_adb_signer(config: Config) -> PythonRSASigner:
+    """Clé ADB du plugin (commune à tous les appareils), lue sur le disque à chaque appel : une clé régénérée est prise en compte"""
+    with open(config.adb_key_file, 'r') as f:
+        priv = f.read()
+    with open(config.adb_pub_file, 'r') as f:
+        pub = f.read()
+    return PythonRSASigner(pub, priv)
+
           
 class EQRemote(object):
     """This is the Remote Device class"""
@@ -411,11 +421,7 @@ class EQRemoteADB(object):
         """Load the ADB signer from key file"""
         try:
             if os.path.exists(self._config.adb_key_file):
-                with open(self._config.adb_key_file, 'r') as f:
-                    priv = f.read()
-                with open(self._config.adb_pub_file, 'r') as f:
-                    pub = f.read()
-                self._signer = PythonRSASigner(pub, priv)
+                self._signer = load_adb_signer(self._config)
                 self._logger.debug("[EQRemoteADB][%s] ADB signer loaded", self._macAddr)
                 return True
             else:
@@ -425,10 +431,10 @@ class EQRemoteADB(object):
             self._logger.error("[EQRemoteADB][%s] Error loading ADB signer :: %s", self._macAddr, e)
             self._logger.debug(traceback.format_exc())
             return False
-    
+
     def _reset_state(self, clear_activity: bool = False) -> None:
         """Reset connection state
-        
+
         Args:
             clear_activity: If True, clears _last_activity (voluntary disconnect).
                           If False, preserves it to allow reconnection within idle period.
@@ -438,7 +444,7 @@ class EQRemoteADB(object):
         self._last_heartbeat = 0  # Reset heartbeat timer
         if clear_activity:
             self._last_activity = 0  # Clear activity timer (voluntary disconnect)
-    
+
     def _can_connect(self) -> bool:
         """Check if we can attempt a new connection
         In persistent mode: always try to reconnect when disconnected
@@ -453,24 +459,158 @@ class EQRemoteADB(object):
                 if time_since_activity < self._idle_timeout_minutes * 60:
                     return True  # Involuntary disconnect during idle period, reconnect
         return False
-    
+
     def _is_connecting(self) -> bool:
         """Check if a connection is in progress"""
         return self._connection_task is not None and not self._connection_task.done()
-    
-    async def _notify_connection_status(self, online: int, adb_connected: int) -> None:
-        """Send connection status to Jeedom"""
+
+    async def _notify_adb_status(self, connected: bool) -> None:
+        """Statut de la connexion ADB vers Jeedom. 'online' n'est envoyé qu'à 1 (connexion ADB réussie : la TV est joignable) ;
+        un échec ou une déconnexion ADB ne prouve pas que la TV est hors ligne (ports ADB fermés, débogage désactivé…),
+        c'est la connexion Google TV qui le met à 0"""
         currentTime = int(time.time())
-        currentTimeStr = EQRemote._format_timestamp(currentTime)
         data = {
             'mac': self._macAddr,
-            'online': online,
-            'adb_connected': adb_connected,
-            'updatelasttime': currentTimeStr,
+            'adb_connected': 1 if connected else 0,
+            'updatelasttime': EQRemote._format_timestamp(currentTime),
             'updatelasttimets': currentTime,
             'realtime': 1
         }
+        if connected:
+            data['online'] = 1
         await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
+
+    async def _close_after_failure(self) -> None:
+        """Ferme la connexion après un échec ou une perte, sans effacer l'activité (reconnexion possible pendant la période d'inactivité)"""
+        if self._adb is not None:
+            try:
+                await self._adb.close()
+            except Exception:
+                pass  # Ignore errors during cleanup
+        self._reset_state(clear_activity=False)
+
+    def _forget_on_demand_activity(self) -> None:
+        """Mode à la demande, tentative de connexion ratée : plus de tentative en arrière-plan (aucune commande n'attend, la suivante
+        réessaiera). Effacé avant toute attente, pour que l'autre appelant d'une tentative partagée ne relance pas entre-temps.
+        Une connexion établie puis perdue garde son activité : elle est retentée (une fois, si cette tentative échoue)"""
+        if not self._persistent_connection:
+            self._last_activity = 0
+
+    async def _connect(self) -> None:
+        """Connexion ADB, seul chemin utilisé par la boucle et par les commandes : une tentative en cours est attendue, jamais doublée.
+        Lève l'erreur de la tentative (connexion déjà refermée), ConnectionAbortedError si elle a été annulée (appairage)"""
+        if self._connected:
+            return
+        if self._signer is None and not await self._load_signer():
+            raise ConnectionError('ADB key not available')
+        if self._adb is None:
+            self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
+        # Tentative existante toujours réutilisée, même déjà terminée : tant qu'un appelant ne l'a pas close (_connection_task remis
+        # à None après un succès ou un échec), son résultat vaut pour tous ; en lancer une autre doublerait la tentative
+        if self._connection_task is None:
+            self._logger.debug("[EQRemoteADB][CONNECT][%s] Connecting to ADB...", self._macAddr)
+            self._connection_task = asyncio.create_task(
+                self._adb.connect(
+                    rsa_keys=[self._signer],
+                    transport_timeout_s=self._config.adb_timeout,  # Explicit TCP connection timeout
+                    auth_timeout_s=self._config.adb_auth_timeout_connect
+                )
+            )
+        task = self._connection_task
+        assert task is not None
+        # Use auth timeout + 5s margin to allow for network delays
+        connection_timeout = self._config.adb_auth_timeout_connect + 5
+        try:
+            # shield : la tentative est partagée ; l'annulation d'un appelant ne doit pas l'interrompre pour l'autre
+            await asyncio.wait_for(asyncio.shield(task), timeout=connection_timeout)
+        except asyncio.CancelledError:
+            current = asyncio.current_task()
+            if current is not None and current.cancelling():
+                raise  # annulation de l'appelant (retrait de l'appareil, arrêt du démon) : jamais absorbée
+            self._forget_on_demand_activity()
+            await self._close_after_failure()
+            raise ConnectionAbortedError('ADB connection attempt cancelled')
+        except asyncio.TimeoutError:
+            task.cancel()
+            self._forget_on_demand_activity()
+            await self._close_after_failure()
+            raise
+        except Exception:
+            self._forget_on_demand_activity()
+            await self._close_after_failure()
+            raise
+        if not self._connected:  # les deux appelants d'une même tentative reprennent ici : un seul enregistre la connexion
+            self._connected = True
+            self._connection_task = None
+            self._last_heartbeat = time.time()  # Initialize heartbeat timer
+            self._last_activity = time.time()   # Initialize activity timer for on-demand mode
+            self._reconnect_delay = self._config.reconnect_delay_min  # Reset backoff on successful connection
+            mode_str = "permanent" if self._persistent_connection else "on-demand"
+            self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB (mode: %s)", self._macAddr, mode_str)
+            await self._notify_adb_status(True)
+
+    async def _on_connection_error(self, e: BaseException) -> None:
+        """Échec de connexion ou connexion perdue dans la boucle : statut envoyé à Jeedom, puis attente avant la tentative suivante"""
+        await self._close_after_failure()
+        # If pairing is in progress, don't process errors (pairing handles its own connection)
+        if self._pairing_mode:
+            self._logger.debug("[EQRemoteADB][MAIN][%s] Connection error during pairing mode (expected, ignored) :: %s", self._macAddr, e)
+            return
+        if isinstance(e, asyncio.TimeoutError):
+            self._logger.error("[EQRemoteADB][MAIN][%s] Connection timeout after %ds", self._macAddr, self._config.adb_auth_timeout_connect + 5)
+            return
+        if isinstance(e, (OSError, ConnectionError)):
+            # Network errors (device offline, unreachable, etc.) - use WARNING instead of ERROR
+            self._logger.warning("[EQRemoteADB][MAIN][%s] Device unreachable :: %s", self._macAddr, e)
+        else:
+            self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
+        await self._notify_adb_status(False)
+        # Apply backoff only when we will attempt reconnection
+        if self._can_connect():
+            self._logger.debug("[EQRemoteADB][MAIN][%s] Waiting %ds before reconnection attempt", self._macAddr, self._reconnect_delay)
+            await asyncio.sleep(self._reconnect_delay)
+            self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
+
+    async def _loop_iteration(self) -> None:
+        """Un tour de boucle : connexion si nécessaire, déconnexion après inactivité, heartbeat"""
+        # Skip connection if not paired or pairing in progress
+        if self._adb_paired != 1 or self._pairing_mode:
+            return
+
+        if self._can_connect():
+            await self._connect()
+
+        # Heartbeat: Check connection health when connected
+        if not self._connected or self._pairing_mode:
+            return
+        assert self._adb is not None  # Guaranteed: _connected implies _adb exists
+        current_time = time.time()
+
+        # Mode non-persistent : déconnecter après inactivité
+        if not self._persistent_connection and current_time - self._last_activity >= self._idle_timeout_minutes * 60:
+            self._logger.info("[EQRemoteADB][IDLE][%s] Disconnecting after %d minutes of inactivity", self._macAddr, self._idle_timeout_minutes)
+            try:
+                await self._adb.close()
+                self._logger.info("[EQRemoteADB][IDLE][%s] ADB connection closed", self._macAddr)
+            except Exception as e:
+                self._logger.debug("[EQRemoteADB][IDLE][%s] Error closing ADB :: %s", self._macAddr, e)
+            self._reset_state(clear_activity=True)  # Voluntary disconnect
+            await self._notify_adb_status(False)
+            return
+
+        # Heartbeat check (in both modes to prevent TV from auto-closing the connection)
+        # Does NOT update _last_activity, so idle timeout is still enforced in on-demand mode
+        if current_time - self._last_heartbeat >= self._config.adb_heartbeat_interval:
+            self._last_heartbeat = current_time
+            try:
+                # Send keepalive with no-op shell command
+                await asyncio.wait_for(self._adb.shell(":", transport_timeout_s=5), timeout=5)
+                mode_type = "permanent" if self._persistent_connection else "on-demand"
+                self._logger.debug("[EQRemoteADB][HEARTBEAT][%s] Connection verified (mode: %s)", self._macAddr, mode_type)
+            except (asyncio.TimeoutError, TcpTimeoutException, InvalidResponseError, OSError, ConnectionError, AttributeError) as e:
+                self._logger.warning("[EQRemoteADB][HEARTBEAT][%s] Device disconnected :: %s", self._macAddr, e)
+                await self._close_after_failure()  # Involuntary disconnect, preserve activity for reconnection
+                await self._notify_adb_status(False)
 
     async def main(self) -> None:
         """
@@ -479,184 +619,53 @@ class EQRemoteADB(object):
         """
         try:
             self._logger.info("[EQRemoteADB][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
-            
+
             # Small initial delay to let the network and device stabilize after daemon start
-            await asyncio.sleep(2)
-            
-            # Note: Keys are now managed globally by TVRemoted, not per device
-            # Load signer (keys must already exist)
-            if not await self._load_signer():
+            await asyncio.sleep(self._config.adb_start_delay)
+
+            # Keys are managed globally by TVRemoted (they must already exist). Clé et objet ADB déjà créés si une commande
+            # est arrivée pendant la pause de démarrage : réutilisés (un second objet ferait perdre la connexion de la commande)
+            if self._signer is None and not await self._load_signer():
                 self._logger.error("[EQRemoteADB][MAIN][%s] Failed to load ADB signer", self._macAddr)
                 return
-            
-            # Create ADB device
-            self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
-            
+
             if self._adb is None:
-                self._logger.error("[EQRemoteADB][MAIN][%s] ADB Device is None", self._macAddr)
-                return
-            
+                self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
+
             # Send initial ADB status: not connected at startup (will connect on-demand or in persistent mode)
             # Don't send 'online' as we don't know TVRemote connection state here
-            currentTime = int(time.time())
-            currentTimeStr = EQRemote._format_timestamp(currentTime)
-            initial_data = {
-                'mac': self._macAddr,
-                'adb_connected': 0,
-                'updatelasttime': currentTimeStr,
-                'updatelasttimets': currentTime,
-                'realtime': 1
-            }
-            await self._jeedom_publisher.add_change('devicesRT::' + initial_data['mac'], initial_data)
+            await self._notify_adb_status(False)
             self._logger.debug("[EQRemoteADB][MAIN][%s] Sending initial status: ADB not connected", self._macAddr)
-            
+
             while not self._config.is_ending:
                 try:
-                    # Skip connection if not paired or pairing in progress
-                    if self._adb_paired != 1 or self._pairing_mode:
-                        await asyncio.sleep(5)
-                        continue
-                    
-                    if self._can_connect():
-                        # Start a new connection if none is in progress
-                        if not self._is_connecting():
-                            self._logger.debug("[EQRemoteADB][MAIN][%s] Connecting to ADB...", self._macAddr)
-                            self._connection_task = asyncio.create_task(
-                                self._adb.connect(
-                                    rsa_keys=[self._signer], 
-                                    transport_timeout_s=self._config.adb_timeout,  # Explicit TCP connection timeout
-                                    auth_timeout_s=self._config.adb_auth_timeout_connect
-                                )
-                            )
-                        
-                        # Wait for the connection task (whether new or existing)
-                        # Use auth timeout + 5s margin to allow for network delays
-                        connection_timeout = self._config.adb_auth_timeout_connect + 5
-                        try:
-                            assert self._connection_task is not None  # Guaranteed by _can_connect()
-                            await asyncio.wait_for(self._connection_task, timeout=connection_timeout)
-                            self._connection_task = None
-                            self._connected = True
-                            self._last_heartbeat = time.time()  # Initialize heartbeat timer
-                            self._last_activity = time.time()   # Initialize activity timer for on-demand mode
-                            mode_str = "permanent" if self._persistent_connection else "on-demand"
-                            self._logger.info("[EQRemoteADB][MAIN][%s] Connected to ADB (mode: %s)", self._macAddr, mode_str)
-                            self._reconnect_delay = self._config.reconnect_delay_min  # Reset backoff on successful connection
-                            
-                            # Send connection status to Jeedom
-                            await self._notify_connection_status(online=1, adb_connected=1)
-                        except (asyncio.TimeoutError, asyncio.CancelledError):
-                            self._logger.error("[EQRemoteADB][MAIN][%s] Connection timeout after %ds", self._macAddr, connection_timeout)
-                            # Close ADB connection properly even if connection failed
-                            if self._adb is not None:
-                                try:
-                                    await self._adb.close()
-                                except Exception:
-                                    pass  # Ignore errors during cleanup
-                            self._reset_state(clear_activity=False)  # Involuntary disconnect (timeout)
-                    
-                    # Heartbeat: Check connection health when connected
-                    if self._connected and not self._pairing_mode:
-                        current_time = time.time()
-                        
-                        # Mode non-persistent : déconnecter après inactivité
-                        if not self._persistent_connection:
-                            if current_time - self._last_activity >= self._idle_timeout_minutes * 60:
-                                self._logger.info("[EQRemoteADB][IDLE][%s] Disconnecting after %d minutes of inactivity", self._macAddr, self._idle_timeout_minutes)
-                                assert self._adb is not None  # Guaranteed: _connected implies _adb exists
-                                try:
-                                    await self._adb.close()
-                                    self._logger.info("[EQRemoteADB][IDLE][%s] ADB connection closed", self._macAddr)
-                                except Exception as e:
-                                    self._logger.debug("[EQRemoteADB][IDLE][%s] Error closing ADB :: %s", self._macAddr, e)
-                                self._reset_state(clear_activity=True)  # Voluntary disconnect
-                                await self._notify_connection_status(online=1, adb_connected=0)
-                                continue
-                        
-                        # Heartbeat check (in both modes to prevent TV from auto-closing the connection)
-                        # Sends keepalive every 20s to maintain connection stability
-                        # Does NOT update _last_activity, so idle timeout is still enforced in on-demand mode
-                        if current_time - self._last_heartbeat >= self._config.adb_heartbeat_interval:
-                            self._last_heartbeat = current_time
-                            try:
-                                # Send keepalive with no-op shell command
-                                await asyncio.wait_for(self._adb.shell(":", transport_timeout_s=5), timeout=5)
-                                mode_type = "permanent" if self._persistent_connection else "on-demand"
-                                self._logger.debug("[EQRemoteADB][HEARTBEAT][%s] Connection verified (mode: %s)", self._macAddr, mode_type)
-                            except (asyncio.TimeoutError, TcpTimeoutException, InvalidResponseError, OSError, ConnectionError, AttributeError) as e:
-                                self._logger.warning("[EQRemoteADB][HEARTBEAT][%s] Device disconnected :: %s", self._macAddr, e)
-                                assert self._adb is not None  # Guaranteed: _connected implies _adb exists
-                                try:
-                                    await self._adb.close()
-                                except Exception:
-                                    pass  # Ignore errors during cleanup
-                                self._reset_state(clear_activity=False)  # Involuntary disconnect, preserve activity for reconnection
-                                
-                                # Send disconnection status to Jeedom
-                                await self._notify_connection_status(online=0, adb_connected=0)
-                                # No backoff here - let the normal connection loop handle reconnection
-                                continue
-                    
-                    # Sleep between iterations (5s is sufficient for checking pairing status and heartbeat timing)
-                    await asyncio.sleep(5)
-                
-                except asyncio.CancelledError:
-                    # Task was cancelled (device removal or connection cancel during pairing)
-                    self._logger.debug("[EQRemoteADB][MAIN][%s] Task cancelled, exiting main loop", self._macAddr)
-                    # Close ADB connection properly before resetting state
-                    if self._adb is not None:
-                        try:
-                            await self._adb.close()
-                        except Exception:
-                            pass  # Ignore errors during cleanup
-                    self._reset_state(clear_activity=False)  # Involuntary disconnect
-                    raise  # Re-raise to exit the main loop
-                    
-                except (TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
+                    await self._loop_iteration()
+                except (asyncio.TimeoutError, TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
                     # Handle connection errors gracefully (device offline, network issue, etc.)
-                    # Close ADB connection properly before resetting state
-                    if self._adb is not None:
-                        try:
-                            await self._adb.close()
-                        except Exception:
-                            pass  # Ignore errors during cleanup
-                    self._reset_state(clear_activity=False)  # Involuntary disconnect (connection error)
-                    
-                    # If pairing is in progress, don't process errors (pairing handles its own connection)
-                    if self._pairing_mode:
-                        self._logger.debug("[EQRemoteADB][MAIN][%s] Connection error during pairing mode (expected, ignored) :: %s", self._macAddr, e)
-                        await asyncio.sleep(5)  # Important: avoid busy loop
-                        continue  # Skip notifications and backoff, return to loop start
-                    
-                    # Log errors based on type
-                    if isinstance(e, (OSError, ConnectionError)):
-                        # Network errors (device offline, unreachable, etc.) - use WARNING instead of ERROR
-                        self._logger.warning("[EQRemoteADB][MAIN][%s] Device unreachable :: %s", self._macAddr, e)
-                        await self._notify_connection_status(online=0, adb_connected=0)
-                    else:
-                        self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
-                        await self._notify_connection_status(online=0, adb_connected=0)
-                    
-                    # Apply backoff only when we will attempt reconnection
-                    # _can_connect() already contains the logic for this decision
-                    if self._can_connect():
-                        self._logger.debug("[EQRemoteADB][MAIN][%s] Waiting %ds before reconnection attempt", self._macAddr, self._reconnect_delay)
-                        await asyncio.sleep(self._reconnect_delay)
-                        self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
-                    
+                    await self._on_connection_error(e)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    # Erreur imprévue : journalisée, la boucle continue (elle ne s'arrête que sur annulation)
+                    self._logger.error("[EQRemoteADB][MAIN][%s] Unexpected exception :: %s", self._macAddr, e)
+                    self._logger.debug(traceback.format_exc())
+                    await self._close_after_failure()
+                    await asyncio.sleep(self._reconnect_delay)
+                    self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
+
+                await asyncio.sleep(self._config.adb_loop_interval)
+
         except asyncio.CancelledError:
             self._logger.debug("[EQRemoteADB] Stop Main for device %s (%s)", self._macAddr, self._host)
             # Clean up connection task on cancellation
             if self._connection_task is not None:
                 self._connection_task.cancel()
-                self._connection_task = None
-        except Exception as e: 
+        except Exception as e:
             self._logger.error("[EQRemoteADB][MAIN] Unexpected exception :: %s", e)
             self._logger.debug(traceback.format_exc())
         finally:
-            # Cleanup resources
-            if self._connected:
-                assert self._adb is not None  # Guaranteed: _connected implies _adb exists
+            # Cleanup resources (connection state kept: remove() notifies Jeedom that ADB is disconnected)
+            if self._connected and self._adb is not None:
                 try:
                     await self._adb.close()
                     self._logger.debug("[EQRemoteADB][MAIN][%s] ADB connection closed", self._macAddr)
@@ -664,10 +673,10 @@ class EQRemoteADB(object):
                     self._logger.debug("[EQRemoteADB][MAIN][%s] Error during ADB close cleanup :: %s", self._macAddr, e)
             self._main_task = None
             self._logger.debug("[EQRemoteADB][MAIN][%s] Main loop stopped", self._macAddr)
-    
+
     async def cancel_connection_attempt(self) -> None:
         """Cancel any ongoing connection attempt and close existing connection
-        
+
         Can be called in different states:
         - Connected: will close connection and notify Jeedom
         - Connecting: will cancel task without notification (not yet connected)
@@ -676,14 +685,18 @@ class EQRemoteADB(object):
         if self._is_connecting():
             assert self._connection_task is not None  # Guaranteed by _is_connecting()
             self._logger.debug("[EQRemoteADB][%s] Cancelling ongoing connection attempt", self._macAddr)
-            self._connection_task.cancel()
+            task = self._connection_task
+            task.cancel()
             try:
-                await self._connection_task
+                await task
             except asyncio.CancelledError:
+                current = asyncio.current_task()
+                if current is not None and current.cancelling():
+                    raise
                 self._logger.debug("[EQRemoteADB][%s] Connection attempt cancelled successfully", self._macAddr)
             except Exception as e:
                 self._logger.debug("[EQRemoteADB][%s] Error during connection cancellation :: %s", self._macAddr, e)
-        
+
         # Also close any existing connection
         if self._connected:
             assert self._adb is not None  # Guaranteed: _connected implies _adb exists
@@ -692,39 +705,39 @@ class EQRemoteADB(object):
                 self._logger.debug("[EQRemoteADB][%s] Existing connection closed", self._macAddr)
             except Exception as e:
                 self._logger.debug("[EQRemoteADB][%s] Error closing connection :: %s", self._macAddr, e)
-        
+
         # Capture state before reset to know if we need to notify
         was_connected = self._connected
-        
+
         # Reset all connection state consistently
         self._reset_state(clear_activity=True)  # Voluntary user action
-        
+
         # Notify Jeedom only if we were connected (state changed)
         if was_connected:
-            await self._notify_connection_status(online=1, adb_connected=0)
-    
+            await self._notify_adb_status(False)
+
     def set_pairing_mode(self, pairing: bool) -> None:
         """Set pairing mode to prevent background connection attempts"""
         self._pairing_mode = pairing
         self._logger.debug("[EQRemoteADB][%s] Pairing mode set to %s", self._macAddr, pairing)
-    
+
     async def remove(self) -> None:
         """Call it to disconnect from a EQRemoteADB"""
         self._logger.debug("[EQRemoteADB] Removing device %s (%s)", self._macAddr, self._host)
         try:
             # Cancel any ongoing connection and close existing one
             await self.cancel_connection_attempt()
-            
+
             # Log removal at INFO level for coherence with connection log
             self._logger.info("[EQRemoteADB][MAIN][%s] Device removed (ADB disconnected)", self._macAddr)
-            
+
             # Reset pairing mode and clear ADB reference
             self._pairing_mode = False
             self._adb = None
         except Exception as e:
             self._logger.error("[EQRemoteADB][REMOVE] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
-    
+
     async def send_command(self, action: str | None = None, value: str | None = None, cmd_id: str | None = None) -> None:
         """Call it to send ADB command to EQRemoteADB"""
         try:
@@ -745,36 +758,14 @@ class EQRemoteADB(object):
             if not self._persistent_connection:
                 self._last_activity = time.time()
             
-            # Connect on-demand if not already connected
+            # Connect on-demand if not already connected (same connection path as the main loop: an attempt in progress is awaited, never doubled)
             if not self._persistent_connection and not self._connected:
                 self._logger.debug("[EQRemoteADB][SendCommand] On-demand mode: connecting...")
-                if self._adb is None:
-                    self._adb = AdbDeviceTcpAsync(self._host, self._port, default_transport_timeout_s=self._config.adb_timeout)
-                
                 try:
-                    await asyncio.wait_for(
-                        self._adb.connect(
-                            rsa_keys=[self._signer], 
-                            transport_timeout_s=self._config.adb_timeout,
-                            auth_timeout_s=self._config.adb_auth_timeout_connect
-                        ),
-                        timeout=self._config.adb_auth_timeout_connect + 5
-                    )
-                    self._connected = True
-                    self._last_heartbeat = time.time()
-                    self._last_activity = time.time()  # Update activity timestamp after successful connection
-                    self._logger.info("[EQRemoteADB][SendCommand] Connected for on-demand command")
-                    # Notify Jeedom that ADB is now connected
-                    await self._notify_connection_status(online=1, adb_connected=1)
-                except (asyncio.TimeoutError, asyncio.CancelledError, OSError, ConnectionError) as e:
-                    self._logger.error("[EQRemoteADB][SendCommand] Failed to connect :: %s", e)
-                    # Clean up ADB object if connection failed
-                    assert self._adb is not None  # Guaranteed: just created above
-                    try:
-                        await self._adb.close()
-                    except Exception:
-                        pass  # Ignore cleanup errors
-                    self._adb = None
+                    await self._connect()
+                except (asyncio.TimeoutError, TcpTimeoutException, InvalidResponseError, DeviceAuthError, OSError, ConnectionError) as e:
+                    # TV éteinte ou injoignable : situation attendue, pas une panne (la commande suivante réessaiera)
+                    self._logger.warning("[EQRemoteADB][SendCommand] Failed to connect :: %s", e)
                     if cmd_id:
                         error_data = {
                             'adb_shell_output_mac': self._macAddr,
@@ -785,7 +776,7 @@ class EQRemoteADB(object):
                     return
             
             if self._adb is None or not self._connected:
-                self._logger.error("[EQRemoteADB][SendCommand] ADB not connected")
+                self._logger.warning("[EQRemoteADB][SendCommand] ADB not connected")
                 # Send error to Jeedom if cmd_id is provided
                 if cmd_id:
                     error_data = {
@@ -843,7 +834,7 @@ class EQRemoteADB(object):
                             pass  # Ignore errors during cleanup
                         self._reset_state(clear_activity=False)  # Involuntary disconnect during command
                         # Notify Jeedom that ADB is now disconnected
-                        await self._notify_connection_status(online=1, adb_connected=0)
+                        await self._notify_adb_status(False)
                         # Send error to Jeedom if cmd_id is provided
                         if cmd_id:
                             error_data = {
@@ -884,7 +875,7 @@ class EQRemoteADB(object):
                 pass  # Ignore errors during cleanup
             self._reset_state(clear_activity=False)  # Involuntary disconnect
             # Notify Jeedom that ADB is now disconnected
-            await self._notify_connection_status(online=1, adb_connected=0)
+            await self._notify_adb_status(False)
             self._logger.debug(traceback.format_exc())
         except Exception as e:
             self._logger.error("[EQRemoteADB][SendCommand] Exception :: %s", e)
@@ -1151,7 +1142,10 @@ class TVRemoted:
             return
         # Ensure ADB keys exist before adding device
         await self.ensure_adb_keys(notify_jeedom=False)
-        device = EQRemoteADB(mac, message['host'], self._config, self._jeedom_publisher)
+        self._create_remote_adb(mac, message['host'], paired, persistent, idle_timeout)
+
+    def _create_remote_adb(self, mac: str, host: str, paired: int, persistent: bool, idle_timeout: int) -> None:
+        device = EQRemoteADB(mac, host, self._config, self._jeedom_publisher)
         device._adb_paired = paired
         device._persistent_connection = persistent
         device._idle_timeout_minutes = idle_timeout
@@ -1160,6 +1154,15 @@ class TVRemoted:
         # Always start main loop as async task (it will handle pairing logic internally)
         device._main_task = asyncio.create_task(device.main())
         self._logger.debug('[DAEMON][SOCKET] Main loop task created for %s (paired=%s) | ADB devices (%d)', mac, device._adb_paired, len(self._config.remote_devices_adb))
+
+    async def _restart_remote_adb(self, mac: str, paired: int) -> None:
+        """Recrée l'appareil ADB avec les mêmes réglages : la clé est relue (elle a pu être régénérée pour l'appairage)"""
+        device = self._config.remote_devices_adb.get(mac)
+        if device is None:
+            return
+        host, persistent, idle_timeout = device.host, device._persistent_connection, device._idle_timeout_minutes
+        await self._remove_remote_adb(mac)
+        self._create_remote_adb(mac, host, paired, persistent, idle_timeout)
 
     async def _remove_remote_adb(self, mac: str) -> None:
         device = self._config.remote_devices_adb.pop(mac, None)
@@ -1290,142 +1293,97 @@ class TVRemoted:
                 await self._jeedom_publisher.send_to_jeedom({'adb_keys_error': str(e)})
             return False
 
+    async def _send_adb_pairing_result(self, data: dict) -> None:
+        """Résultat de l'appairage ADB vers Jeedom ; un échec d'envoi est journalisé, sans interrompre l'appairage"""
+        if self._jeedom_publisher is None:
+            return
+        try:
+            await self._jeedom_publisher.send_to_jeedom(data)
+        except Exception as e:
+            self._logger.warning("[PAIRING_ADB][%s] Cannot send the pairing result to Jeedom :: %s", data.get('mac'), e)
+
+    async def _send_adb_pairing_failed(self, mac, message: str) -> None:
+        """Échec sans conclusion sur l'appairage (TV injoignable, appairage déjà en cours…) : affiché à l'utilisateur, statut d'appairage inchangé"""
+        await self._send_adb_pairing_result({'mac': mac, 'adb_pairing_failed': 1, 'message': message})
+
     async def _pairing_adb(self, _mac=None, _host=None) -> None:
-        """Function to pair with TV using ADB"""
-        
+        """Function to pair with TV using ADB.
+        Le statut d'appairage envoyé à Jeedom (adb_paired) ne change que sur un résultat certain : succès (1) ou refus sur la TV (0)"""
+
         if self._config.scanmode:
             self._logger.error("[PAIRING_ADB] TV ScanMode in Progress. Stop Scan before trying to Pair.")
             return
-        
+
         if _host is None:
             self._logger.error("[PAIRING_ADB] Host is None")
             return
-        
+
         # Check if pairing is already in progress for this device
-        if _mac in self._config.remote_devices_adb:
-            device = self._config.remote_devices_adb[_mac]
-            if device._pairing_mode:
-                self._logger.warning("[PAIRING_ADB][%s] Pairing already in progress, ignoring new request", _mac)
-                if self._jeedom_publisher is not None:
-                    data = {
-                        'mac': _mac,
-                        'adb_paired': 0,
-                        'message': 'Pairing already in progress'
-                    }
-                    await self._jeedom_publisher.send_to_jeedom(data)
-                return
-        
+        device = self._config.remote_devices_adb.get(_mac)
+        if device is not None and device._pairing_mode:
+            self._logger.warning("[PAIRING_ADB][%s] Pairing already in progress, ignoring new request", _mac)
+            await self._send_adb_pairing_failed(_mac, 'Pairing already in progress')
+            return
+
+        adb = None
         try:
             # Ensure keys exist (shared across all devices)
             await self.ensure_adb_keys(notify_jeedom=False)
-            
-            # Load signer
-            with open(self._config.adb_key_file, 'r') as f:
-                priv = f.read()
-            with open(self._config.adb_pub_file, 'r') as f:
-                pub = f.read()
-            signer = PythonRSASigner(pub, priv)
-            
-            # Create ADB device
+            signer = load_adb_signer(self._config)
             adb = AdbDeviceTcpAsync(_host, 5555, default_transport_timeout_s=self._config.adb_timeout)
-            
+
             self._logger.debug("[PAIRING_ADB][START][%s] Start ADB Pairing...", _mac)
-            
+
             # If device already exists, cancel any ongoing connection and enable pairing mode
-            if _mac in self._config.remote_devices_adb:
-                device = self._config.remote_devices_adb[_mac]
+            if device is not None:
                 self._logger.debug("[PAIRING_ADB][%s] Cancelling background connections and enabling pairing mode", _mac)
                 device.set_pairing_mode(True)
                 await device.cancel_connection_attempt()
-                # Wait a bit to ensure the main loop has seen the pairing mode flag
-                await asyncio.sleep(1)
-            
+
+            # Longer authentication timeout for manual pairing, to give the user time to accept on the TV
+            await adb.connect(
+                rsa_keys=[signer],
+                transport_timeout_s=self._config.adb_timeout,  # Explicit TCP connection timeout
+                auth_timeout_s=self._config.adb_auth_timeout_pairing
+            )
+            self._logger.info("[PAIRING_ADB][%s] ADB connection successful", _mac)
             try:
-                # Try to connect (use longer timeout for manual pairing to give user time to validate)
-                await adb.connect(
-                    rsa_keys=[signer], 
-                    transport_timeout_s=self._config.adb_timeout,  # Explicit TCP connection timeout
-                    auth_timeout_s=self._config.adb_auth_timeout_pairing
-                )
-                self._logger.info("[PAIRING_ADB][%s] ADB connection successful", _mac)
-                
-                # Inform Jeedom of success
-                if self._jeedom_publisher is not None:
-                    data = {
-                        'mac': _mac,
-                        'adb_paired': 1,
-                        'message': 'ADB pairing successful'
-                    }
-                    await self._jeedom_publisher.send_to_jeedom(data)
-                
-                # Close connection (wrap in try/except to avoid interfering with success notification)
-                try:
-                    await adb.close()
-                except Exception as close_error:
-                    self._logger.debug("[PAIRING_ADB][%s] Error closing connection (ignored) :: %s", _mac, close_error)
-                
-                # Disable pairing mode and update paired status
-                if _mac in self._config.remote_devices_adb:
-                    device = self._config.remote_devices_adb[_mac]
-                    device.set_pairing_mode(False)
-                    device._adb_paired = 1
-                    self._logger.info("[PAIRING_ADB][%s] Device paired, main loop will connect soon", _mac)
-                
-            except DeviceAuthError as e:
-                self._logger.error("[PAIRING_ADB][%s] Device not authorized. Please check TV screen for authorization prompt :: %s", _mac, e)
-                # Close ADB connection properly
-                try:
-                    await adb.close()
-                except Exception:
-                    pass  # Ignore errors during cleanup
-                if self._jeedom_publisher is not None:
-                    data = {
-                        'mac': _mac,
-                        'adb_paired': 0,
-                        'message': 'Device not authorized. Please check TV screen for authorization prompt.'
-                    }
-                    await self._jeedom_publisher.send_to_jeedom(data)
-                
-                # Disable pairing mode
-                if _mac in self._config.remote_devices_adb:
-                    self._config.remote_devices_adb[_mac].set_pairing_mode(False)
-            except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
-                # Distinguer les erreurs de connexion normales (device offline) des erreurs critiques
-                if isinstance(e, (OSError, ConnectionError)):
-                    self._logger.warning("[PAIRING_ADB][%s] Cannot connect (device may be offline) :: %s", _mac, e)
-                else:
-                    self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
-                # Close ADB connection properly
-                try:
-                    await adb.close()
-                except Exception:
-                    pass  # Ignore errors during cleanup
-                if self._jeedom_publisher is not None:
-                    data = {
-                        'mac': _mac,
-                        'adb_paired': 0,
-                        'message': f'Connection error: {str(e)}'
-                    }
-                    await self._jeedom_publisher.send_to_jeedom(data)
-                
-                # Disable pairing mode
-                if _mac in self._config.remote_devices_adb:
-                    self._config.remote_devices_adb[_mac].set_pairing_mode(False)
-            
+                await adb.close()
+            except Exception as close_error:
+                self._logger.debug("[PAIRING_ADB][%s] Error closing connection (ignored) :: %s", _mac, close_error)
+
+            # Appareil recréé : il relit la clé (régénérée si elle avait été supprimée) et se connecte avec l'appairage à jour
+            async with self._devices_lock:
+                await self._restart_remote_adb(_mac, paired=1)
+            if _mac in self._config.remote_devices_adb:
+                self._logger.info("[PAIRING_ADB][%s] Device paired, restarted to connect now", _mac)
+            await self._send_adb_pairing_result({'mac': _mac, 'adb_paired': 1, 'message': 'ADB pairing successful'})
+
+        except DeviceAuthError as e:
+            # Refus sur la TV (ou demande non acceptée à temps) : la clé n'est pas autorisée, résultat certain
+            self._logger.warning("[PAIRING_ADB][%s] Device not authorized. Please check TV screen for authorization prompt :: %s", _mac, e)
+            await self._send_adb_pairing_result({'mac': _mac, 'adb_paired': 0, 'message': 'Device not authorized. Please check TV screen for authorization prompt.'})
+        except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
+            # Distinguer les erreurs de connexion normales (device offline) des erreurs critiques
+            if isinstance(e, (OSError, ConnectionError)):
+                self._logger.warning("[PAIRING_ADB][%s] Cannot connect (device may be offline) :: %s", _mac, e)
+            else:
+                self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)
+            await self._send_adb_pairing_failed(_mac, f'Connection error: {str(e)}')
         except Exception as e:
             self._logger.error("[PAIRING_ADB][%s] Exception :: %s", _mac, e)
             self._logger.debug(traceback.format_exc())
-            # Close ADB connection properly if it exists
-            try:
-                await adb.close()
-            except Exception:
-                pass  # Ignore errors during cleanup
-            if self._jeedom_publisher is not None:
-                await self._jeedom_publisher.send_to_jeedom({'adb_pairing_error': str(e), 'mac': _mac})
-            
-            # Disable pairing mode in case of unexpected exception
-            if _mac in self._config.remote_devices_adb:
-                self._config.remote_devices_adb[_mac].set_pairing_mode(False)
+            await self._send_adb_pairing_failed(_mac, f'Error: {str(e)}')
+        finally:
+            if adb is not None:
+                try:
+                    await adb.close()
+                except Exception:
+                    pass  # Ignore errors during cleanup
+            # Fin du mode appairage (appareil inchangé ; un appareil recréé démarre sans)
+            device = self._config.remote_devices_adb.get(_mac)
+            if device is not None and device._pairing_mode:
+                device.set_pairing_mode(False)
 
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
