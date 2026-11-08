@@ -183,6 +183,18 @@ class tvremote extends eqLogic {
         system::fuserk(config::byKey('socketport', __CLASS__, '55112'));
     }
 
+    /**
+     * Texte avec les secrets masqués (clé API), avant log::add de tout contenu reçu ou envoyé.
+     * Mêmes règles, dans le même ordre, que maskSecrets côté démon (resources/tvremoted/jeedom/utils.py).
+     */
+    public static function maskSecrets($_text) {
+        $rules = array(
+            '/(--apikey\s+)\S+/' => '$1sEcReT',
+            '/(["\']?\bapikey\b["\']?\s*[:=]\s*["\']?)[^"\'&\s,}]+/i' => '$1sEcReT',
+        );
+        return preg_replace(array_keys($rules), array_values($rules), (string) $_text);
+    }
+
     public static function sendToDaemon($params) {
         try {
             $deamon_info = self::deamon_info();

@@ -5,6 +5,8 @@ from typing import Callable, Awaitable
 from collections.abc import Mapping, MutableMapping
 import aiohttp
 
+from .utils import maskSecrets
+
 
 class Listener():
     """This class allow to create an asyncio task that will open a socket server and listen to it until task is canceled. `on_message` call_back will be call with the message as a dict as argument"""
@@ -38,14 +40,22 @@ class Listener():
 
     async def _handle_read(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         data = await reader.read()
-        message = data.decode()
         addr = writer.get_extra_info('peername')
-        self._logger.debug("[LISTENER] Received %s from %s", message, addr)
 
         writer.close()
         self._logger.debug("[LISTENER] Close connection")
         await writer.wait_closed()
-        await self._on_message(json.loads(message))
+        try:
+            message = json.loads(data.decode())
+        except ValueError as e:  # UnicodeDecodeError et JSONDecodeError en héritent
+            self._logger.warning("[LISTENER] Invalid message from %s (not JSON) :: %s", addr, e)
+            return
+        if not isinstance(message, dict):
+            self._logger.warning("[LISTENER] Invalid message from %s (not a JSON object)", addr)
+            return
+        # Clé API jamais écrite dans le log (lisible par d'autres, par exemple des agents IA) : masquée ici, sans dépendre du filtre du log
+        self._logger.debug("[LISTENER] Received %s from %s", maskSecrets(str(message)), addr)
+        await self._on_message(message)
 
 class Publisher():
     """This class allow to push information to Jeedom either immediately by calling function `send_to_jeedom` or in cycle by calling function `add_change`. For the "cycle" mode, a task must be created by calling `create_send_task` and awaited"""

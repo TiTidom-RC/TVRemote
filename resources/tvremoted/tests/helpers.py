@@ -77,6 +77,8 @@ class FakeRemote:
     instances: list = []
     initialVolume = None  # volume_info des prochaines instances
     certError = None  # exception levée par async_generate_cert_if_missing des prochaines instances
+    MAC = '11:22:33:44:55:66'  # renvoyée par async_get_name_and_mac (scan)
+    nameAndMacErrors: dict = {}  # par hôte : exception levée par async_get_name_and_mac
 
     def __init__(self, client_name, certfile, keyfile, host, enable_ime=True, **kwargs):
         self.host = host
@@ -102,6 +104,7 @@ class FakeRemote:
         cls.instances = []
         cls.initialVolume = None
         cls.certError = None
+        cls.nameAndMacErrors = {}
 
     @classmethod
     def running(cls):
@@ -154,6 +157,12 @@ class FakeRemote:
 
     def send_launch_app_command(self, app_link):
         self.keys.append(('app', app_link))
+
+    async def async_get_name_and_mac(self):
+        error = FakeRemote.nameAndMacErrors.get(self.host)
+        if error is not None:
+            raise error
+        return 'Sony', FakeRemote.MAC
 
     async def async_start_pairing(self):
         pass

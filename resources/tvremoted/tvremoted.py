@@ -14,9 +14,10 @@ import asyncio
 import time
 import traceback
 import ipaddress
+import secrets
 
 from config import Config
-from jeedom.utils import Utils
+from jeedom.utils import SECRET_MASK, Utils
 from jeedom.aio_connector import Listener, Publisher
 
 # Import pour ZeroConf
@@ -45,7 +46,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-# Écran allumé ? Commande de python-androidtv (CMD_SCREEN_ON), utilisée par l'intégration ADB de Home Assistant
+# Écran allumé ? (code de retour 0 si oui, selon les versions d'Android : dumpsys power puis dumpsys display)
 ADB_SCREEN_ON = "(dumpsys power | grep 'Display Power' | grep -q 'state=ON' || dumpsys power | grep -q 'mScreenOn=true' || dumpsys display | grep -q 'mScreenState=ON')"
 # Power On / Power Off en ADB : la touche Power (qui bascule) n'est envoyée que si l'écran n'est pas déjà dans l'état demandé
 ADB_POWER_COMMANDS = {
@@ -1006,8 +1007,9 @@ class TVRemoted:
         This function will be called by the "listen task" once a message is received from Jeedom.
         You must implement the different actions that your daemon can handle.
         """
-        if message['apikey'] != self._config.api_key:
-            self._logger.error('[MAIN][SOCKET] Invalid apikey from socket : %s', message)
+        if not secrets.compare_digest(str(message.get('apikey', '')), self._config.api_key):
+            # Message non recopié : il contient la clé fournie
+            self._logger.error('[MAIN][SOCKET] Invalid apikey from socket (cmd :: %s)', message.get('cmd'))
             return
         try:
             if message['cmd'] == "action":
@@ -1457,87 +1459,107 @@ class TVRemoted:
             if device is not None and device._pairing_mode:
                 device.set_pairing_mode(False)
 
+    # Délai laissé, en fin de scan, aux TV encore en cours d'interrogation (secondes)
+    SCAN_PENDING_TIMEOUT = 5
+
+    async def _report_tv_host(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
+        """Une TV trouvée par le scan : nom, adresse et MAC envoyés à Jeedom. Une erreur ne concerne qu'elle : journalisée, le scan continue"""
+        try:
+            info = AsyncServiceInfo(service_type, name)
+            if not await info.async_request(zeroconf, 3000):
+                self._logger.warning("[TVHOSTS][%s] Info :: NO", name)
+                return
+
+            currentTime = int(time.time())
+            currentTimeStr = EQRemote._format_timestamp(currentTime)
+
+            _friendly_name = info.get_name()
+            _type = info.type
+
+            self._logger.info("[TVHOSTS][%s] Name :: %s", _friendly_name, name)
+            self._logger.info("[TVHOSTS][%s] Type :: %s", _friendly_name, _type)
+
+            _ip_addr_v4 = None
+            _port = info.port
+            for addr in info.parsed_scoped_addresses():
+                if (await self._is_ipv4(addr)):
+                    _ip_addr_v4 = addr
+                    self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", _friendly_name, addr, str(_port))
+                    break
+            if _ip_addr_v4 is None:
+                self._logger.warning("[TVHOSTS][%s] No IPv4 address :: TV ignored", _friendly_name)
+                return
+
+            if info.decoded_properties:
+                for key, value in info.decoded_properties.items():
+                    self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", _friendly_name, key, value)
+            else:
+                self._logger.warning("[TVHOSTS][%s] Properties :: NONE", _friendly_name)
+
+            # Connect to Remote and get name and mac address
+            remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _ip_addr_v4)
+            if await remote.async_generate_cert_if_missing():
+                self._logger.info("[TVHOSTS][%s] Generated New Cert/Key Files :: %s | %s", _friendly_name, self._config.cert_file, self._config.key_file)
+
+            remote_name, remote_mac = await remote.async_get_name_and_mac()
+
+            self._logger.info("[TVHOSTS][%s] Name:Mac :: %s | %s", _friendly_name, remote_name, remote_mac)
+
+            data = {
+                'name': name,
+                'family': remote_name,
+                'mac': remote_mac,
+                'friendly_name': _friendly_name,
+                'lastscan': currentTimeStr,
+                'type': _type,
+                'host': _ip_addr_v4,
+                'port': info.port,
+                'scanmode': 1
+            }
+            # Envoi vers Jeedom
+            if self._jeedom_publisher is not None:
+                await self._jeedom_publisher.add_change('devices::' + data['name'], data)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            # TV injoignable ou réponse inattendue : situation possible pendant un scan, pas une panne
+            self._logger.warning("[TVHOSTS][%s] TV ignored, cannot read its information :: %s", name, e)
+            self._logger.debug(traceback.format_exc())
+
     async def _tvhosts_from_zeroconf(self, timeout: float = 30.0) -> None:
         """ Function to detect TV hosts from ZeroConf Instance """
-        
+        # Interrogations en cours, suivies pour être attendues (ou arrêtées) à la fin du scan
+        tasks: set = set()
+
         def _async_on_service_state_change(zeroconf: Zeroconf, service_type: str, name: str, state_change: ServiceStateChange) -> None:
             if state_change is not ServiceStateChange.Added:
                 return
-            _ = asyncio.ensure_future(async_get_service_info(zeroconf, service_type, name))
-
-        async def async_get_service_info(zeroconf: Zeroconf, service_type: str, name: str) -> None:
-            info = AsyncServiceInfo(service_type, name)
-            await info.async_request(zeroconf, 3000)
-            if info:
-                currentTime = int(time.time())
-                currentTimeStr = EQRemote._format_timestamp(currentTime)
-                
-                _friendly_name = info.get_name()
-                _type = info.type
-                
-                self._logger.info("[TVHOSTS][%s] Name :: %s", _friendly_name, name)
-                self._logger.info("[TVHOSTS][%s] Type :: %s", _friendly_name, _type)
-                
-                _ip_addr_v4 = "0.0.0.0"
-                _port = info.port
-                for addr in info.parsed_scoped_addresses():
-                    if (await self._is_ipv4(addr)):
-                        _ip_addr_v4 = addr
-                        self._logger.info("[TVHOSTS][%s] Addr:Port (IPv4) :: %s:%s", _friendly_name, addr, str(_port))
-                        break
-                    # else:
-                        # self._logger.info("[TVHOSTS][%s] Addr (IPv6) :: %s (port=%s)", name, addr, str(info.port))
-                
-                if info.decoded_properties:
-                    for key, value in info.decoded_properties.items():
-                        self._logger.info("[TVHOSTS][%s] Properties :: %s = %s", _friendly_name, key, value)
-                else:
-                    self._logger.warning("[TVHOSTS][%s] Properties :: NONE", _friendly_name)
-                
-                # Connect to Remote and get name and mac address
-                remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, _ip_addr_v4)
-                if await remote.async_generate_cert_if_missing():
-                    self._logger.info("[TVHOSTS][%s] Generated New Cert/Key Files :: %s | %s", _friendly_name, self._config.cert_file, self._config.key_file)
-                
-                remote_name, remote_mac = await remote.async_get_name_and_mac()
-                
-                self._logger.info("[TVHOSTS][%s] Name:Mac :: %s | %s", _friendly_name, remote_name, remote_mac)
-                
-                data = {
-                    'name': name,
-                    'family': remote_name,
-                    'mac': remote_mac,
-                    'friendly_name': _friendly_name,
-                    'lastscan': currentTimeStr,
-                    'type': _type,
-                    'host': _ip_addr_v4,
-                    'port': info.port,
-                    'scanmode': 1
-                }
-                # Envoi vers Jeedom
-                if self._jeedom_publisher is not None:
-                    await self._jeedom_publisher.add_change('devices::' + data['name'], data)
-                
-                # Libération de la mémoire
-                remote = None
-                remote_name = None
-                remote_mac = None
-                
-            else:
-                self._logger.warning("[TVHOSTS][%s] Info :: NO", name)
+            task = asyncio.ensure_future(self._report_tv_host(zeroconf, service_type, name))
+            tasks.add(task)
+            task.add_done_callback(tasks.discard)
 
         zc = AsyncZeroconf()
         services = ["_androidtvremote2._tcp.local."]
         self._logger.info("[TVHOSTS] TV Browser (for %s seconds) :: START", timeout)
         browser = AsyncServiceBrowser(zc.zeroconf, services, handlers=[_async_on_service_state_change])
-        t = 0
-        while not self._config.is_ending and (t < timeout) and self._config.scanmode:
-            t += 0.5
-            await asyncio.sleep(0.5)
-
-        await browser.async_cancel()
-        await zc.async_close()
-        self._logger.info("[TVHOSTS] TV Browser :: STOP")
+        try:
+            t = 0
+            while not self._config.is_ending and (t < timeout) and self._config.scanmode:
+                t += 0.5
+                await asyncio.sleep(0.5)
+        finally:
+            await browser.async_cancel()
+            pending = set(tasks)
+            if pending:
+                # TV trouvées juste avant la fin : quelques secondes pour finir, puis abandonnées
+                _, pending = await asyncio.wait(pending, timeout=self.SCAN_PENDING_TIMEOUT)
+                for task in pending:
+                    task.cancel()
+                await asyncio.gather(*pending, return_exceptions=True)
+                if pending:
+                    self._logger.info("[TVHOSTS] %d TV still being read at the end of the scan :: ignored", len(pending))
+            await zc.async_close()
+            self._logger.info("[TVHOSTS] TV Browser :: STOP")
 
     async def _mainLoop(self, cycle: float = 2.0) -> None:
         # Main Loop for Daemon
@@ -1740,7 +1762,7 @@ if __name__ == '__main__':
     args = get_args()
     config = Config(**vars(args))
 
-    Utils.init_logger(config.log_level)
+    Utils.init_logger(config.log_level)  # avec le masquage des secrets (SecretMaskFilter)
     logging.getLogger('asyncio').setLevel(logging.WARNING)
     if config.tv_log_level != 'daemon':
         _tv_level = Utils.convert_log_level(config.tv_log_level)
@@ -1783,7 +1805,7 @@ if __name__ == '__main__':
         _LOGGER.info('[DAEMON] Cycle Comm: %s', config.cycle_comm)
         _LOGGER.info('[DAEMON] Cycle Event: %s', config.cycle_event)
         _LOGGER.info('[DAEMON] PID File: %s', config.pid_filename)
-        _LOGGER.info('[DAEMON] Api Key: %s', "***")
+        _LOGGER.info('[DAEMON] Api Key: %s', SECRET_MASK)
         _LOGGER.info('[DAEMON] CallBack: %s', config.callback_url)
         _LOGGER.info('[DAEMON] Cert/Key Files: %s :: %s', config.cert_file, config.key_file)
 
