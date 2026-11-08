@@ -1628,68 +1628,71 @@ def shutdown() -> None:
 
 # ----------------------------------------------------------------------------
 
-args = get_args()
-config = Config(**vars(args))
-
-Utils.init_logger(config.log_level)
 _LOGGER = logging.getLogger(__name__)
-logging.getLogger('asyncio').setLevel(logging.WARNING)
-if config.tv_log_level != 'daemon':
-    _tv_level = Utils.convert_log_level(config.tv_log_level)
-    logging.getLogger('zeroconf').setLevel(_tv_level)
-    logging.getLogger('androidtvremote2').setLevel(_tv_level)
-    logging.getLogger('adb_shell').setLevel(_tv_level)
 
-if config.log_filters_enabled_arg != '0':
-    config.log_filters_enabled = True
+# Démarrage du démon seulement quand le fichier est lancé : importé (tests), il ne lit pas d'arguments et ne démarre rien
+if __name__ == '__main__':
+    args = get_args()
+    config = Config(**vars(args))
 
-if config.log_filters_enabled:
+    Utils.init_logger(config.log_level)
+    logging.getLogger('asyncio').setLevel(logging.WARNING)
+    if config.tv_log_level != 'daemon':
+        _tv_level = Utils.convert_log_level(config.tv_log_level)
+        logging.getLogger('zeroconf').setLevel(_tv_level)
+        logging.getLogger('androidtvremote2').setLevel(_tv_level)
+        logging.getLogger('adb_shell').setLevel(_tv_level)
+
+    if config.log_filters_enabled_arg != '0':
+        config.log_filters_enabled = True
+
+    if config.log_filters_enabled:
+        try:
+            with open(config.log_filters_file_path, 'r', encoding='utf-8') as _f:
+                config.log_filters = json.load(_f)
+        except FileNotFoundError:
+            logging.warning('[DAEMON][LOGFILTERS] Fichier introuvable : %s', config.log_filters_file_path)
+        except Exception as _e:
+            logging.warning('[DAEMON][LOGFILTERS] Erreur lecture filtres : %s', _e)
+
+    if config.log_filters_enabled and config.log_filters:
+        _remap_filter = PatternRemapFilter(config.log_filters)
+        for _handler in logging.root.handlers:
+            _handler.addFilter(_remap_filter)
+        _active_count = sum(1 for r in config.log_filters if r.get('enabled', True))
+        logging.info('[DAEMON][LOGFILTERS] %d filtre(s) actif(s) sur %d', _active_count, len(config.log_filters))
+
     try:
-        with open(config.log_filters_file_path, 'r', encoding='utf-8') as _f:
-            config.log_filters = json.load(_f)
-    except FileNotFoundError:
-        logging.warning('[DAEMON][LOGFILTERS] Fichier introuvable : %s', config.log_filters_file_path)
-    except Exception as _e:
-        logging.warning('[DAEMON][LOGFILTERS] Erreur lecture filtres : %s', _e)
+        _LOGGER.info('[DAEMON] Starting Daemon')
+        _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
+        _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
+        _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
+        _LOGGER.info('[DAEMON] TV Log Level: %s', config.tv_log_level)
+        _LOGGER.info('[DAEMON] Log Filters Enabled: %s | rules: %d', config.log_filters_enabled, len(config.log_filters))
+        _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
+        _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
+        _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)
+        # TODO protéger les valeurs de cyclefactor
 
-if config.log_filters_enabled and config.log_filters:
-    _remap_filter = PatternRemapFilter(config.log_filters)
-    for _handler in logging.root.handlers:
-        _handler.addFilter(_remap_filter)
-    _active_count = sum(1 for r in config.log_filters if r.get('enabled', True))
-    logging.info('[DAEMON][LOGFILTERS] %d filtre(s) actif(s) sur %d', _active_count, len(config.log_filters))
+        _LOGGER.info('[DAEMON] Cycle Main: %s', config.cycle_main)
+        _LOGGER.info('[DAEMON] Cycle Comm: %s', config.cycle_comm)
+        _LOGGER.info('[DAEMON] Cycle Event: %s', config.cycle_event)
+        _LOGGER.info('[DAEMON] PID File: %s', config.pid_filename)
+        _LOGGER.info('[DAEMON] Api Key: %s', "***")
+        _LOGGER.info('[DAEMON] CallBack: %s', config.callback_url)
+        _LOGGER.info('[DAEMON] Cert/Key Files: %s :: %s', config.cert_file, config.key_file)
 
-try:
-    _LOGGER.info('[DAEMON] Starting Daemon')
-    _LOGGER.info('[DAEMON] Plugin Version: %s', config.plugin_version)
-    _LOGGER.info('[DAEMON] Pairing Name: %s', config.client_name)
-    _LOGGER.info('[DAEMON] Log Level: %s', config.log_level)
-    _LOGGER.info('[DAEMON] TV Log Level: %s', config.tv_log_level)
-    _LOGGER.info('[DAEMON] Log Filters Enabled: %s | rules: %d', config.log_filters_enabled, len(config.log_filters))
-    _LOGGER.info('[DAEMON] Socket Port: %s', config.socket_port)
-    _LOGGER.info('[DAEMON] Socket Host: %s', config.socket_host)
-    _LOGGER.info('[DAEMON] Cycle Factor: %s', config.cycle_factor)
-    # TODO protéger les valeurs de cyclefactor
-    
-    _LOGGER.info('[DAEMON] Cycle Main: %s', config.cycle_main)
-    _LOGGER.info('[DAEMON] Cycle Comm: %s', config.cycle_comm)
-    _LOGGER.info('[DAEMON] Cycle Event: %s', config.cycle_event)
-    _LOGGER.info('[DAEMON] PID File: %s', config.pid_filename)
-    _LOGGER.info('[DAEMON] Api Key: %s', "***")
-    _LOGGER.info('[DAEMON] CallBack: %s', config.callback_url)
-    _LOGGER.info('[DAEMON] Cert/Key Files: %s :: %s', config.cert_file, config.key_file)
-    
-    Utils.write_pid(str(config.pid_filename))
+        Utils.write_pid(str(config.pid_filename))
 
-    daemon = TVRemoted(config)
-    asyncio.run(daemon.main())
-except Exception as e:
-    exception_type, exception_object, exception_traceback = sys.exc_info()
-    if exception_traceback is not None:
-        filename = exception_traceback.tb_frame.f_code.co_filename
-        line_number = exception_traceback.tb_lineno
-        _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
-    else:
-        _LOGGER.error('[DAEMON] Fatal error: %s(%s)', e, exception_type)
-    _LOGGER.debug(traceback.format_exc())
-shutdown()
+        daemon = TVRemoted(config)
+        asyncio.run(daemon.main())
+    except Exception as e:
+        exception_type, exception_object, exception_traceback = sys.exc_info()
+        if exception_traceback is not None:
+            filename = exception_traceback.tb_frame.f_code.co_filename
+            line_number = exception_traceback.tb_lineno
+            _LOGGER.error('[DAEMON] Fatal error: %s(%s) in %s on line %s', e, exception_type, filename, line_number)
+        else:
+            _LOGGER.error('[DAEMON] Fatal error: %s(%s)', e, exception_type)
+        _LOGGER.debug(traceback.format_exc())
+    shutdown()
