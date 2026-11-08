@@ -109,6 +109,25 @@ class GoogleTvPowerTest(PowerMuteTestCase):
         await self.send(action('keycode', value='KEYCODE_POWER'))
         self.assertEqual(remote.keys, ['KEYCODE_POWER'])
 
+    async def testIgnoredCommandReportsTheStateToJeedom(self):
+        """ Widget à l'affichage périmé (« éteinte ») : son clic envoie Power On, ignoré ; l'état renvoyé corrige l'affichage,
+        le clic suivant enverra Power Off """
+        await self.addGoogleTv(is_on=True)
+        publisher = self.daemon._jeedom_publisher
+        before = len(publisher.changesFor(MAC))
+        await self.send(action('power_on'))
+        reported = publisher.changesFor(MAC)[before:]
+        self.assertEqual([(change['online'], change['is_on']) for change in reported], [(1, 1)])
+
+    async def testIgnoredMuteReportsTheMuteState(self):
+        await self.addGoogleTv(is_on=True, volume_info={'level': 5, 'max': 100, 'muted': False})
+        publisher = self.daemon._jeedom_publisher
+        before = len(publisher.changesFor(MAC))
+        await self.send(action('mute_off'))
+        reported = publisher.changesFor(MAC)[before:]
+        self.assertEqual([change['volume_muted'] for change in reported], [0])
+        self.assertNotIn('is_on', reported[0])
+
     async def testOtherKeysAreNotConcerned(self):
         remote = await self.addGoogleTv(is_on=True)
         await self.send(action('volumeup'))

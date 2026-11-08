@@ -110,6 +110,27 @@ class EQRemote(object):
             current = volume_info.get('muted') if volume_info else None
         return current is not None and bool(current) == wanted
 
+    async def report_state(self, action: str) -> None:
+        """Renvoie à Jeedom l'état connu concerné par une commande ignorée : un affichage périmé (widget) se corrige,
+        et son clic suivant envoie la bonne commande"""
+        target = self.STATEFUL_ACTIONS.get(action)
+        if target is None:
+            return
+        state, wanted = target
+        currentTime = int(time.time())
+        data = {
+            'mac': self._macAddr,
+            'updatelasttime': self._format_timestamp(currentTime),
+            'updatelasttimets': currentTime,
+            'realtime': 1
+        }
+        # is_already() a confirmé que la TV est dans l'état demandé : c'est cette valeur qui est renvoyée
+        if state == 'is_on':
+            data.update({'online': 1, 'is_on': 1 if wanted else 0})
+        else:
+            data['volume_muted'] = 1 if wanted else 0
+        await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
+
     @staticmethod
     def _format_timestamp(timestamp: int) -> str:
         """Format Unix timestamp to readable string"""
@@ -1011,7 +1032,7 @@ class TVRemoted:
                                 self._logger.warning('[DAEMON][SOCKET] Options mal formatées (Json KO) :: %s', e)
 
                         # Power On/Off, Mute On/Off : rien n'est envoyé si la TV est déjà dans l'état demandé (la touche bascule)
-                        if self._already_in_requested_state(message['mac'], message['cmd_action']):
+                        if await self._already_in_requested_state(message['mac'], message['cmd_action']):
                             return
 
                         # Check if protocol is explicitly specified via options
@@ -1090,12 +1111,14 @@ class TVRemoted:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
             self._logger.debug(traceback.format_exc())
 
-    def _already_in_requested_state(self, mac: str, action: str) -> bool:
-        """État connu par la connexion Google TV de l'appareil, quel que soit le protocole utilisé pour la commande"""
+    async def _already_in_requested_state(self, mac: str, action: str) -> bool:
+        """État connu par la connexion Google TV de l'appareil, quel que soit le protocole utilisé pour la commande.
+        Commande ignorée : l'état est renvoyé à Jeedom (le widget choisit Power On/Off et Mute On/Off d'après la valeur affichée)"""
         device = self._config.remote_devices.get(mac)
         if device is None or not device.is_already(action):
             return False
         self._logger.info('[DAEMON][SOCKET] Action %s ignored (Mac :: %s) :: TV already in the requested state', action, mac)
+        await device.report_state(action)
         return True
 
     async def _stop_device_task(self, device) -> None:
