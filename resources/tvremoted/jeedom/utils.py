@@ -7,15 +7,20 @@ SECRET_MASK = 'sEcReT'
 # Règles de masquage des secrets, uniques côté Python (miroir de tvremote::maskSecrets côté PHP) : toute nouvelle donnée
 # sensible est ajoutée ici, des deux côtés, plutôt que masquée au cas par cas.
 _SECRET_RULES = [
+    # Identifiants dans une URL, y compris échappée en JSON : l'URL reste lisible et lançable (avant la règle des mots-clés)
+    (re.compile(r'''(\b[a-z][a-z0-9+.-]*:(?:\\?/){2})[^\s/?#"'@:\\]+:[^\s/?#"']*@''', re.IGNORECASE), r'\1uSeR:' + SECRET_MASK + '@'),
+    (re.compile(r'''(\b[a-z][a-z0-9+.-]*:(?:\\?/){2})[^\s/?#"':\\]+@''', re.IGNORECASE), r'\1uSeR@'),
+    (re.compile(r'''(\bbearer\s+)[^\s"']+''', re.IGNORECASE), r'\1' + SECRET_MASK),
     # Argument de la ligne de commande du démon
     (re.compile(r'(--apikey\s+)\S+'), r'\1' + SECRET_MASK),
-    # Clé API dans un message (JSON, dict Python, paramètre d'URL), avec ou sans guillemets
-    (re.compile(r'''(["']?\bapikey\b["']?\s*[:=]\s*["']?)[^"'&\s,}]+''', re.IGNORECASE), r'\1' + SECRET_MASK),
+    # Clé API, token ou mot de passe dans un message (JSON, dict Python, paramètre d'URL, texte saisi : commande ADB Shell,
+    # commande personnalisée, lien d'appli), avec ou sans guillemets
+    (re.compile(r'''(["']?\b(?:apikey|api_key|token|access_token|refresh_token|accessToken|refreshToken|client_secret|clientSecret|password|passwd|pass|pwd)\b["']?\s*[:=]\s*["']?)[^"'&\s,}]+''', re.IGNORECASE), r'\1' + SECRET_MASK),
 ]
 
 
 def maskSecrets(text: str) -> str:
-    """Texte avec les secrets masqués (clé API) : pour un log, ou tout texte qui peut en contenir"""
+    """Texte avec les secrets masqués (clé API, tokens, mots de passe, identifiants d'URL) : pour un log, ou tout texte qui peut en contenir"""
     for pattern, repl in _SECRET_RULES:
         text = pattern.sub(repl, text)
     return text

@@ -184,15 +184,22 @@ class tvremote extends eqLogic {
     }
 
     /**
-     * Texte avec les secrets masqués (clé API), avant log::add de tout contenu reçu ou envoyé.
+     * Texte avec les secrets masqués (clé API, tokens, mots de passe, identifiants d'URL), avant log::add de tout contenu reçu ou envoyé.
      * Mêmes règles, dans le même ordre, que maskSecrets côté démon (resources/tvremoted/jeedom/utils.py).
      */
     public static function maskSecrets($_text) {
-        $rules = array(
-            '/(--apikey\s+)\S+/' => '$1sEcReT',
-            '/(["\']?\bapikey\b["\']?\s*[:=]\s*["\']?)[^"\'&\s,}]+/i' => '$1sEcReT',
-        );
-        return preg_replace(array_keys($rules), array_values($rules), (string) $_text);
+        return preg_replace(
+            array(
+                // Identifiants dans une URL, y compris échappée en JSON : l'URL reste lisible et lançable (avant la règle des mots-clés)
+                '~(\b[a-z][a-z0-9+.-]*:(?:\\\\?/){2})[^\s/?#"\'@:\\\\]+:[^\s/?#"\']*@~i',
+                '~(\b[a-z][a-z0-9+.-]*:(?:\\\\?/){2})[^\s/?#"\':\\\\]+@~i',
+                '/(\bbearer\s+)[^\s"\']+/i',
+                '/(--apikey\s+)\S+/',
+                '/(["\']?\b(?:apikey|api_key|token|access_token|refresh_token|accessToken|refreshToken|client_secret|clientSecret|password|passwd|pass|pwd)\b["\']?\s*[:=]\s*["\']?)[^"\'&\s,}]+/i',
+            ),
+            array('$1uSeR:sEcReT@', '$1uSeR@', '$1sEcReT', '$1sEcReT', '$1sEcReT'),
+            (string) $_text
+        ) ?? '[contenu masqué : filtrage impossible]';
     }
 
     public static function sendToDaemon($params) {
