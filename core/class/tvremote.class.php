@@ -131,7 +131,7 @@ class tvremote extends eqLogic {
             self::getPyEnvVersion();
             self::getPythonVersion();
         } catch (Exception $e) {
-            log::add('tvremote', 'error', '[DAEMON][START][PyVersions] Exception :: ' . $e->getMessage());
+            log::add('tvremote', 'error', '[DAEMON][START][PyVersions] Exception :: ' . self::maskSecrets($e->getMessage()));
         }
 
         $path = realpath(__DIR__ . '/../../resources/tvremoted');
@@ -144,7 +144,7 @@ class tvremote extends eqLogic {
         $cmd .= ' --cyclefactor ' . config::byKey('cyclefactor', __CLASS__, '1.0');
         $cmd .= ' --jeedomname ' . preg_replace('/\s+/', '', config::byKey('name', 'core', 'Jeedom'));
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'http:127.0.0.1:port:comp') . '/plugins/tvremote/core/php/jeetvremote.php'; // chemin du callback
-        log::add(__CLASS__, 'debug', 'Daemon Cmd (w/o APIKey) :: ' . $cmd);
+        log::add(__CLASS__, 'debug', 'Daemon Cmd (w/o APIKey) :: ' . self::maskSecrets($cmd));
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid'; // ne PAS modifier
         log::add(__CLASS__, 'info', 'Lancement du démon');
@@ -183,6 +183,25 @@ class tvremote extends eqLogic {
         system::fuserk(config::byKey('socketport', __CLASS__, '55112'));
     }
 
+    /**
+     * Texte avec les secrets masqués (clé API, tokens, mots de passe, identifiants d'URL), avant log::add de tout contenu reçu ou envoyé.
+     * Mêmes règles, dans le même ordre, que maskSecrets côté démon (resources/tvremoted/jeedom/utils.py).
+     */
+    public static function maskSecrets($_text) {
+        return preg_replace(
+            array(
+                // Identifiants dans une URL, y compris échappée en JSON : l'URL reste lisible et lançable (avant la règle des mots-clés)
+                '~(\b[a-z][a-z0-9+.-]*:(?:\\\\?/){2})[^\s/?#"\'@:\\\\]+:[^\s/?#"\']*@~i',
+                '~(\b[a-z][a-z0-9+.-]*:(?:\\\\?/){2})[^\s/?#"\':\\\\]+@~i',
+                '/(\bbearer\s+)[^\s"\']+/i',
+                '/(--apikey\s+)\S+/',
+                '/(["\']?\b(?:apikey|api_key|token|access_token|refresh_token|accessToken|refreshToken|client_secret|clientSecret|password|passwd|pass|pwd)\b["\']?\s*[:=]\s*["\']?)[^"\'&\s,}]+/i',
+            ),
+            array('$1uSeR:sEcReT@', '$1uSeR@', '$1sEcReT', '$1sEcReT', '$1sEcReT'),
+            (string) $_text
+        ) ?? '[contenu masqué : filtrage impossible]';
+    }
+
     public static function sendToDaemon($params) {
         try {
             $deamon_info = self::deamon_info();
@@ -197,11 +216,19 @@ class tvremote extends eqLogic {
             $params['apikey'] = jeedom::getApiKey(__CLASS__);
             $payLoad = json_encode($params);
             $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-            socket_connect($socket, '127.0.0.1', config::byKey('socketport', __CLASS__, '55112'));
+            if ($socket === false) {
+                throw new Exception('socket_create :: ' . socket_strerror(socket_last_error()));
+            }
+            // socket_connect renvoie false sans lever d'exception (port fermé : démon en cours de démarrage ou d'arrêt)
+            if (!@socket_connect($socket, '127.0.0.1', config::byKey('socketport', __CLASS__, '55112'))) {
+                $error = socket_strerror(socket_last_error($socket));
+                socket_close($socket);
+                throw new Exception('socket_connect :: ' . $error);
+            }
             socket_write($socket, $payLoad, strlen($payLoad));
             socket_close($socket);
-        } catch (Exception $e) {
-            log::add('tvremote', 'error', '[SOCKET][SendToDaemon] Exception :: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            log::add('tvremote', 'error', '[SOCKET][SendToDaemon] Exception :: ' . self::maskSecrets($e->getMessage()));
             return false;
         }
     }
@@ -227,7 +254,7 @@ class tvremote extends eqLogic {
                 log::add('tvremote', 'warning', '[Plugin-Version] Impossible de récupérer la version du plugin');
             }
         } catch (\Exception $e) {
-            log::add('tvremote', 'debug', '[Plugin-Version] Get ERROR :: ' . $e->getMessage());
+            log::add('tvremote', 'debug', '[Plugin-Version] Get ERROR :: ' . self::maskSecrets($e->getMessage()));
         }
         log::add('tvremote', 'info', '[Plugin-Version] PluginVersion :: ' . $pluginVersion);
         return $pluginVersion;
@@ -278,7 +305,7 @@ class tvremote extends eqLogic {
                 config::save('pythonDepNum', $pythonDepNum, 'tvremote');
             }
         } catch (\Exception $e) {
-            log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . $e->getMessage());
+            log::add('tvremote', 'debug', '[Python-Dep] Get requirements.txt ERROR :: ' . self::maskSecrets($e->getMessage()));
             return false;
         }
         log::add('tvremote', 'debug', '[Python-Dep] Validated dependencies regex : ' . $pythonDepString . " / Expected packages count : " . $pythonDepNum);
@@ -296,7 +323,7 @@ class tvremote extends eqLogic {
                 log::add('tvremote', 'error', '[Python-Version] Python File :: KO');
             }
         } catch (\Exception $e) {
-            log::add('tvremote', 'error', '[Python-Version] Exception :: ' . $e->getMessage());
+            log::add('tvremote', 'error', '[Python-Version] Exception :: ' . self::maskSecrets($e->getMessage()));
         }
         log::add('tvremote', 'info', '[Python-Version] PythonVersion :: ' . $pythonVersion);
         return $pythonVersion;
@@ -318,7 +345,7 @@ class tvremote extends eqLogic {
                 log::add('tvremote', 'error', '[PyEnv-Version] PyEnv File :: KO');
             }
         } catch (\Exception $e) {
-            log::add('tvremote', 'error', '[PyEnv-Version] Exception :: ' . $e->getMessage());
+            log::add('tvremote', 'error', '[PyEnv-Version] Exception :: ' . self::maskSecrets($e->getMessage()));
         }
         log::add('tvremote', 'info', '[PyEnv-Version] PyEnvVersion :: ' . $pyenvVersion);
         return $pyenvVersion;
@@ -376,6 +403,10 @@ class tvremote extends eqLogic {
 
         // Verify ADB prerequisites
         $eqLogic = tvremote::byLogicalId($_mac, 'tvremote');
+        if (!is_object($eqLogic)) {
+            log::add('tvremote', 'warning', '[sendBeginPairingAdb] Équipement introuvable :: MAC=' . $_mac);
+            throw new Exception(__('Équipement introuvable (sauvegardez l\'équipement avant l\'appairage)', __FILE__));
+        }
 
         if (!$eqLogic->getIsEnable()) {
             log::add('tvremote', 'error', '[sendBeginPairingAdb] Équipement désactivé :: ' . $eqLogic->getHumanName());
@@ -582,33 +613,256 @@ class tvremote extends eqLogic {
         }
     }
 
-    public static function pairingException($_data) {
-        if (!isset($_data['pairing_mac'])) {
-            log::add('tvremote', 'error', '[PAIRING][EXCEPTION] Information manquante (MAC) pour mettre à jour l\'équipement');
-            return false;
+    /**
+     * Message reçu du démon (callback jeetvremote.php). Chaque clé est traitée indépendamment : un même envoi groupé
+     * peut porter des équipements découverts (devices) et des mises à jour temps réel (devicesRT).
+     */
+    public static function onDaemonMessage(array $_message) {
+        log::add('tvremote', 'debug', '[CALLBACK] Received data: ' . self::maskSecrets(json_encode($_message)));
+        $handled = false;
+        if (isset($_message['scanState'])) {
+            self::onScanState($_message['scanState']);
+            $handled = true;
         }
-        $pairingExc = tvremote::byLogicalId($_data['pairing_mac'], 'tvremote');
-        if (!is_object($pairingExc)) {
-            $mac_addr = $_data['pairing_mac'];
-            log::add('tvremote', 'error', '[PAIRING][EXCEPTION] Device (' . $mac_addr . ') non existant dans Jeedom');
-            return false;
-        } else {
-            $friendly_name = $pairingExc->getConfiguration('friendly_name');
-            $device_mac = $_data['pairing_mac'];
-            $device_host = $_data['pairing_host'];
-            $pairing_exc = $_data['PairingExc'];
-
-            event::add('jeedom::alert', array(
-                'level' => 'warning',
-                'page' => 'tvremote',
-                'message' => __('TV :: ' . $friendly_name .  ' (' . $device_mac . ' / ' . $device_host . ') :: ' . $pairing_exc, __FILE__),
-            ));
-
-            log::add('tvremote', 'error', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' / ' . $device_host . ') :: ' . $pairing_exc, 'pairingExc' . $pairingExc->getId());
-            # message::add('tvremote', 'TV :: ' . $friendly_name .  ' (' . $device_mac . ' / ' . $device_host . ') :: ' . $pairing_exc, '', 'pairingExc' . $pairingExc->getId());
-            # $pairingExc->setConfiguration('pairingState', $_data['pairing_value']);
-            # $pairingExc->save();
+        if (isset($_message['heartbeat'])) {
+            if ($_message['heartbeat'] === 1) {
+                log::add('tvremote', 'info', '[CALLBACK] tvremote Daemon Heartbeat (600s)');
+            }
+            $handled = true;
         }
+        if (isset($_message['daemonStarted'])) {
+            if ($_message['daemonStarted'] === 1) {
+                log::add('tvremote', 'info', '[CALLBACK] Daemon Started');
+                self::sendOnStartTVRemoteToDaemon();
+            }
+            $handled = true;
+        }
+        if (isset($_message['devices']) && is_array($_message['devices'])) {
+            self::onDevicesDiscovered($_message['devices']);
+            $handled = true;
+        }
+        if (isset($_message['devicesRT']) && is_array($_message['devicesRT'])) {
+            self::onDevicesRealtime($_message['devicesRT']);
+            $handled = true;
+        }
+        if (isset($_message['adb_shell_output_mac']) && (isset($_message['adb_shell_output_value']) || isset($_message['adb_shell_error']))) {
+            self::onAdbShellOutput($_message);
+            $handled = true;
+        }
+        if (isset($_message['PairingExc'])) {
+            self::onTvRemoteNotPaired($_message);
+            $handled = true;
+        }
+        if (isset($_message['tvremote_paired'])) {
+            self::onTvRemotePairingResult($_message);
+            $handled = true;
+        }
+        if (isset($_message['adb_paired'])) {
+            self::onAdbPairingResult($_message);
+            $handled = true;
+        }
+        if (isset($_message['adb_pairing_failed'])) {
+            self::onAdbPairingFailed($_message);
+            $handled = true;
+        }
+        if (!$handled) {
+            log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon');
+        }
+    }
+
+    private static function onScanState($_scanState) {
+        $scanState = ($_scanState === 'scanOn') ? 'scanOn' : 'scanOff';
+        log::add('tvremote', 'debug', '[CALLBACK] scanState = ' . $scanState);
+        config::save('scanState', $scanState, 'tvremote');
+        event::add('tvremote::scanState', array('scanState' => $scanState));
+        if ($scanState === 'scanOff') {
+            self::sendOnStartTVRemoteToDaemon();
+        }
+    }
+
+    /** TV trouvées par le scan : chacune traitée à part, une erreur ne concerne qu'elle */
+    private static function onDevicesDiscovered(array $_devices) {
+        log::add('tvremote', 'debug', '[CALLBACK][Discovery] TVRemote Devices :: ' . count($_devices) . ' device(s) reçu(s)');
+        foreach ($_devices as $data) {
+            if (!is_array($data) || !isset($data['mac']) || !isset($data['scanmode']) || $data['scanmode'] !== 1) {
+                continue;
+            }
+            try {
+                $isNew = !is_object(self::byLogicalId($data['mac'], 'tvremote'));
+                log::add('tvremote', 'debug', '[CALLBACK][Discovery] TVRemote ' . ($isNew ? 'NEW' : 'UPDATE') . ' détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
+                self::createAndUpdTVRemoteFromScan($data);
+            } catch (\Throwable $e) {
+                log::add('tvremote', 'error', '[CALLBACK][Discovery] ' . $data['mac'] . ' :: ' . self::maskSecrets($e->getMessage()));
+            }
+        }
+    }
+
+    /** Mises à jour temps réel : chacune traitée à part, une erreur ne concerne que son équipement */
+    private static function onDevicesRealtime(array $_devices) {
+        $macs = array_column($_devices, 'mac');
+        log::add('tvremote', 'debug', '[CALLBACK] TVRemote Devices RealTime :: ' . count($_devices) . ' event(s) reçu(s) :: ' . implode(', ', $macs));
+        foreach ($_devices as $data) {
+            if (!is_array($data) || !isset($data['mac']) || !isset($data['realtime']) || $data['realtime'] !== 1) {
+                continue;
+            }
+            if (!is_object(self::byLogicalId($data['mac'], 'tvremote'))) {
+                continue;
+            }
+            try {
+                self::realtimeUpdateDevice($data);
+            } catch (\Throwable $e) {
+                log::add('tvremote', 'error', '[CALLBACK][RealTime] ' . $data['mac'] . ' :: ' . self::maskSecrets($e->getMessage()));
+            }
+        }
+    }
+
+    /** Résultat (ou échec) d'une commande ADB Shell ; un échec (TV éteinte, connexion perdue…) est attendu : warning */
+    private static function onAdbShellOutput(array $_message) {
+        log::add('tvremote', 'debug', '[CALLBACK][ADB Shell Output] MAC :: ' . $_message['adb_shell_output_mac']);
+        $eqLogic = self::byLogicalId($_message['adb_shell_output_mac'], 'tvremote');
+        if (!is_object($eqLogic)) {
+            return;
+        }
+        $error = (isset($_message['adb_shell_error']) && !empty($_message['adb_shell_error'])) ? self::maskSecrets($_message['adb_shell_error']) : '';
+        $value = isset($_message['adb_shell_output_value']) ? $_message['adb_shell_output_value'] : '';
+        if (isset($_message['adb_shell_output_cmd_id'])) {
+            // Commande info ADB Shell personnalisée
+            $cmd = cmd::byId($_message['adb_shell_output_cmd_id']);
+            if (!is_object($cmd)) {
+                log::add('tvremote', 'warning', '[CALLBACK][ADB Shell Output] Command not found :: cmd_id=' . $_message['adb_shell_output_cmd_id']);
+                return;
+            }
+            if ($error !== '') {
+                log::add('tvremote', 'warning', '[CALLBACK][ADB Shell Output] Error for cmd #' . $_message['adb_shell_output_cmd_id'] . ' (' . $eqLogic->getName() . ') :: ' . $error);
+                return;
+            }
+            $eqLogic->checkAndUpdateCmd($cmd, $value);
+            log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated cmd #' . $_message['adb_shell_output_cmd_id'] . ' for ' . $eqLogic->getName() . ' [:100] :: ' . self::maskSecrets(substr($value, 0, 100)));
+            return;
+        }
+        // Commande info adb_shell_output par défaut
+        $cmd = $eqLogic->getCmd('info', 'adb_shell_output');
+        if (!is_object($cmd)) {
+            return;
+        }
+        if ($error !== '') {
+            log::add('tvremote', 'warning', '[CALLBACK][ADB Shell Output] Error for ' . $eqLogic->getName() . ' :: ' . $error);
+            return;
+        }
+        $cmd->event($value);
+        log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated for ' . $eqLogic->getName() . ' [:100] :: ' . self::maskSecrets(substr($value, 0, 100)));
+    }
+
+    /**
+     * TV non appairée (ou appairage retiré sur la TV) : envoyé par le démon une fois par série de tentatives.
+     * Statut d'appairage remis à 0, alerte et log en warning (état d'attente, pas une panne).
+     */
+    private static function onTvRemoteNotPaired(array $_message) {
+        if (!isset($_message['pairing_mac'])) {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Exception :: [MAC] non défini !');
+            return;
+        }
+        $eqLogic = self::byLogicalId($_message['pairing_mac'], 'tvremote');
+        if (!is_object($eqLogic)) {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Exception :: Equipment not found in Jeedom :: ' . $_message['pairing_mac']);
+            return;
+        }
+        $friendlyName = $eqLogic->getConfiguration('friendly_name', $eqLogic->getName());
+        $host = isset($_message['pairing_host']) ? $_message['pairing_host'] : $eqLogic->getConfiguration('host');
+        $reason = self::maskSecrets($_message['PairingExc']);
+        $text = 'TV :: ' . $friendlyName . ' (' . $_message['pairing_mac'] . ' / ' . $host . ') :: ' . $reason;
+        log::add('tvremote', 'warning', $text);
+        event::add('jeedom::alert', array('level' => 'warning', 'page' => 'tvremote', 'message' => $text));
+        if ($eqLogic->getConfiguration('tvremote_paired_status', 0) != 0) {
+            $eqLogic->setConfiguration('tvremote_paired_status', 0);
+            $eqLogic->save();
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Status saved :: ' . $_message['pairing_mac'] . ' :: 0');
+        }
+        // Mise à jour du badge d'appairage seulement : l'alerte ci-dessus informe déjà l'utilisateur
+        event::add('tvremote::tvremotePairingResult', array(
+            'mac' => $_message['pairing_mac'],
+            'friendly_name' => $friendlyName,
+            'tvremote_paired' => 0,
+            'message' => $reason,
+            'auto_detected' => true
+        ));
+    }
+
+    private static function onTvRemotePairingResult(array $_message) {
+        if (!isset($_message['mac'])) {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Result :: [MAC] non défini !');
+            return;
+        }
+        log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Result :: ' . $_message['mac'] . ' :: ' . ($_message['tvremote_paired'] === 1 ? 'SUCCESS' : 'FAILED'));
+        $eqLogic = self::byLogicalId($_message['mac'], 'tvremote');
+        if (!is_object($eqLogic)) {
+            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing :: Equipment not found in Jeedom :: ' . $_message['mac']);
+            return;
+        }
+        $eqLogic->setConfiguration('tvremote_paired_status', $_message['tvremote_paired']);
+        $eqLogic->save();
+        $friendlyName = $eqLogic->getConfiguration('friendly_name', $eqLogic->getName());
+        $message = isset($_message['message']) ? self::maskSecrets($_message['message']) : '';
+        event::add('tvremote::tvremotePairingResult', array(
+            'mac' => $_message['mac'],
+            'friendly_name' => $friendlyName,
+            'tvremote_paired' => $_message['tvremote_paired'],
+            'message' => $message
+        ));
+        if ($message !== '') {
+            log::add('tvremote', ($_message['tvremote_paired'] === 1) ? 'info' : 'warning', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $message);
+        }
+    }
+
+    /** Résultat certain d'un appairage ADB (succès 1, refus sur la TV 0) : statut enregistré */
+    private static function onAdbPairingResult(array $_message) {
+        if (!isset($_message['mac'])) {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Result :: [MAC] non défini !');
+            return;
+        }
+        log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Result :: ' . $_message['mac'] . ' :: ' . ($_message['adb_paired'] === 1 ? 'SUCCESS' : 'FAILED'));
+        $eqLogic = self::byLogicalId($_message['mac'], 'tvremote');
+        if (!is_object($eqLogic)) {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing :: Equipment not found in Jeedom :: ' . $_message['mac']);
+            return;
+        }
+        $eqLogic->setConfiguration('adb_paired_status', $_message['adb_paired']);
+        $eqLogic->save();
+        $friendlyName = $eqLogic->getConfiguration('friendly_name', $eqLogic->getName());
+        $message = isset($_message['message']) ? self::maskSecrets($_message['message']) : '';
+        event::add('tvremote::adbPairingResult', array(
+            'mac' => $_message['mac'],
+            'friendly_name' => $friendlyName,
+            'adb_paired' => $_message['adb_paired'],
+            'message' => $message,
+            'auto_detected' => false
+        ));
+        if ($message !== '') {
+            log::add('tvremote', ($_message['adb_paired'] === 1) ? 'info' : 'warning', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $message);
+        }
+    }
+
+    /** Échec sans conclusion sur l'appairage ADB (TV injoignable, appairage déjà en cours…) : affiché, statut d'appairage inchangé */
+    private static function onAdbPairingFailed(array $_message) {
+        if (!isset($_message['mac'])) {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Failed :: [MAC] non défini !');
+            return;
+        }
+        $eqLogic = self::byLogicalId($_message['mac'], 'tvremote');
+        if (!is_object($eqLogic)) {
+            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Failed :: Equipment not found in Jeedom :: ' . $_message['mac']);
+            return;
+        }
+        $friendlyName = $eqLogic->getConfiguration('friendly_name', $eqLogic->getName());
+        $message = isset($_message['message']) ? self::maskSecrets($_message['message']) : '';
+        log::add('tvremote', 'warning', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $message);
+        event::add('tvremote::adbPairingResult', array(
+            'mac' => $_message['mac'],
+            'friendly_name' => $friendlyName,
+            'adb_paired' => null,
+            'message' => $message,
+            'auto_detected' => false
+        ));
     }
 
     public static function realtimeUpdateDevice($_data) {
@@ -691,7 +945,7 @@ class tvremote extends eqLogic {
     }
 
     public static function actionTVRemote($mac = null, $action = null, $message = null, $options = null) {
-        log::add('tvremote', 'debug', '[ActionTVRemote] Infos :: ' . $mac . ' / ' . $action . " / " . $message . " / options=" . $options);
+        log::add('tvremote', 'debug', '[ActionTVRemote] Infos :: ' . self::maskSecrets($mac . ' / ' . $action . " / " . $message . " / options=" . $options));
 
         $value = array(
             'cmd' => 'action',
@@ -701,15 +955,20 @@ class tvremote extends eqLogic {
             'options' => $options
         );
 
-        log::add('tvremote', 'debug', '[ActionTVRemote] ArrayToSend :: ' . json_encode($value));
+        log::add('tvremote', 'debug', '[ActionTVRemote] ArrayToSend :: ' . self::maskSecrets(json_encode($value)));
         self::sendToDaemon($value);
     }
 
     public static function customCmdDecoder($customCmd = null) {
-        log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd :: ' . $customCmd);
+        log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd :: ' . self::maskSecrets($customCmd));
         try {
             $data = json_decode("{" . $customCmd . "}", true);
-            log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Data :: ' . json_encode($data));
+            if (!is_array($data)) {
+                // Saisie invalide (pas une liste "clé":"valeur") : refusée, ce n'est pas une panne
+                log::add('tvremote', 'warning', '[customCmdDecoder] CustomCmd invalide (JSON attendu, ex. "action":"keycode","value":"KEYCODE_HOME") :: ' . self::maskSecrets($customCmd));
+                return null;
+            }
+            log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Data :: ' . self::maskSecrets(json_encode($data)));
             $resAction = '';
             $resCmd = array();
             $resOptions = array();
@@ -734,11 +993,11 @@ class tvremote extends eqLogic {
             // Only add title if there are options
             if (!empty($resOptions)) {
                 $resCmd['title'] = substr(json_encode($resOptions), 1, -1);
-                log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Title :: ' . $resCmd['title']);
+                log::add('tvremote', 'debug', '[customCmdDecoder] CustomCmd Title :: ' . self::maskSecrets($resCmd['title']));
             }
             return [$resAction, $resCmd];
-        } catch (Exception $e) {
-            log::add('tvremote', 'error', '[customCmdDecoder] CustomCmd Decoder Exception :: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            log::add('tvremote', 'error', '[customCmdDecoder] CustomCmd Decoder Exception :: ' . self::maskSecrets($e->getMessage()));
             return null;
         }
     }
@@ -2320,7 +2579,7 @@ class tvremoteCmd extends cmd {
             // Check if this is a custom ADB Shell command
             $adbShellCommand = $this->getConfiguration('adb-shell-command', '');
             if (!empty(trim($adbShellCommand))) {
-                log::add('tvremote', 'debug', '[CMD] Custom ADB Shell Command :: ' . $adbShellCommand);
+                log::add('tvremote', 'debug', '[CMD] Custom ADB Shell Command :: ' . tvremote::maskSecrets($adbShellCommand));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
                     // Force protocol to ADB for custom shell commands
@@ -2345,13 +2604,13 @@ class tvremoteCmd extends cmd {
             // Gestion de customcmd en premier
             if (in_array($logicalId, ["customcmd"])) {
                 if (isset($_options['message'])) {
-                    log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                    log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . tvremote::maskSecrets(json_encode($_options)));
                     $decoded = tvremote::customCmdDecoder($_options['message']);
                     if ($decoded !== null) {
                         [$logicalId, $_options] = $decoded;
-                        log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' (Custom Decoded Message) :: ' . json_encode($_options));
+                        log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' (Custom Decoded Message) :: ' . tvremote::maskSecrets(json_encode($_options)));
                     } else {
-                        log::add('tvremote', 'error', '[CMD] Échec du décodage de customcmd');
+                        log::add('tvremote', 'warning', '[CMD] Échec du décodage de customcmd');
                         return false;
                     }
                 } else {
@@ -2365,7 +2624,7 @@ class tvremoteCmd extends cmd {
             $options = isset($_options['title']) ? $_options['title'] : null;
 
             if (in_array($logicalId, ["keycode", "appcode", "adbshell"])) {
-                log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . tvremote::maskSecrets(json_encode($_options)));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC) && isset($message)) {
                     // Pour adbshell, forcer protocol=adb et changer logicalId en shell
@@ -2386,7 +2645,7 @@ class tvremoteCmd extends cmd {
                     log::add('tvremote', 'debug', '[CMD - Key/App Code] Il manque un paramètre pour lancer la commande ' . $logicalId);
                 }
             } elseif (in_array($logicalId, ["volumedown", "volumeup", "power_on", "power_off", "up", "down", "left", "right", "center", "mute_on", "mute_off", "back", "home", "menu", "tv", "channel_up", "channel_down", "info", "settings", "input", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "oqee", "youtube", "netflix", "primevideo", "disneyplus", "mycanal", "plex", "appletv", "orangetv", "molotov", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero", "media_next", "media_stop", "media_pause", "media_play", "media_rewind", "media_forward", "media_previous", "shell"])) {
-                log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . tvremote::maskSecrets(json_encode($_options)));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
                     // Pour shell, le message est requis
@@ -2401,7 +2660,7 @@ class tvremoteCmd extends cmd {
                     }
                 }
             } elseif (in_array($logicalId, ["refresh"])) {
-                log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . json_encode($_options));
+                log::add('tvremote', 'debug', '[CMD] ' . $logicalId . ' :: ' . tvremote::maskSecrets(json_encode($_options)));
                 // Refresh all info commands with custom ADB Shell commands
                 foreach ($eqLogic->getCmd('info') as $cmd) {
                     $adbShellCommand = $cmd->getConfiguration('adb-shell-command', '');
@@ -2418,7 +2677,7 @@ class tvremoteCmd extends cmd {
             // Handle info commands with custom ADB Shell commands
             $adbShellCommand = $this->getConfiguration('adb-shell-command', '');
             if (!empty(trim($adbShellCommand))) {
-                log::add('tvremote', 'debug', '[CMD-INFO] Custom ADB Shell Info :: ' . $adbShellCommand);
+                log::add('tvremote', 'debug', '[CMD-INFO] Custom ADB Shell Info :: ' . tvremote::maskSecrets($adbShellCommand));
                 $deviceMAC = $eqLogic->getLogicalId();
                 if (isset($deviceMAC)) {
                     $options = '"protocol":"adb","cmd_id":"' . $this->getId() . '"';

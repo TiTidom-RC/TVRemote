@@ -18,7 +18,7 @@
 try {
     require_once dirname(__FILE__) . "/../../../../core/php/core.inc.php";
 
-    if (!jeedom::apiAccess(init('apikey'), 'tvremote')) { 
+    if (!jeedom::apiAccess(init('apikey'), 'tvremote')) {
         echo __('Vous n\'etes pas autorisé à effectuer cette action', __FILE__);
         die();
     }
@@ -27,246 +27,20 @@ try {
         die();
     }
     $result = json_decode(file_get_contents("php://input"), true);
-    
+
     // Gestion des erreurs JSON (important pour PHP 8.4+)
     if (json_last_error() !== JSON_ERROR_NONE) {
         log::add('tvremote', 'error', '[CALLBACK] JSON decode error: ' . json_last_error_msg());
         die();
     }
-    
+
     if (!is_array($result)) {
         log::add('tvremote', 'error', '[CALLBACK] Result is not an array');
         die();
     }
-    
-    // Log du contenu reçu pour debug
-    log::add('tvremote', 'debug', '[CALLBACK] Received data: ' . json_encode($result));
 
-    if (isset($result['scanState'])) {
-        if ($result['scanState'] === "scanOn") {
-            log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOn'); 
-            config::save('scanState', 'scanOn', 'tvremote');
-            event::add('tvremote::scanState', array(
-                'scanState' => 'scanOn')
-            );
-            log::add('tvremote', 'debug', '[CALLBACK] event::add tvremote::scanState scanOn sent');
-        } else {
-            log::add('tvremote', 'debug', '[CALLBACK] scanState = scanOff'); 
-            config::save('scanState', 'scanOff', 'tvremote');
-            event::add('tvremote::scanState', array(
-                'scanState' => 'scanOff')
-            );
-            log::add('tvremote', 'debug', '[CALLBACK] event::add tvremote::scanState scanOff sent');
-            tvremote::sendOnStartTVRemoteToDaemon();
-        }
-    } elseif (isset($result['heartbeat'])) {
-        if ($result['heartbeat'] === 1) {
-            log::add('tvremote','info','[CALLBACK] tvremote Daemon Heartbeat (600s)');
-        }
-    } elseif (isset($result['daemonStarted'])) {
-        if ($result['daemonStarted'] === 1) {
-            log::add('tvremote', 'info', '[CALLBACK] Daemon Started');
-            tvremote::sendOnStartTVRemoteToDaemon();
-        }
-    } elseif (isset($result['devices'])) {
-        log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote Devices :: ' . count($result['devices']) . ' device(s) reçu(s)');
-        foreach ($result['devices'] as $key => $data) {
-            if (!isset($data['mac'])) {
-                continue;
-            }
-            if ($data['scanmode'] !== 1) {
-                continue;
-            }
-            $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
-            if (!is_object($tv_remote)) {    
-                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote NEW détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
-                $scannewtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
-            }
-            else {
-                log::add('tvremote','debug','[CALLBACK][Discovery] TVRemote UPDATE détecté :: ' . $data['friendly_name'] . ' (' . $data['mac'] . ')');
-                $scanupdtvremote = tvremote::createAndUpdTVRemoteFromScan($data);
-            }
-        }
-    } elseif (isset($result['adb_shell_output_mac']) && (isset($result['adb_shell_output_value']) || isset($result['adb_shell_error']))) {
-        log::add('tvremote', 'debug', '[CALLBACK][ADB Shell Output] MAC :: ' . $result['adb_shell_output_mac']);
-        $tv_remote = tvremote::byLogicalId($result['adb_shell_output_mac'], 'tvremote');
-        if (is_object($tv_remote)) {
-            // Check if this is an error response
-            $isError = isset($result['adb_shell_error']) && !empty($result['adb_shell_error']);
-            
-            // Check if a specific cmd_id is provided (for custom ADB Shell info commands)
-            if (isset($result['adb_shell_output_cmd_id'])) {
-                $cmd = cmd::byId($result['adb_shell_output_cmd_id']);
-                if (is_object($cmd)) {
-                    if ($isError) {
-                        // Don't update the command with error message, just log it
-                        log::add('tvremote', 'error', '[CALLBACK][ADB Shell Output] Error for cmd #' . $result['adb_shell_output_cmd_id'] . ' (' . $tv_remote->getName() . ') :: ' . $result['adb_shell_error']);
-                    } else {
-                        $tv_remote->checkAndUpdateCmd($cmd, $result['adb_shell_output_value']);
-                        log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated cmd #' . $result['adb_shell_output_cmd_id'] . ' for ' . $tv_remote->getName() . ' [:100] :: ' . substr($result['adb_shell_output_value'], 0, 100));
-                    }
-                } else {
-                    log::add('tvremote', 'warning', '[CALLBACK][ADB Shell Output] Command not found :: cmd_id=' . $result['adb_shell_output_cmd_id']);
-                }
-            } else {
-                // Fallback to default adb_shell_output command
-                $cmd = $tv_remote->getCmd('info', 'adb_shell_output');
-                if (is_object($cmd)) {
-                    if ($isError) {
-                        // Don't update the command with error message, just log it
-                        log::add('tvremote', 'error', '[CALLBACK][ADB Shell Output] Error for ' . $tv_remote->getName() . ' :: ' . $result['adb_shell_error']);
-                    } else {
-                        $cmd->event($result['adb_shell_output_value']);
-                        log::add('tvremote', 'info', '[CALLBACK][ADB Shell Output] Updated for ' . $tv_remote->getName() . ' [:100] :: ' . substr($result['adb_shell_output_value'], 0, 100));
-                    }
-                }
-            }
-        }
-    } elseif (isset($result['devicesRT'])) {
-        $macs = array_column($result['devicesRT'], 'mac');
-        log::add('tvremote','debug','[CALLBACK] TVRemote Devices RealTime :: ' . count($result['devicesRT']) . ' event(s) reçu(s) :: ' . implode(', ', $macs));
-        foreach ($result['devicesRT'] as $key => $data) {
-            if (!isset($data['mac'])) {
-                continue;
-            }
-            if ($data['realtime'] !== 1) {
-                continue;
-            }
-            $tv_remote = tvremote::byLogicalId($data['mac'], 'tvremote');
-            if (!is_object($tv_remote)) {    
-                continue;
-            }
-            else {
-                $rtDevice = tvremote::realtimeUpdateDevice($data);
-            }
-        }
-    } elseif (isset($result['PairingExc'])) {
-        log::add('tvremote','debug','[CALLBACK] TVRemote Pairing Exception');
-        
-            if (!isset($result['pairing_mac'])) {
-                log::add('tvremote','debug','[CALLBACK] TVRemote Pairing Exception :: [MAC] non défini !');
-                return;
-            }
-            log::add('tvremote','debug','[CALLBACK] TVRemote Pairing Exception :: ' . $result['pairing_mac']);
-            $tv_remote = tvremote::byLogicalId($result['pairing_mac'], 'tvremote');
-            if (!is_object($tv_remote)) {    
-                return;
-            }
-            else {
-                $pairingExc = tvremote::pairingException($result);
-            }
-    } elseif (isset($result['adb_paired'])) {
-        log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Result');
-        
-        if (!isset($result['mac'])) {
-            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Result :: [MAC] non défini !');
-            return;
-        }
-        
-        log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Result :: ' . $result['mac'] . ' :: ' . ($result['adb_paired'] === 1 ? 'SUCCESS' : 'FAILED'));
-        
-        // Update equipment configuration with pairing status
-        $tv_remote = tvremote::byLogicalId($result['mac'], 'tvremote');
-        if (is_object($tv_remote)) {
-            $tv_remote->setConfiguration('adb_paired_status', $result['adb_paired']);
-            $tv_remote->save();
-            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing Status saved :: ' . $result['mac'] . ' :: ' . $result['adb_paired']);
-            
-            // Get friendly name for user-friendly message
-            $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
-            
-            // Send event to JavaScript only if equipment exists
-            event::add('tvremote::adbPairingResult', array(
-                'mac' => $result['mac'],
-                'friendly_name' => $friendlyName,
-                'adb_paired' => $result['adb_paired'],
-                'message' => isset($result['message']) ? $result['message'] : '',
-                'auto_detected' => false  // Manual pairing result
-            ));
-            
-            // Log the message if present
-            if (isset($result['message'])) {
-                if ($result['adb_paired'] === 1) {
-                    log::add('tvremote', 'info', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
-                } else {
-                    log::add('tvremote', 'warning', '[CALLBACK] ADB Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
-                }
-            }
-        } else {
-            log::add('tvremote', 'debug', '[CALLBACK] ADB Pairing :: Equipment not found in Jeedom :: ' . $result['mac']);
-        }
-    } elseif (isset($result['pairing_value'])) {
-        log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error');
-        
-        if (!isset($result['pairing_mac'])) {
-            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error :: [MAC] non défini !');
-            return;
-        }
-        
-        log::add('tvremote', 'warning', '[CALLBACK] TVRemote Not Paired :: ' . $result['pairing_mac'] . ' :: ' . (isset($result['PairingExc']) ? $result['PairingExc'] : 'Unknown error'));
-        
-        // Update equipment configuration with pairing status
-        $tv_remote = tvremote::byLogicalId($result['pairing_mac'], 'tvremote');
-        if (is_object($tv_remote)) {
-            $tv_remote->setConfiguration('tvremote_paired_status', $result['pairing_value']);
-            $tv_remote->save();
-            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Status saved :: ' . $result['pairing_mac'] . ' :: ' . $result['pairing_value']);
-            
-            // Get friendly name for user-friendly message
-            $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
-            
-            // Send event to JavaScript only if equipment exists
-            event::add('tvremote::tvremotePairingResult', array(
-                'mac' => $result['pairing_mac'],
-                'friendly_name' => $friendlyName,
-                'tvremote_paired' => $result['pairing_value'],
-                'message' => isset($result['PairingExc']) ? $result['PairingExc'] : 'Device not paired. Please start pairing procedure.'
-            ));
-        } else {
-            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Error :: Equipment not found in Jeedom :: ' . $result['pairing_mac']);
-        }
-    } elseif (isset($result['tvremote_paired'])) {
-        log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Result');
-        
-        if (!isset($result['mac'])) {
-            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Result :: [MAC] non défini !');
-            return;
-        }
-        
-        log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Result :: ' . $result['mac'] . ' :: ' . ($result['tvremote_paired'] === 1 ? 'SUCCESS' : 'FAILED'));
-        
-        // Update equipment configuration with pairing status
-        $tv_remote = tvremote::byLogicalId($result['mac'], 'tvremote');
-        if (is_object($tv_remote)) {
-            $tv_remote->setConfiguration('tvremote_paired_status', $result['tvremote_paired']);
-            $tv_remote->save();
-            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing Status saved :: ' . $result['mac'] . ' :: ' . $result['tvremote_paired']);
-            
-            // Get friendly name for user-friendly message
-            $friendlyName = $tv_remote->getConfiguration('friendly_name', $tv_remote->getName());
-            
-            // Send event to JavaScript only if equipment exists
-            event::add('tvremote::tvremotePairingResult', array(
-                'mac' => $result['mac'],
-                'friendly_name' => $friendlyName,
-                'tvremote_paired' => $result['tvremote_paired'],
-                'message' => isset($result['message']) ? $result['message'] : ''
-            ));
-            
-            // Log the message if present
-            if (isset($result['message'])) {
-                if ($result['tvremote_paired'] === 1) {
-                    log::add('tvremote', 'info', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
-                } else {
-                    log::add('tvremote', 'warning', '[CALLBACK] TVRemote Pairing :: ' . $friendlyName . ' :: ' . $result['message']);
-                }
-            }
-        } else {
-            log::add('tvremote', 'debug', '[CALLBACK] TVRemote Pairing :: Equipment not found in Jeedom :: ' . $result['mac']);
-        }
-    } else {
-        log::add('tvremote', 'error', '[CALLBACK] unknown message received from daemon'); 
-    }
-} catch (Exception $e) {
-    log::add('tvremote', 'error', displayException($e));
+    // Traitement dans la classe (testable sans Jeedom)
+    tvremote::onDaemonMessage($result);
+} catch (\Throwable $e) {
+    log::add('tvremote', 'error', '[CALLBACK] Exception :: ' . tvremote::maskSecrets($e->getMessage()));
 }

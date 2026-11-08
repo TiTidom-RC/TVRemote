@@ -22,23 +22,14 @@ class Config(object):
         self.resources_firsttime = int(time.time())
         
         self.tasks = []
-        self.known_hosts = []  # Hosts for AndroidTVRemote2
-        self.known_hosts_adb = []  # Hosts for ADB
-        self.remote_mac = []  # MAC addresses for AndroidTVRemote2
 
         self.log_filters_enabled: bool = False
         self.log_filters: list = []  # [{ "pattern": str, "level": str, "enabled": bool }]
         self.log_filters_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data/filters/logfilters.json'))
 
-        self.remote_mac_adb = []  # MAC addresses for ADB
-        self.remote_names = []  # Names for AndroidTVRemote2
-        self.remote_names_adb = []  # Names for ADB
-        
         self.remote_devices = {}  # Devices using AndroidTVRemote2 - key is MAC
         self.remote_devices_adb = {}  # Devices using ADB - key is MAC
-        self.remote_zconf = None
-        self.remote_listener = {}
-        
+
         self.pairing_code = None
         
         self.key_mapping = {
@@ -254,6 +245,16 @@ class Config(object):
         Set to 20s to prevent Android TV timeout (typically 60s) from closing idle ADB connections"""
         return 20
     
+    @property
+    def adb_start_delay(self):
+        """Pause au démarrage d'un appareil ADB, le temps que le réseau et la TV soient prêts (secondes)"""
+        return 2
+
+    @property
+    def adb_loop_interval(self):
+        """Période de la boucle d'un appareil ADB : appairage, connexion, heartbeat, inactivité (secondes)"""
+        return 5
+
     @property
     def adb_idle_timeout_default(self):
         """Default idle timeout for on-demand connection mode (minutes)

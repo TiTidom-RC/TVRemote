@@ -77,6 +77,6 @@ try {
 
     throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
     /*     * *********Catch exception*************** */
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     ajax::error(displayException($e), $e->getCode());
 }
