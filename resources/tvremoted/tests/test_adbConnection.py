@@ -11,58 +11,10 @@ from adb_shell.exceptions import DeviceAuthError, TcpTimeoutException
 
 import tvremoted
 from config import Config
-from tests.helpers import API_KEY, FakePublisher, newConfig, waitUntil
+from tests.helpers import API_KEY, FakeAdb, FakePublisher, newConfig, waitUntil
 
 MAC = 'AA:BB:CC:DD:EE:FF'
 HOST = '192.168.1.10'
-
-
-class FakeAdb:
-    """ Remplace adb_shell AdbDeviceTcpAsync. Chaque connect() consomme le résultat suivant de `connectResults`, commun à toutes les
-    instances : une exception à lever, un asyncio.Event à attendre avant de réussir, ou None ; liste vide : connexion réussie """
-    connectResults: list = []
-    instances: list = []
-    shellError = None  # exception levée par le prochain shell()
-
-    def __init__(self, host, port, default_transport_timeout_s=None):
-        self.host = host
-        self.connectCalls = 0
-        self.signers = []
-        self.commands = []
-        self.connected = False
-        FakeAdb.instances.append(self)
-
-    @classmethod
-    def reset(cls, results=None):
-        cls.connectResults = list(results or [])
-        cls.instances = []
-        cls.shellError = None
-
-    @classmethod
-    def totalConnectCalls(cls):
-        return sum(adb.connectCalls for adb in cls.instances)
-
-    async def connect(self, rsa_keys=None, transport_timeout_s=None, auth_timeout_s=None):
-        self.connectCalls += 1
-        self.signers.append(rsa_keys[0] if rsa_keys else None)
-        if FakeAdb.connectResults:
-            result = FakeAdb.connectResults.pop(0)
-            if isinstance(result, asyncio.Event):
-                await result.wait()
-            elif result is not None:
-                raise result
-        self.connected = True
-        return True
-
-    async def shell(self, command, transport_timeout_s=None):
-        if FakeAdb.shellError is not None:
-            error, FakeAdb.shellError = FakeAdb.shellError, None
-            raise error
-        self.commands.append(command)
-        return 'ok'
-
-    async def close(self):
-        self.connected = False
 
 
 def addAdbMessage(persistent=0, paired=1, host=HOST):

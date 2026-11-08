@@ -45,6 +45,15 @@ except ImportError as e:
     sys.exit(1)
 
 
+# Écran allumé ? Commande de python-androidtv (CMD_SCREEN_ON), utilisée par l'intégration ADB de Home Assistant
+ADB_SCREEN_ON = "(dumpsys power | grep 'Display Power' | grep -q 'state=ON' || dumpsys power | grep -q 'mScreenOn=true' || dumpsys display | grep -q 'mScreenState=ON')"
+# Power On / Power Off en ADB : la touche Power (qui bascule) n'est envoyée que si l'écran n'est pas déjà dans l'état demandé
+ADB_POWER_COMMANDS = {
+    'power_on': ADB_SCREEN_ON + ' || input keyevent KEYCODE_POWER',
+    'power_off': ADB_SCREEN_ON + ' && input keyevent KEYCODE_POWER',
+}
+
+
 def load_adb_signer(config: Config) -> PythonRSASigner:
     """Clé ADB du plugin (commune à tous les appareils), lue sur le disque à chaque appel : une clé régénérée est prise en compte"""
     with open(config.adb_key_file, 'r') as f:
@@ -71,6 +80,7 @@ class EQRemote(object):
         # Exponential backoff for reconnection attempts
         self._reconnect_delay = self._config.reconnect_delay_min
         self._pairingLost = asyncio.Event()  # Reconnexion de la bibliothèque refusée faute d'appairage
+        self._available = False  # Connexion Google TV établie : l'état de la TV (allumée, mute) est alors poussé par elle à chaque changement
         # Jeedom n'est prévenu qu'au premier échec d'une série de tentatives (remis à zéro à la connexion)
         self._notPairedNotified = False
         self._unreachableNotified = False
@@ -82,6 +92,23 @@ class EQRemote(object):
     @property
     def enable_ime(self) -> bool:
         return self._enable_ime
+
+    # Commandes à état (même touche pour les deux sens : elle bascule) -> (état concerné, valeur demandée)
+    STATEFUL_ACTIONS = {'power_on': ('is_on', True), 'power_off': ('is_on', False), 'mute_on': ('muted', True), 'mute_off': ('muted', False)}
+
+    def is_already(self, action: str) -> bool:
+        """La TV est-elle déjà dans l'état demandé par Power On/Off ou Mute On/Off ? Seulement si la connexion Google TV est établie
+        (état poussé par la TV) et l'état connu ; sinon False : la touche est envoyée comme avant"""
+        target = self.STATEFUL_ACTIONS.get(action)
+        if target is None or self._remote is None or not self._available:
+            return False
+        state, wanted = target
+        if state == 'is_on':
+            current = self._remote.is_on
+        else:
+            volume_info = self._remote.volume_info
+            current = volume_info.get('muted') if volume_info else None
+        return current is not None and bool(current) == wanted
 
     @staticmethod
     def _format_timestamp(timestamp: int) -> str:
@@ -180,6 +207,7 @@ class EQRemote(object):
                 self._reconnect_delay = self._config.reconnect_delay_min
                 self._notPairedNotified = False
                 self._unreachableNotified = False
+                self._available = True
                 return True
             # Exponential backoff: wait before retry and increase delay
             await self._apply_backoff_delay()
@@ -225,6 +253,7 @@ class EQRemote(object):
 
             def is_available_updated(is_available: bool) -> None:
                 self._logger.debug("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
+                self._available = is_available
                 try:
                     # UpdateLastTime
                     currentTime = int(time.time())
@@ -336,6 +365,7 @@ class EQRemote(object):
             self._logger.debug(traceback.format_exc())
         finally:
             # Cleanup resources
+            self._available = False
             if self._remote is not None:
                 try:
                     self._remote.disconnect()
@@ -855,6 +885,10 @@ class EQRemoteADB(object):
                 if value is not None:
                     self._logger.debug("[EQRemoteADB][SendCmd - Launch App] %s", value)
                     await self._adb.shell(f"monkey -p {value} 1")
+            elif action in ADB_POWER_COMMANDS:
+                # La TV vérifie elle-même son écran au moment de la commande : aucun état mémorisé qui pourrait être périmé
+                self._logger.debug("[EQRemoteADB][SendCommand] %s :: %s", action, ADB_POWER_COMMANDS[action])
+                await self._adb.shell(ADB_POWER_COMMANDS[action])
             elif action in self._config.key_mapping:
                 self._logger.debug("[EQRemoteADB][SendCommand] %s :: %s", action, self._config.key_mapping[action])
                 keycode = self._config.key_mapping[action]
@@ -975,7 +1009,11 @@ class TVRemoted:
                                 self._logger.debug('[DAEMON][SOCKET] Options parsed :: %s', str(options_json))
                             except (ValueError, json.JSONDecodeError) as e:
                                 self._logger.warning('[DAEMON][SOCKET] Options mal formatées (Json KO) :: %s', e)
-                        
+
+                        # Power On/Off, Mute On/Off : rien n'est envoyé si la TV est déjà dans l'état demandé (la touche bascule)
+                        if self._already_in_requested_state(message['mac'], message['cmd_action']):
+                            return
+
                         # Check if protocol is explicitly specified via options
                         if protocol:
                             if protocol == 'adb':
@@ -1051,6 +1089,14 @@ class TVRemoted:
         except Exception as message_e:
             self._logger.error('[MAIN][SOCKET] Exception :: %s', message_e)
             self._logger.debug(traceback.format_exc())
+
+    def _already_in_requested_state(self, mac: str, action: str) -> bool:
+        """État connu par la connexion Google TV de l'appareil, quel que soit le protocole utilisé pour la commande"""
+        device = self._config.remote_devices.get(mac)
+        if device is None or not device.is_already(action):
+            return False
+        self._logger.info('[DAEMON][SOCKET] Action %s ignored (Mac :: %s) :: TV already in the requested state', action, mac)
+        return True
 
     async def _stop_device_task(self, device) -> None:
         """Arrête la boucle d'un appareil et attend sa fin (fermeture de la connexion comprise)"""
