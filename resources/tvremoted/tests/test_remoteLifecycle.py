@@ -166,14 +166,20 @@ class RobustnessTest(DaemonTestCase):
         self.assertTrue(await waitUntil(lambda: self.device()._remote is not None and self.device()._remote.connected))
         self.assertEqual([remote.host for remote in FakeRemote.running()], ['192.168.1.20'])
 
-    async def testWakeUpDuringAConnectionDoesNotShortenALaterWaiting(self):
-        FakeRemote.connectGate = asyncio.Event()
-        await self.send(addMessage())
-        self.assertTrue(await waitUntil(lambda: FakeRemote.instances and FakeRemote.instances[0].connectCalls == 1))
-        self.device().wake_up()
-        FakeRemote.connectGate.set()
-        self.assertTrue(await waitUntil(lambda: FakeRemote.instances[0].connected))
-        self.assertFalse(self.device()._wakeup.is_set())
+    async def testStateIsSentOnceAtConnection(self):
+        """ La connexion notifie déjà l'état (remote_start) : il ne doit arriver qu'une fois dans Jeedom, par l'état initial """
+        await self.addConnected()
+        self.assertTrue(await waitUntil(lambda: self.publisher.changesFor(MAC)))
+        await asyncio.sleep(0.05)
+        self.assertEqual(len([change for change in self.publisher.changesFor(MAC) if 'is_on' in change]), 1)
+
+    async def testCallbacksAreAddedOnceAcrossReconnections(self):
+        device = await self.addConnected()
+        remote = device._remote
+        firstCallbacks = dict(remote.callbacks)
+        remote.losePairing()
+        self.assertTrue(await waitUntil(lambda: remote.connected and remote.connectCalls == 2))
+        self.assertEqual(remote.callbacks, firstCallbacks)
 
     async def testDaemonCancellationIsNotSwallowedWhileStoppingADevice(self):
         device = await self.addConnected()
@@ -218,26 +224,44 @@ class VolumeTest(DaemonTestCase):
 class PairingTest(DaemonTestCase):
     reconnectDelay = 30  # une attente de reconnexion qui ne finirait pas pendant le test
 
-    async def testWakeUpInterruptsTheWaiting(self):
+    async def testSuccessfulPairingIsReportedAndRestartsTheDevice(self):
+        """ async_finish_pairing ne renvoie rien : une fin sans exception est un succès. L'appareil, en attente avant sa prochaine
+        tentative, est recréé : connexion immédiate, avec un objet neuf qui relit le certificat (la bibliothèque garde l'ancien en mémoire) """
         FakeRemote.reset([InvalidAuth()])
-        await self.send(addMessage())
-        self.assertTrue(await waitUntil(lambda: FakeRemote.instances and FakeRemote.instances[0].connectCalls == 1))
-        self.device().wake_up()
-        self.assertTrue(await waitUntil(lambda: FakeRemote.instances[0].connected, timeout=1))
-
-    async def testSuccessfulPairingIsReportedAndConnectsTheDevice(self):
-        """ async_finish_pairing ne renvoie rien : une fin sans exception est un succès """
-        FakeRemote.reset([InvalidAuth()])
-        await self.send(addMessage())
-        self.assertTrue(await waitUntil(lambda: FakeRemote.instances and FakeRemote.instances[0].connectCalls == 1))
+        await self.send(addMessage(enable_ime=0))
+        waiting = await waitUntil(lambda: FakeRemote.instances and FakeRemote.instances[0].connectCalls == 1) and FakeRemote.instances[0]
+        self.assertTrue(waiting)
+        FakeRemote.script = []  # la TV accepte désormais la connexion
         self.config.pairing_code = None
         pairing = asyncio.create_task(self.daemon._pairing(MAC, '192.168.1.10', 6466))
         await asyncio.sleep(0.05)
         self.config.pairing_code = '1234'
         await asyncio.wait_for(pairing, timeout=3)
         self.assertIn({'mac': MAC, 'tvremote_paired': 1, 'message': 'TVRemote pairing successful'}, self.publisher.sent)
-        self.assertEqual(FakeRemote.instances[-1].pairingCodes, ['1234'])
-        self.assertTrue(await waitUntil(lambda: FakeRemote.instances[0].connected, timeout=1))
+        self.assertEqual(FakeRemote.instances[1].pairingCodes, ['1234'])
+        self.assertTrue(await waitUntil(lambda: self.device()._remote is not None and self.device()._remote.connected, timeout=1))
+        self.assertIsNot(self.device()._remote, waiting)
+        self.assertTrue(waiting.disconnected)
+        self.assertFalse(self.device().enable_ime)  # réglages repris
+
+    async def testPairingWithoutDeviceInTheDaemon(self):
+        """ Appairage d'une TV dont l'équipement est désactivé : rien à recréer """
+        pairing = asyncio.create_task(self.daemon._pairing(MAC, '192.168.1.10', 6466))
+        await asyncio.sleep(0.05)
+        self.config.pairing_code = '1234'
+        await asyncio.wait_for(pairing, timeout=3)
+        self.assertIsNone(self.device())
+        self.assertIn({'mac': MAC, 'tvremote_paired': 1, 'message': 'TVRemote pairing successful'}, self.publisher.sent)
+
+
+class PublisherTest(unittest.IsolatedAsyncioTestCase):
+    async def testRequestsHaveATimeout(self):
+        """ Un Jeedom qui ne répond plus ne doit pas bloquer les envois pendant les 5 min par défaut d'aiohttp """
+        from jeedom.aio_connector import Publisher
+        publisher = Publisher('http://127.0.0.1/callback', 'key')
+        self.addAsyncCleanup(publisher._jeedom_session.close)
+        self.assertEqual(publisher._jeedom_session.timeout.total, Publisher.REQUEST_TIMEOUT)
+        self.assertLessEqual(Publisher.REQUEST_TIMEOUT, 60)
 
 
 class AdbAddChangeTest(DaemonTestCase):

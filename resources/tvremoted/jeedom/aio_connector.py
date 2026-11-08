@@ -49,8 +49,12 @@ class Listener():
 
 class Publisher():
     """This class allow to push information to Jeedom either immediately by calling function `send_to_jeedom` or in cycle by calling function `add_change`. For the "cycle" mode, a task must be created by calling `create_send_task` and awaited"""
+    # Délai maximal d'un appel au callback : sans lui (5 min par défaut dans aiohttp), un Jeedom qui ne répond plus bloque
+    # tout ce qui attend un envoi (connexion d'une TV, appairage, heartbeat, envois groupés)
+    REQUEST_TIMEOUT = 30
+
     def __init__(self, callback_url: str, api_key: str, cycle: float = 0.5) -> None:
-        self._jeedom_session = aiohttp.ClientSession()
+        self._jeedom_session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.REQUEST_TIMEOUT))
         self._callback_url = callback_url
         self._api_key = api_key
         self._cycle = cycle if (cycle > 0 and cycle < 10) else 0.5

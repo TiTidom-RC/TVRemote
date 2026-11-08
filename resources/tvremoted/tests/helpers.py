@@ -25,7 +25,6 @@ class FakeRemote:
     instances: list = []
     initialVolume = None  # volume_info des prochaines instances
     certError = None  # exception levée par async_generate_cert_if_missing des prochaines instances
-    connectGate = None  # asyncio.Event : async_connect attend qu'il soit levé (connexion en cours prolongée)
 
     def __init__(self, client_name, certfile, keyfile, host, enable_ime=True, **kwargs):
         self.host = host
@@ -51,7 +50,6 @@ class FakeRemote:
         cls.instances = []
         cls.initialVolume = None
         cls.certError = None
-        cls.connectGate = None
 
     @classmethod
     def running(cls):
@@ -71,13 +69,14 @@ class FakeRemote:
 
     async def async_connect(self):
         self.connectCalls += 1
-        if FakeRemote.connectGate is not None:
-            await FakeRemote.connectGate.wait()
         if self.results:
             result = self.results.pop(0)
             if result is not None:
                 raise result
         self.connected = True
+        # Comme la bibliothèque : le message remote_start de la connexion notifie l'état allumé/éteint
+        if 'is_on' in self.callbacks:
+            self.callbacks['is_on'](self.is_on)
 
     def keep_reconnecting(self, invalid_auth_callback=None):
         self.invalidAuthCallback = invalid_auth_callback

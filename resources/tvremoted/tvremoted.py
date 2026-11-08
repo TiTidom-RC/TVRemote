@@ -60,7 +60,6 @@ class EQRemote(object):
         self._main_task: asyncio.Task | None = None  # Reference to the main loop task
         # Exponential backoff for reconnection attempts
         self._reconnect_delay = self._config.reconnect_delay_min
-        self._wakeup = asyncio.Event()  # Interrompt l'attente avant la prochaine tentative (appairage réussi)
         self._pairingLost = asyncio.Event()  # Reconnexion de la bibliothèque refusée faute d'appairage
         # Jeedom n'est prévenu qu'au premier échec d'une série de tentatives (remis à zéro à la connexion)
         self._notPairedNotified = False
@@ -90,20 +89,11 @@ class EQRemote(object):
             'volume_max': volume_info['max']
         }
 
-    def wake_up(self) -> None:
-        """Tente la connexion sans attendre la fin du délai en cours (appelé après un appairage réussi)"""
-        self._reconnect_delay = self._config.reconnect_delay_min
-        self._wakeup.set()
-
     async def _apply_backoff_delay(self) -> None:
         """Apply exponential backoff delay before next reconnection attempt"""
         self._logger.debug("[EQRemote][MAIN][%s] Waiting %ds before reconnection attempt (exponential backoff)", self._macAddr, self._reconnect_delay)
-        try:
-            await asyncio.wait_for(self._wakeup.wait(), timeout=self._reconnect_delay)
-            self._logger.debug("[EQRemote][MAIN][%s] Waiting interrupted, reconnecting now", self._macAddr)
-        except asyncio.TimeoutError:
-            self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
-        self._wakeup.clear()
+        await asyncio.sleep(self._reconnect_delay)
+        self._reconnect_delay = min(self._reconnect_delay * 2, self._config.reconnect_delay_max)
 
     async def _notify_unreachable(self) -> None:
         """Premier échec de connexion d'une série : la TV est signalée hors ligne"""
@@ -127,7 +117,7 @@ class EQRemote(object):
 
     def _on_pairing_lost(self) -> None:
         """Appelé par la bibliothèque quand une reconnexion est refusée faute d'appairage : elle ne réessaie plus, la boucle du plugin reprend la main"""
-        self._logger.warning("[EQRemote][MAIN][%s] Pairing lost while reconnecting :: back to the connection loop", self._macAddr)
+        self._logger.info("[EQRemote][MAIN][%s] Pairing lost while reconnecting :: back to the connection loop", self._macAddr)
         self._pairingLost.set()
 
     async def _wait_for_pairing_lost(self) -> None:
@@ -176,11 +166,10 @@ class EQRemote(object):
                 self._logger.debug(traceback.format_exc())
                 await self._notify_unreachable()
             else:
-                # Reset reconnection delay, wake-up request and failure notifications on successful connection
+                # Reset reconnection delay and failure notifications on successful connection
                 self._reconnect_delay = self._config.reconnect_delay_min
                 self._notPairedNotified = False
                 self._unreachableNotified = False
-                self._wakeup.clear()
                 return True
             # Exponential backoff: wait before retry and increase delay
             await self._apply_backoff_delay()
@@ -313,16 +302,19 @@ class EQRemote(object):
                     self._logger.error('[EQRemote][Volume_Info] Exception :: %s', e)
                     self._logger.debug(traceback.format_exc())
 
-            self._remote.add_is_available_updated_callback(is_available_updated)
-            self._remote.add_is_on_updated_callback(is_on_updated)
-            self._remote.add_current_app_updated_callback(current_app_updated)
-            self._remote.add_volume_info_updated_callback(volume_info_updated)
-
             # Connexion, état initial, puis attente des notifications ; la bibliothèque gère les reconnexions (keep_reconnecting),
             # sauf quand la TV les refuse faute d'appairage : retour à la boucle de connexion, qui le signale à Jeedom
+            callbacksAdded = False
             while not self._config.is_ending:
                 if not await self._connect_until_success():
                     break
+                if not callbacksAdded:
+                    # Branchés après la première connexion : son état (remote_start) est envoyé par _send_initial_state(), pas en double
+                    self._remote.add_is_available_updated_callback(is_available_updated)
+                    self._remote.add_is_on_updated_callback(is_on_updated)
+                    self._remote.add_current_app_updated_callback(current_app_updated)
+                    self._remote.add_volume_info_updated_callback(volume_info_updated)
+                    callbacksAdded = True
                 self._remote.keep_reconnecting(self._on_pairing_lost)
                 self._send_initial_state()
                 await self._wait_for_pairing_lost()
@@ -1106,10 +1098,22 @@ class TVRemoted:
                 self._logger.info('[DAEMON][SOCKET] TVRemote %s changed (host %s -> %s, IME %s -> %s) :: restarting device', mac, device.host, message['host'], device.enable_ime, enable_ime)
             await self._remove_remote(mac)
         self._logger.debug('[DAEMON][SOCKET] TVRemote %s (%s) :: IME (virtual keyboard) %s', message['friendly_name'], mac, 'enabled' if enable_ime else 'disabled')
-        device = EQRemote(mac, message['host'], self._config, self._jeedom_publisher, enable_ime)
+        self._create_remote(mac, message['host'], enable_ime)
+
+    def _create_remote(self, mac: str, host: str, enable_ime: bool) -> None:
+        device = EQRemote(mac, host, self._config, self._jeedom_publisher, enable_ime)
         self._config.remote_devices[mac] = device
         device._main_task = asyncio.create_task(device.main())
         self._logger.debug('[DAEMON][SOCKET] Main loop task created for TVRemote %s | TVRemote devices (%d)', mac, len(self._config.remote_devices))
+
+    async def _restart_remote(self, mac: str) -> None:
+        """Recrée l'appareil avec les mêmes réglages : nouvelle connexion immédiate, certificat relu
+        (la bibliothèque garde en mémoire celui chargé à la première connexion)"""
+        device = self._config.remote_devices.get(mac)
+        if device is None:
+            return
+        await self._remove_remote(mac)
+        self._create_remote(mac, device.host, device.enable_ime)
 
     async def _remove_remote(self, mac: str) -> None:
         device = self._config.remote_devices.pop(mac, None)
@@ -1213,10 +1217,10 @@ class TVRemoted:
                         # Ne renvoie rien : sans exception (InvalidAuth, ConnectionClosed), l'appairage a réussi
                         await remote.async_finish_pairing(self._config.pairing_code)
                         self._logger.info("[PAIRING][%s] Pairing successful", _mac)
-                        # Connexion immédiate de l'appareil, sans attendre la fin de son délai de reconnexion
-                        device = self._config.remote_devices.get(_mac)
-                        if device is not None:
-                            device.wake_up()
+                        # Appareil recréé : connexion immédiate (sans attendre son délai de reconnexion), avec le certificat
+                        # utilisé pour l'appairage (régénéré si les fichiers avaient été supprimés)
+                        async with self._devices_lock:
+                            await self._restart_remote(_mac)
                         # Inform Jeedom about successful pairing
                         if self._jeedom_publisher is not None:
                             data = {
