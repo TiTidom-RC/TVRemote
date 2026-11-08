@@ -81,7 +81,8 @@
         "Volume Up": "Subir volumen",
         "YouTube": "YouTube",
         "[KO] Communication impossible avec le démon car il n\\'est pas démarré !": "[KO] ¡No hay comunicación con el demonio porque no se ha iniciado!",
-        "[KO] Information manquante (MAC) pour créer l\\'équipement": "[KO] Falta información (MAC) para crear el equipo"
+        "[KO] Information manquante (MAC) pour créer l\\'équipement": "[KO] Falta información (MAC) para crear el equipo",
+        "Équipement introuvable (sauvegardez l\\'équipement avant l\\'appairage)": "No se encuentra el dispositivo (haz una copia de seguridad del dispositivo antes de emparejarlo)"
     },
     "plugins\/tvremote\/core\/php\/jeetvremote.php": {
         "Vous n\\'etes pas autorisé à effectuer cette action": "No está autorizado a realizar esta acción"
@@ -118,6 +119,7 @@
         "Plugin": "Plugin",
         "Refresh Cmd": "Refresh Cmd",
         "Scan": "Escanear",
+        "Scan terminé. Sauvegardez vos modifications, puis rechargez la page pour voir les équipements trouvés.": "Escaneo finalizado. Guarda los cambios y vuelve a cargar la página para ver los dispositivos detectados.",
         "Stop Scan": "Detener la exploración",
         "Supprimer la commande": "Eliminar comando",
         "Tester": "Pruebe",
