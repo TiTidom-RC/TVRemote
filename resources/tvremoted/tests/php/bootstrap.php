@@ -33,8 +33,60 @@ class event {
     }
 }
 
-class eqLogic {}
-class cmd {}
+class eqLogic {
+    public static $byLogicalId = [];
+    public static function byLogicalId($logicalId, $type, $multiple = false) {
+        return self::$byLogicalId[$logicalId] ?? null;
+    }
+}
+
+class cmd {
+    public static $byId = [];
+    public static function byId($id) {
+        return self::$byId[$id] ?? null;
+    }
+}
+
+// Équipement TV : configuration, commandes info, enregistrements
+class fakeTv {
+    public $config;
+    public $cmds = [];
+    public $saved = 0;
+    public $updated = [];
+    private $name;
+    public function __construct($name, $config = []) {
+        $this->name = $name;
+        $this->config = $config;
+    }
+    public function getName() { return $this->name; }
+    public function getId() { return 1; }
+    public function getConfiguration($key, $default = '') { return $this->config[$key] ?? $default; }
+    public function setConfiguration($key, $value) { $this->config[$key] = $value; }
+    public function save() { $this->saved++; }
+    public function getCmd($type = null, $logicalId = null) {
+        return ($logicalId === null) ? array_values($this->cmds) : ($this->cmds[$logicalId] ?? null);
+    }
+    public function checkAndUpdateCmd($cmd, $value) { $this->updated[] = [$cmd, $value]; }
+}
+
+class fakeCmd {
+    public $events = [];
+    private $logicalId;
+    public function __construct($logicalId) { $this->logicalId = $logicalId; }
+    public function getLogicalId() { return $this->logicalId; }
+    public function event($value) { $this->events[] = $value; }
+}
+
+function resetCore() {
+    log::$lines = [];
+    event::$events = [];
+    eqLogic::$byLogicalId = [];
+    cmd::$byId = [];
+}
+
+function eventsNamed($name) {
+    return array_values(array_map(fn($event) => $event[1], array_filter(event::$events, fn($event) => $event[0] === $name)));
+}
 
 function loadPluginClass() {
     $source = file_get_contents(__DIR__ . '/../../../../core/class/tvremote.class.php');

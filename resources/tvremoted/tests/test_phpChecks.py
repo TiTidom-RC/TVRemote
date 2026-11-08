@@ -19,6 +19,10 @@ class PhpChecksTest(unittest.TestCase):
     def testCustomCommandDecoding(self):
         self.assertScriptPasses('check_custom_cmd.php')
 
+    def testDaemonMessages(self):
+        """ Callback du démon : clés traitées indépendamment, erreur limitée à son équipement, statuts d'appairage, niveaux de log """
+        self.assertScriptPasses('check_daemon_message.php')
+
     def testSecretMasking(self):
         """ tvremote::maskSecrets masque comme maskSecrets du démon (mêmes exemples : tests/mask_secrets_cases.json) """
         self.assertScriptPasses('check_mask_secrets.php')
