@@ -61,6 +61,7 @@ class EQRemote(object):
         # Exponential backoff for reconnection attempts
         self._reconnect_delay = self._config.reconnect_delay_min
         self._wakeup = asyncio.Event()  # Interrompt l'attente avant la prochaine tentative (appairage réussi)
+        self._pairingLost = asyncio.Event()  # Reconnexion de la bibliothèque refusée faute d'appairage
         # Jeedom n'est prévenu qu'au premier échec d'une série de tentatives (remis à zéro à la connexion)
         self._notPairedNotified = False
         self._unreachableNotified = False
@@ -119,6 +120,93 @@ class EQRemote(object):
         }
         await self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data)
 
+    @property
+    def is_running(self) -> bool:
+        """Boucle de l'appareil en cours (False si elle s'est arrêtée, y compris sur une erreur)"""
+        return self._main_task is not None and not self._main_task.done()
+
+    def _on_pairing_lost(self) -> None:
+        """Appelé par la bibliothèque quand une reconnexion est refusée faute d'appairage : elle ne réessaie plus, la boucle du plugin reprend la main"""
+        self._logger.warning("[EQRemote][MAIN][%s] Pairing lost while reconnecting :: back to the connection loop", self._macAddr)
+        self._pairingLost.set()
+
+    async def _wait_for_pairing_lost(self) -> None:
+        """Garde la tâche en vie (notifications de la bibliothèque) jusqu'à la perte de l'appairage ou l'arrêt du démon"""
+        while not self._config.is_ending:
+            try:
+                await asyncio.wait_for(self._pairingLost.wait(), timeout=60)
+            except asyncio.TimeoutError:
+                continue
+            self._pairingLost.clear()
+            return
+
+    async def _notify_not_paired(self, exc: Exception) -> None:
+        """TV pas (ou plus) appairée : état d'attente, Jeedom n'est prévenu qu'une fois par série de tentatives (une fois l'envoi réussi)"""
+        if self._notPairedNotified:
+            self._logger.debug("[EQRemote][MAIN][%s] Not Paired (still waiting for pairing) :: %s", self._macAddr, exc)
+            return
+        self._logger.warning("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
+        data = {
+            'PairingExc': str(exc),
+            'pairing_mac': self._macAddr,
+            'pairing_host': self._host,
+            'pairing_value': 0
+        }
+        try:
+            self._notPairedNotified = await self._jeedom_publisher.send_to_jeedom(data)
+        except Exception as e:
+            self._logger.warning("[EQRemote][MAIN][%s] Cannot send the pairing state to Jeedom (will retry) :: %s", self._macAddr, e)
+
+    async def _connect_until_success(self) -> bool:
+        """Tente la connexion jusqu'à ce qu'elle réussisse ; False si le démon s'arrête avant"""
+        assert self._remote is not None
+        while not self._config.is_ending:
+            try:
+                await self._remote.async_connect()
+            except InvalidAuth as exc:
+                await self._notify_not_paired(exc)
+            except CannotConnect as exc:
+                self._logger.warning("[EQRemote][MAIN][%s] Cannot connect (device may be offline) :: %s", self._macAddr, exc)
+                await self._notify_unreachable()
+            except ConnectionClosed as exc:
+                self._logger.error("[EQRemote][MAIN][%s] Connection closed unexpectedly. Exception :: %s", self._macAddr, exc)
+                await self._notify_unreachable()
+            except Exception as e:
+                self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
+                self._logger.debug(traceback.format_exc())
+                await self._notify_unreachable()
+            else:
+                # Reset reconnection delay, wake-up request and failure notifications on successful connection
+                self._reconnect_delay = self._config.reconnect_delay_min
+                self._notPairedNotified = False
+                self._unreachableNotified = False
+                self._wakeup.clear()
+                return True
+            # Exponential backoff: wait before retry and increase delay
+            await self._apply_backoff_delay()
+        return False
+
+    def _send_initial_state(self) -> None:
+        """État complet de la TV, envoyé à Jeedom à chaque connexion réussie"""
+        assert self._remote is not None
+        try:
+            self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s | Is_On :: %s | Current_App :: %s | Volume_Info :: %s", self._macAddr, self._remote.device_info, self._remote.is_on, self._remote.current_app, self._remote.volume_info)
+            currentTime = int(time.time())
+            data = {
+                'mac': self._macAddr,
+                'online': 1,
+                'is_on': 1 if self._remote.is_on else 0,
+                'current_app': self._remote.current_app,
+                **self._volume_fields(self._remote.volume_info),
+                'updatelasttime': self._format_timestamp(currentTime),
+                'updatelasttimets': currentTime,
+                'realtime': 1
+            }
+            self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
+        except Exception as e:
+            self._logger.error('[EQRemote][MAIN-Publisher][%s] Exception :: %s', self._macAddr, e)
+            self._logger.debug(traceback.format_exc())
+
     async def main(self) -> None:
         """
         The is the entry point of your class EQRemote.
@@ -126,90 +214,15 @@ class EQRemote(object):
         """
         try:
             self._logger.info("[EQRemote][MAIN][%s] Starting Main for Host :: %s", self._macAddr, self._host)
-            
+
             self._remote = AndroidTVRemote(self._config.client_name, self._config.cert_file, self._config.key_file, self._host, enable_ime=self._enable_ime)
-            
+
             if self._remote is None:
                 self._logger.error("[EQRemote][Remote] Object Creation Failed :: Object is None !")
                 return
-            
+
             if await self._remote.async_generate_cert_if_missing():
                 self._logger.info("[EQRemote][CERT][%s] Generated New Cert/Key Files :: %s | %s", self._macAddr, self._config.cert_file, self._config.key_file)
-            
-            while not self._config.is_ending:
-                try:
-                    await self._remote.async_connect()
-                    # Reset reconnection delay and failure notifications on successful connection
-                    self._reconnect_delay = self._config.reconnect_delay_min
-                    self._notPairedNotified = False
-                    self._unreachableNotified = False
-                    break
-                except InvalidAuth as exc:
-                    # Pas encore appairée (ou appairage retiré sur la TV) : état d'attente, Jeedom n'est prévenu qu'une fois par série
-                    if self._notPairedNotified:
-                        self._logger.debug("[EQRemote][MAIN][%s] Not Paired (still waiting for pairing) :: %s", self._macAddr, exc)
-                    else:
-                        self._notPairedNotified = True
-                        self._logger.warning("[EQRemote][MAIN][%s] Not Paired. Exception :: %s", self._macAddr, exc)
-                        data = {
-                            'PairingExc': str(exc),
-                            'pairing_mac': self._macAddr,
-                            'pairing_host': self._host,
-                            'pairing_value': 0
-                        }
-                        await self._jeedom_publisher.send_to_jeedom(data)
-
-                    # Exponential backoff: wait before retry and increase delay
-                    await self._apply_backoff_delay()
-                    continue
-                except CannotConnect as exc:
-                    self._logger.warning("[EQRemote][MAIN][%s] Cannot connect (device may be offline) :: %s", self._macAddr, exc)
-                    await self._notify_unreachable()
-
-                    # Exponential backoff: wait before retry and increase delay
-                    await self._apply_backoff_delay()
-                    continue
-                except ConnectionClosed as exc:
-                    self._logger.error("[EQRemote][MAIN][%s] Connection closed unexpectedly. Exception :: %s", self._macAddr, exc)
-                    await self._notify_unreachable()
-
-                    # Exponential backoff: wait before retry and increase delay
-                    await self._apply_backoff_delay()
-                    continue
-                except Exception as e:
-                    self._logger.error("[EQRemote][Connect][%s] Exception :: %s", self._macAddr, e)
-                    self._logger.debug(traceback.format_exc())
-                    await self._notify_unreachable()
-
-                    # Exponential backoff: wait before retry and increase delay
-                    await self._apply_backoff_delay()
-                    continue
-                    
-            self._remote.keep_reconnecting()
-            
-            try:
-                self._logger.info("[EQRemote][MAIN][%s] Device_Info :: %s | Is_On :: %s | Current_App :: %s | Volume_Info :: %s", self._macAddr, self._remote.device_info, self._remote.is_on, self._remote.current_app, self._remote.volume_info)
-            
-                # UpdateLastTime
-                currentTime = int(time.time())
-                currentTimeStr = self._format_timestamp(currentTime)
-                
-                _isOn = 1 if self._remote.is_on else 0
-                data = {
-                    'mac': self._macAddr,
-                    'online': 1,
-                    'is_on': _isOn,
-                    'current_app': self._remote.current_app,
-                    **self._volume_fields(self._remote.volume_info),
-                    'updatelasttime': currentTimeStr,
-                    'updatelasttimets': currentTime,
-                    'realtime': 1
-                }
-                # Envoi vers Jeedom
-                self._loop.create_task(self._jeedom_publisher.add_change('devicesRT::' + data['mac'], data))
-            except Exception as e:
-                self._logger.error('[EQRemote][MAIN-Publisher][%s] Exception :: %s', self._macAddr, e)
-                self._logger.debug(traceback.format_exc())
 
             def is_available_updated(is_available: bool) -> None:
                 self._logger.debug("[EQRemote][Is_Available][%s] Notification :: %s", self._macAddr, is_available)
@@ -304,15 +317,19 @@ class EQRemote(object):
             self._remote.add_is_on_updated_callback(is_on_updated)
             self._remote.add_current_app_updated_callback(current_app_updated)
             self._remote.add_volume_info_updated_callback(volume_info_updated)
-            
-            # Keep the task alive to receive callbacks from AndroidTVRemote2
-            # The library handles reconnection internally via keep_reconnecting()
+
+            # Connexion, état initial, puis attente des notifications ; la bibliothèque gère les reconnexions (keep_reconnecting),
+            # sauf quand la TV les refuse faute d'appairage : retour à la boucle de connexion, qui le signale à Jeedom
             while not self._config.is_ending:
-                await asyncio.sleep(60)  # Check every minute if daemon is ending
-        
+                if not await self._connect_until_success():
+                    break
+                self._remote.keep_reconnecting(self._on_pairing_lost)
+                self._send_initial_state()
+                await self._wait_for_pairing_lost()
+
         except asyncio.CancelledError:
             self._logger.debug("[EQRemote] Stop Main for device %s (%s)", self._macAddr, self._host)
-        except Exception as e: 
+        except Exception as e:
             self._logger.error("[EQRemote][MAIN] Exception :: %s", e)
             self._logger.debug(traceback.format_exc())
         finally:
@@ -392,6 +409,11 @@ class EQRemoteADB(object):
     @property
     def host(self) -> str:
         return self._host
+
+    @property
+    def is_running(self) -> bool:
+        """Boucle de l'appareil en cours (False si elle s'est arrêtée, y compris sur une erreur)"""
+        return self._main_task is not None and not self._main_task.done()
 
     async def _load_signer(self) -> bool:
         """Load the ADB signer from key file"""
@@ -889,6 +911,9 @@ class TVRemoted:
 
         # Below you can init your own variables if needed
         self._main_task = None
+        # Ajouts et retraits d'appareils un par un : chaque message du socket est traité dans sa propre tâche, et un ajout
+        # qui recrée un appareil attend l'arrêt de l'ancien (un second ajout pendant cette attente créerait un doublon)
+        self._devices_lock = asyncio.Lock()
         # self._tvhosts_task = None
         # self._search_task = None
 
@@ -1017,19 +1042,23 @@ class TVRemoted:
             elif message['cmd'] == "addtvremote":
                 if all(keys in message for keys in ('mac', 'host', 'port', 'friendly_name')):
                     self._logger.info('[DAEMON][SOCKET] Add TVRemote Device (Mac :: %s) :: %s:%s', message['mac'], message['host'], message['port'])
-                    await self._add_remote(message)
+                    async with self._devices_lock:
+                        await self._add_remote(message)
             elif message['cmd'] == "removetvremote":
                 if 'mac' in message:
                     self._logger.info('[DAEMON][SOCKET] Remove TVRemote (Mac :: %s) :: %s:%s', message['mac'], message.get('host'), message.get('port'))
-                    await self._remove_remote(message['mac'])
+                    async with self._devices_lock:
+                        await self._remove_remote(message['mac'])
             elif message['cmd'] == "addtvremote_adb":
                 if all(keys in message for keys in ('mac', 'host', 'friendly_name')):
                     self._logger.info('[DAEMON][SOCKET] Add ADB Device (Mac :: %s) :: %s', message['mac'], message['host'])
-                    await self._add_remote_adb(message)
+                    async with self._devices_lock:
+                        await self._add_remote_adb(message)
             elif message['cmd'] == "removetvremote_adb":
                 if 'mac' in message:
                     self._logger.info('[DAEMON][SOCKET] Remove ADB Device (Mac :: %s) :: %s', message['mac'], message.get('host'))
-                    await self._remove_remote_adb(message['mac'])
+                    async with self._devices_lock:
+                        await self._remove_remote_adb(message['mac'])
             else:
                 self._logger.warning('[DAEMON][SOCKET] Unknown Cmd :: %s', message['cmd'])
                 
@@ -1039,23 +1068,42 @@ class TVRemoted:
 
     async def _stop_device_task(self, device) -> None:
         """Arrête la boucle d'un appareil et attend sa fin (fermeture de la connexion comprise)"""
-        if device._main_task is not None and not device._main_task.done():
-            device._main_task.cancel()
+        task = device._main_task
+        if task is not None and not task.done():
+            task.cancel()
             try:
-                await device._main_task
+                # shield : une annulation de la tâche en cours (arrêt du démon) ne doit pas atteindre la boucle de l'appareil,
+                # qui la rattraperait en s'arrêtant normalement (annulation perdue) ; elle remonte ici, l'appareil finit de s'arrêter
+                await asyncio.shield(task)
             except asyncio.CancelledError:
-                pass
+                # Annulation de la boucle de l'appareil : attendue. Celle de la tâche en cours doit continuer
+                current = asyncio.current_task()
+                if current is not None and current.cancelling():
+                    raise
+
+    def _int_option(self, message: dict, key: str, default: int) -> int:
+        """Valeur entière d'un réglage envoyé par Jeedom ; absente ou illisible (champ vidé…) : valeur par défaut, l'appareil est quand même ajouté"""
+        value = message.get(key, default)
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            self._logger.warning('[DAEMON][SOCKET] Invalid value for %s (Mac :: %s) :: %r, using %s', key, message.get('mac'), value, default)
+            return default
 
     async def _add_remote(self, message: dict) -> None:
-        """Ajoute l'appareil Google TV, ou le recrée si son IP ou son option IME a changé (sinon rien ne change : les enregistrements fréquents de l'équipement ne coupent pas la connexion)"""
+        """Ajoute l'appareil Google TV, ou le recrée si son IP ou son option IME a changé, ou si sa boucle s'est arrêtée
+        (sinon rien ne change : les enregistrements fréquents de l'équipement ne coupent pas la connexion)"""
         mac = message['mac']
-        enable_ime = int(message.get('enable_ime', 1)) != 0
+        enable_ime = self._int_option(message, 'enable_ime', 1) != 0
         device = self._config.remote_devices.get(mac)
         if device is not None:
-            if device.host == message['host'] and device.enable_ime == enable_ime:
+            if not device.is_running:
+                self._logger.info('[DAEMON][SOCKET] TVRemote %s was stopped :: restarting device', mac)
+            elif device.host == message['host'] and device.enable_ime == enable_ime:
                 self._logger.debug('[DAEMON][SOCKET] TVRemote device %s already exists (unchanged)', mac)
                 return
-            self._logger.info('[DAEMON][SOCKET] TVRemote %s changed (host %s -> %s, IME %s -> %s) :: restarting device', mac, device.host, message['host'], device.enable_ime, enable_ime)
+            else:
+                self._logger.info('[DAEMON][SOCKET] TVRemote %s changed (host %s -> %s, IME %s -> %s) :: restarting device', mac, device.host, message['host'], device.enable_ime, enable_ime)
             await self._remove_remote(mac)
         self._logger.debug('[DAEMON][SOCKET] TVRemote %s (%s) :: IME (virtual keyboard) %s', message['friendly_name'], mac, 'enabled' if enable_ime else 'disabled')
         device = EQRemote(mac, message['host'], self._config, self._jeedom_publisher, enable_ime)
@@ -1074,12 +1122,18 @@ class TVRemoted:
     async def _add_remote_adb(self, message: dict) -> None:
         """Ajoute l'appareil ADB, ou le recrée si son IP a changé ; sinon met à jour l'appairage et le mode de connexion sans couper la connexion"""
         mac = message['mac']
-        paired = int(message.get('adb_paired', 0))
-        persistent = int(message.get('adb_persistent_connection', 0)) != 0
-        idle_timeout = int(message.get('adb_idle_timeout', self._config.adb_idle_timeout_default))
+        paired = self._int_option(message, 'adb_paired', 0)
+        persistent = self._int_option(message, 'adb_persistent_connection', 0) != 0
+        idle_timeout = self._int_option(message, 'adb_idle_timeout', self._config.adb_idle_timeout_default)
+        if idle_timeout < 1:
+            self._logger.warning('[DAEMON][SOCKET] Invalid value for adb_idle_timeout (Mac :: %s) :: %s, using %s', mac, idle_timeout, self._config.adb_idle_timeout_default)
+            idle_timeout = self._config.adb_idle_timeout_default
         device = self._config.remote_devices_adb.get(mac)
-        if device is not None and device.host != message['host']:
-            self._logger.info('[DAEMON][SOCKET] ADB %s changed (host %s -> %s) :: restarting device', mac, device.host, message['host'])
+        if device is not None and (device.host != message['host'] or not device.is_running):
+            if device.is_running:
+                self._logger.info('[DAEMON][SOCKET] ADB %s changed (host %s -> %s) :: restarting device', mac, device.host, message['host'])
+            else:
+                self._logger.info('[DAEMON][SOCKET] ADB %s was stopped :: restarting device', mac)
             await self._remove_remote_adb(mac)
             device = None
         if device is not None:

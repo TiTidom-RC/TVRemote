@@ -130,6 +130,66 @@ class ConnectionFailureTest(DaemonTestCase):
         self.assertFalse(device._notPairedNotified)
 
 
+class RobustnessTest(DaemonTestCase):
+    def pairingReports(self):
+        return [sent for sent in self.publisher.sent if 'PairingExc' in sent]
+
+    async def testJeedomUnreachableDoesNotStopTheDevice(self):
+        """ L'envoi de l'état « non appairée » échoue (Jeedom injoignable) : l'appareil continue, et l'envoi est retenté """
+        self.publisher.failures = 1
+        FakeRemote.reset([InvalidAuth()] * 2)
+        device = await self.addConnected()
+        self.assertTrue(device.is_running)
+        self.assertEqual(len(self.pairingReports()), 1)
+
+    async def testPairingLostWhileConnectedIsReportedAndRetried(self):
+        """ Reconnexion de la bibliothèque refusée faute d'appairage (elle ne réessaie plus) : signalé à Jeedom, et la boucle du plugin reprend """
+        device = await self.addConnected()
+        remote = device._remote
+        remote.losePairing([InvalidAuth()])
+        self.assertTrue(await waitUntil(lambda: remote.connected and remote.connectCalls == 3))
+        self.assertEqual(len(self.pairingReports()), 1)
+        self.assertTrue(device.is_running)
+
+    async def testStoppedDeviceIsRestartedOnTheNextAdd(self):
+        FakeRemote.certError = RuntimeError('certificate error')
+        await self.send(addMessage())
+        self.assertTrue(await waitUntil(lambda: not self.device().is_running))
+        FakeRemote.certError = None
+        device = await self.addConnected()
+        self.assertTrue(device.is_running)
+        self.assertEqual(len(FakeRemote.instances), 2)
+
+    async def testSimultaneousAddsKeepASingleDevice(self):
+        await self.addConnected()
+        await asyncio.gather(self.send(addMessage(host='192.168.1.20')), self.send(addMessage(host='192.168.1.20')))
+        self.assertTrue(await waitUntil(lambda: self.device()._remote is not None and self.device()._remote.connected))
+        self.assertEqual([remote.host for remote in FakeRemote.running()], ['192.168.1.20'])
+
+    async def testWakeUpDuringAConnectionDoesNotShortenALaterWaiting(self):
+        FakeRemote.connectGate = asyncio.Event()
+        await self.send(addMessage())
+        self.assertTrue(await waitUntil(lambda: FakeRemote.instances and FakeRemote.instances[0].connectCalls == 1))
+        self.device().wake_up()
+        FakeRemote.connectGate.set()
+        self.assertTrue(await waitUntil(lambda: FakeRemote.instances[0].connected))
+        self.assertFalse(self.device()._wakeup.is_set())
+
+    async def testDaemonCancellationIsNotSwallowedWhileStoppingADevice(self):
+        device = await self.addConnected()
+        stopping = asyncio.create_task(self.daemon._stop_device_task(device))
+        await asyncio.sleep(0)
+        stopping.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await stopping
+
+    async def testInvalidImeValueUsesTheDefault(self):
+        with self.assertLogs(tvremoted.__name__, 'WARNING') as logs:
+            device = await self.addConnected(enable_ime='')
+        self.assertTrue(device.enable_ime)
+        self.assertTrue([line for line in logs.output if 'enable_ime' in line])
+
+
 class VolumeTest(DaemonTestCase):
     async def testUnknownVolumeIsNotSent(self):
         """ TV en veille à la connexion : pas d'infos de volume, la dernière valeur connue dans Jeedom ne doit pas être écrasée par 0 """
@@ -140,14 +200,8 @@ class VolumeTest(DaemonTestCase):
         self.assertFalse({'volume_level', 'volume_muted', 'volume_max'} & set(first))
 
     async def testKnownVolumeIsSent(self):
-        FakeRemote.reset()
-        original = FakeRemote.__init__
-
-        def withVolume(fake, *args, **kwargs):
-            original(fake, *args, **kwargs)
-            fake.volume_info = {'level': 12, 'muted': True, 'max': 100}
-        with mock.patch.object(FakeRemote, '__init__', withVolume):
-            await self.addConnected()
+        FakeRemote.initialVolume = {'level': 12, 'muted': True, 'max': 100}
+        await self.addConnected()
         self.assertTrue(await waitUntil(lambda: self.publisher.changesFor(MAC)))
         first = self.publisher.changesFor(MAC)[0]
         self.assertEqual((first['volume_level'], first['volume_muted'], first['volume_max']), (12, 1, 100))
@@ -190,8 +244,14 @@ class AdbAddChangeTest(DaemonTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
 
+        self.runningAdb = set()
+
         async def idleMain(device):
-            await asyncio.Event().wait()
+            self.runningAdb.add(device)
+            try:
+                await asyncio.Event().wait()
+            finally:
+                self.runningAdb.discard(device)
         for patcher in (
             mock.patch.object(tvremoted.EQRemoteADB, 'main', idleMain),
             mock.patch.object(tvremoted.TVRemoted, 'ensure_adb_keys', mock.AsyncMock(return_value=False)),
@@ -208,6 +268,30 @@ class AdbAddChangeTest(DaemonTestCase):
         await self.send(addAdbMessage(paired=1))
         self.assertIs(self.adbDevice(), device)
         self.assertEqual(device._adb_paired, 1)
+
+    async def testEmptyIdleTimeoutUsesTheDefault(self):
+        """ Champ « délai d'inactivité » vidé dans l'équipement : l'appareil est quand même ajouté, avec le délai par défaut """
+        message = addAdbMessage()
+        message['adb_idle_timeout'] = ''
+        await self.send(message)
+        self.assertEqual(self.adbDevice()._idle_timeout_minutes, self.config.adb_idle_timeout_default)
+
+    async def testStoppedDeviceIsRestartedOnTheNextAdd(self):
+        await self.send(addAdbMessage())
+        old = self.adbDevice()
+        old._main_task.cancel()
+        self.assertTrue(await waitUntil(lambda: not old.is_running))
+        await self.send(addAdbMessage())
+        self.assertIsNot(self.adbDevice(), old)
+        self.assertTrue(self.adbDevice().is_running)
+
+    async def testSimultaneousAddsKeepASingleDevice(self):
+        """ Le retrait ADB attend aussi la fermeture de la connexion : un second ajout pendant cette attente ne doit pas laisser d'appareil orphelin """
+        await self.send(addAdbMessage())
+        self.assertTrue(await waitUntil(lambda: len(self.runningAdb) == 1))
+        await asyncio.gather(self.send(addAdbMessage(host='192.168.1.20')), self.send(addAdbMessage(host='192.168.1.20')))
+        self.assertTrue(await waitUntil(lambda: len(self.runningAdb) == 1 and next(iter(self.runningAdb)).host == '192.168.1.20'))
+        self.assertIs(next(iter(self.runningAdb)), self.adbDevice())
 
     async def testHostChangeRestartsTheDevice(self):
         await self.send(addAdbMessage())

@@ -23,19 +23,24 @@ class FakeRemote:
     (une exception à lever, ou None pour une connexion réussie) ; script vide : connexion réussie """
     script: list = []
     instances: list = []
+    initialVolume = None  # volume_info des prochaines instances
+    certError = None  # exception levée par async_generate_cert_if_missing des prochaines instances
+    connectGate = None  # asyncio.Event : async_connect attend qu'il soit levé (connexion en cours prolongée)
 
     def __init__(self, client_name, certfile, keyfile, host, enable_ime=True, **kwargs):
         self.host = host
         self.enable_ime = enable_ime
         self.results = list(FakeRemote.script)
+        self.certError = FakeRemote.certError
         self.connectCalls = 0
         self.connected = False
         self.disconnected = False
         self.keys = []
         self.callbacks = {}
+        self.invalidAuthCallback = None
         self.is_on = False
         self.current_app = ''
-        self.volume_info = None
+        self.volume_info = FakeRemote.initialVolume
         self.device_info = {}
         self.pairingCodes = []
         FakeRemote.instances.append(self)
@@ -44,12 +49,30 @@ class FakeRemote:
     def reset(cls, script=None):
         cls.script = list(script or [])
         cls.instances = []
+        cls.initialVolume = None
+        cls.certError = None
+        cls.connectGate = None
+
+    @classmethod
+    def running(cls):
+        """ Instances dont la connexion n'a pas été fermée """
+        return [remote for remote in cls.instances if not remote.disconnected]
 
     async def async_generate_cert_if_missing(self):
+        if self.certError is not None:
+            raise self.certError
         return False
+
+    def losePairing(self, script=None):
+        """ Simule une reconnexion de la bibliothèque refusée faute d'appairage : elle appelle le rappel et ne réessaie plus """
+        self.connected = False
+        self.results = list(script or [])
+        self.invalidAuthCallback()
 
     async def async_connect(self):
         self.connectCalls += 1
+        if FakeRemote.connectGate is not None:
+            await FakeRemote.connectGate.wait()
         if self.results:
             result = self.results.pop(0)
             if result is not None:
@@ -57,7 +80,7 @@ class FakeRemote:
         self.connected = True
 
     def keep_reconnecting(self, invalid_auth_callback=None):
-        pass
+        self.invalidAuthCallback = invalid_auth_callback
 
     def disconnect(self):
         self.disconnected = True
@@ -100,11 +123,15 @@ class FakePublisher:
     def __init__(self):
         self.changes = []
         self.sent = []
+        self.failures = 0  # nombre de prochains envois immédiats en échec (Jeedom injoignable)
 
     async def add_change(self, key, value):
         self.changes.append((key, dict(value)))
 
     async def send_to_jeedom(self, payload):
+        if self.failures > 0:
+            self.failures -= 1
+            raise OSError('Jeedom unreachable')
         self.sent.append(dict(payload))
         return True
 
