@@ -22,23 +22,14 @@ class Config(object):
         self.resources_firsttime = int(time.time())
         
         self.tasks = []
-        self.known_hosts = []  # Hosts for AndroidTVRemote2
-        self.known_hosts_adb = []  # Hosts for ADB
-        self.remote_mac = []  # MAC addresses for AndroidTVRemote2
 
         self.log_filters_enabled: bool = False
         self.log_filters: list = []  # [{ "pattern": str, "level": str, "enabled": bool }]
         self.log_filters_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data/filters/logfilters.json'))
 
-        self.remote_mac_adb = []  # MAC addresses for ADB
-        self.remote_names = []  # Names for AndroidTVRemote2
-        self.remote_names_adb = []  # Names for ADB
-        
         self.remote_devices = {}  # Devices using AndroidTVRemote2 - key is MAC
         self.remote_devices_adb = {}  # Devices using ADB - key is MAC
-        self.remote_zconf = None
-        self.remote_listener = {}
-        
+
         self.pairing_code = None
         
         self.key_mapping = {
