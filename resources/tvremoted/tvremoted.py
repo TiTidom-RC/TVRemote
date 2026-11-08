@@ -557,10 +557,12 @@ class EQRemoteADB(object):
             self._logger.debug("[EQRemoteADB][MAIN][%s] Connection error during pairing mode (expected, ignored) :: %s", self._macAddr, e)
             return
         if isinstance(e, asyncio.TimeoutError):
-            self._logger.error("[EQRemoteADB][MAIN][%s] Connection timeout after %ds", self._macAddr, self._config.adb_auth_timeout_connect + 5)
+            # TV joignable, autorisation ADB non validée à temps : à régler sur la TV, pas une panne
+            self._logger.warning("[EQRemoteADB][MAIN][%s] Connection timeout after %ds", self._macAddr, self._config.adb_auth_timeout_connect + 5)
             return
-        if isinstance(e, (OSError, ConnectionError)):
+        if isinstance(e, (OSError, ConnectionError, TcpTimeoutException)):
             # Network errors (device offline, unreachable, etc.) - use WARNING instead of ERROR
+            # TcpTimeoutException : connexion TCP sans réponse dans le délai (TV éteinte qui ignore les paquets)
             self._logger.warning("[EQRemoteADB][MAIN][%s] Device unreachable :: %s", self._macAddr, e)
         else:
             self._logger.error("[EQRemoteADB][MAIN][%s] Connection error :: %s", self._macAddr, e)
@@ -865,7 +867,8 @@ class EQRemoteADB(object):
             else:
                 self._logger.error("[EQRemoteADB][SendCommand] Command Mapping :: %s :: Unknown Key !", action)
         except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
-            self._logger.error("[EQRemoteADB][SendCommand] Connection error :: %s", e)
+            # Connexion perdue pendant la commande (TV éteinte entre-temps…) : situation attendue, pas une panne
+            self._logger.warning("[EQRemoteADB][SendCommand] Connection error :: %s", e)
             # Close ADB connection properly before resetting state
             # At this point _adb is guaranteed non-null (checked at entry of send_command)
             assert self._adb is not None
@@ -1364,8 +1367,8 @@ class TVRemoted:
             self._logger.warning("[PAIRING_ADB][%s] Device not authorized. Please check TV screen for authorization prompt :: %s", _mac, e)
             await self._send_adb_pairing_result({'mac': _mac, 'adb_paired': 0, 'message': 'Device not authorized. Please check TV screen for authorization prompt.'})
         except (TcpTimeoutException, InvalidResponseError, OSError, ConnectionError) as e:
-            # Distinguer les erreurs de connexion normales (device offline) des erreurs critiques
-            if isinstance(e, (OSError, ConnectionError)):
+            # Distinguer les erreurs de connexion normales (device offline, délai TCP dépassé) des erreurs critiques
+            if isinstance(e, (OSError, ConnectionError, TcpTimeoutException)):
                 self._logger.warning("[PAIRING_ADB][%s] Cannot connect (device may be offline) :: %s", _mac, e)
             else:
                 self._logger.error("[PAIRING_ADB][%s] Connection error :: %s", _mac, e)

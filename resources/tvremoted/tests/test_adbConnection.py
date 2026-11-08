@@ -7,7 +7,7 @@ import asyncio
 import unittest
 from unittest import mock
 
-from adb_shell.exceptions import DeviceAuthError
+from adb_shell.exceptions import DeviceAuthError, TcpTimeoutException
 
 import tvremoted
 from config import Config
@@ -140,6 +140,16 @@ class ConnectionTest(AdbTestCase):
         await device.send_command('shell', 'ls', '13')
         self.assertTrue(device._connected)
         self.assertEqual(FakeAdb.instances[0].commands, ['ls'])
+
+    async def testUnansweredTvIsAWarningNotAnError(self):
+        """ TV éteinte qui ignore les paquets : délai TCP dépassé (TcpTimeoutException d'adb_shell), traité comme une TV injoignable.
+        Une erreur à chaque tentative déclencherait les alertes Jeedom pour une situation normale """
+        FakeAdb.reset([TcpTimeoutException('Connecting to 192.168.1.10:5555 timed out (20 seconds)')] * 2)
+        with self.assertLogs(tvremoted.__name__, 'DEBUG') as logs:
+            device = await self.addAdb(persistent=1)
+            self.assertTrue(await waitUntil(lambda: device._connected))
+        self.assertEqual(len([line for line in logs.output if line.startswith('WARNING') and 'Device unreachable' in line]), 2)
+        self.assertFalse([line for line in logs.output if line.startswith('ERROR')])
 
     async def testAdbFailureNeverReportsTheTvOffline(self):
         """ Un échec ADB ne prouve pas que la TV est hors ligne (ports ADB fermés, débogage désactivé) : seul « Connexion ADB » passe à 0 ;
