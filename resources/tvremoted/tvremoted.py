@@ -1007,7 +1007,8 @@ class TVRemoted:
         This function will be called by the "listen task" once a message is received from Jeedom.
         You must implement the different actions that your daemon can handle.
         """
-        if not secrets.compare_digest(str(message.get('apikey', '')), self._config.api_key):
+        # Comparaison des octets : avec du texte, compare_digest lève une erreur sur un caractère non ASCII au lieu de refuser
+        if not secrets.compare_digest(str(message.get('apikey', '')).encode('utf-8'), self._config.api_key.encode('utf-8')):
             # Message non recopié : il contient la clé fournie
             self._logger.error('[MAIN][SOCKET] Invalid apikey from socket (cmd :: %s)', message.get('cmd'))
             return
@@ -1551,8 +1552,11 @@ class TVRemoted:
             await browser.async_cancel()
             pending = set(tasks)
             if pending:
-                # TV trouvées juste avant la fin : quelques secondes pour finir, puis abandonnées
-                _, pending = await asyncio.wait(pending, timeout=self.SCAN_PENDING_TIMEOUT)
+                # TV trouvées juste avant la fin : quelques secondes pour finir, puis abandonnées ; aucune attente si le démon s'arrête
+                current = asyncio.current_task()
+                stopping = current is not None and current.cancelling() > 0
+                if not stopping:
+                    _, pending = await asyncio.wait(pending, timeout=self.SCAN_PENDING_TIMEOUT)
                 for task in pending:
                     task.cancel()
                 await asyncio.gather(*pending, return_exceptions=True)

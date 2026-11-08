@@ -139,6 +139,13 @@ class SocketMessageTest(unittest.IsolatedAsyncioTestCase):
         self.assertFalse([line for line in logs.output if 'wrongKey' in line])
         self.assertFalse(daemon._config.scanmode)
 
+    async def testNonAsciiApiKeyIsRejectedWithoutError(self):
+        daemon = tvremoted.TVRemoted(newConfig())
+        with self.assertLogs(tvremoted.__name__, 'ERROR') as logs:
+            await daemon._on_socket_message({'apikey': 'clé-é', 'cmd': 'scanOn'})
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn('Invalid apikey', logs.output[0])
+
 
 class FakeServiceInfo:
     """ Remplace zeroconf AsyncServiceInfo : réponses par nom de service (dict `answers`, réglé par chaque test) """
@@ -240,6 +247,21 @@ class ScanTest(unittest.IsolatedAsyncioTestCase):
         FakeServiceInfo.answers = {'Salon.' + SERVICE: {'found': False}}
         await self.daemon._tvhosts_from_zeroconf(timeout=1)
         self.assertEqual(self.reported(), [])
+
+    async def testDaemonStopDuringAScanDoesNotWaitForPendingReadings(self):
+        """ Arrêt du démon pendant un scan : les interrogations en cours sont abandonnées tout de suite (Jeedom n'attend que 3 s) """
+        self.config.scanmode = True
+        self.found.append('Salon.' + SERVICE)
+        FakeServiceInfo.answers = {'Salon.' + SERVICE: {'found': asyncio.Event()}}  # ne répond jamais
+        scan = asyncio.create_task(self.daemon._tvhosts_from_zeroconf(timeout=60))
+        await asyncio.sleep(0.05)
+        scan.cancel()
+        loop = asyncio.get_running_loop()
+        start = loop.time()
+        with self.assertRaises(asyncio.CancelledError):
+            await scan
+        self.assertLess(loop.time() - start, 1)
+        self.assertTrue(self.zeroconf.closed)
 
     async def testReadingStillInProgressIsStoppedAtTheEndOfTheScan(self):
         self.found.append('Salon.' + SERVICE)
