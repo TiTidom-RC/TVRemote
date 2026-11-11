@@ -5,6 +5,8 @@ from typing import Callable, Awaitable
 from collections.abc import Mapping, MutableMapping
 import aiohttp
 
+from .utils import maskSecrets
+
 
 class Listener():
     """This class allow to create an asyncio task that will open a socket server and listen to it until task is canceled. `on_message` call_back will be call with the message as a dict as argument"""
@@ -38,19 +40,31 @@ class Listener():
 
     async def _handle_read(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         data = await reader.read()
-        message = data.decode()
         addr = writer.get_extra_info('peername')
-        self._logger.debug("[LISTENER] Received %s from %s", message, addr)
 
         writer.close()
         self._logger.debug("[LISTENER] Close connection")
         await writer.wait_closed()
-        await self._on_message(json.loads(message))
+        try:
+            message = json.loads(data.decode())
+        except ValueError as e:  # UnicodeDecodeError et JSONDecodeError en héritent
+            self._logger.warning("[LISTENER] Invalid message from %s (not JSON) :: %s", addr, e)
+            return
+        if not isinstance(message, dict):
+            self._logger.warning("[LISTENER] Invalid message from %s (not a JSON object)", addr)
+            return
+        # Clé API jamais écrite dans le log (lisible par d'autres, par exemple des agents IA) : masquée ici, sans dépendre du filtre du log
+        self._logger.debug("[LISTENER] Received %s from %s", maskSecrets(str(message)), addr)
+        await self._on_message(message)
 
 class Publisher():
     """This class allow to push information to Jeedom either immediately by calling function `send_to_jeedom` or in cycle by calling function `add_change`. For the "cycle" mode, a task must be created by calling `create_send_task` and awaited"""
+    # Délai maximal d'un appel au callback : sans lui (5 min par défaut dans aiohttp), un Jeedom qui ne répond plus bloque
+    # tout ce qui attend un envoi (connexion d'une TV, appairage, heartbeat, envois groupés)
+    REQUEST_TIMEOUT = 30
+
     def __init__(self, callback_url: str, api_key: str, cycle: float = 0.5) -> None:
-        self._jeedom_session = aiohttp.ClientSession()
+        self._jeedom_session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.REQUEST_TIMEOUT))
         self._callback_url = callback_url
         self._api_key = api_key
         self._cycle = cycle if (cycle > 0 and cycle < 10) else 0.5

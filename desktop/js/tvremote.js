@@ -521,10 +521,11 @@ const changeScanState = (_scanState) => {
         if (adbStatus) {
           updatePairingStatusBadge(adbStatus, true)
         }
-      } else if (adb_paired === 0) {
+      } else {
         const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
         jeedomUtils.showAlert({ message: `{{Échec de l'appairage ADB pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
-        if (adbStatus) {
+        // Badge changé seulement sur un refus de la TV (adb_paired = 0) ; sans conclusion (TV injoignable…), l'appairage connu reste affiché
+        if (adbStatus && adb_paired === 0) {
           updatePairingStatusBadge(adbStatus, false)
         }
       }
@@ -548,8 +549,11 @@ const changeScanState = (_scanState) => {
           updatePairingStatusBadge(tvremoteStatus, true)
         }
       } else if (tvremote_paired === 0) {
-        const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
-        jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
+        // Détection automatique (TV non appairée) : alerte déjà affichée par le plugin, seul le badge change
+        if (!auto_detected) {
+          const finalErrorMsg = errorMsg || '{{Erreur inconnue}}'
+          jeedomUtils.showAlert({ message: `{{Échec de l'appairage TVRemote pour}} ${deviceName} : ${finalErrorMsg}`, level: 'danger' })
+        }
         if (tvremoteStatus) {
           updatePairingStatusBadge(tvremoteStatus, false)
         }
@@ -603,6 +607,9 @@ const changeScanState = (_scanState) => {
       
       if (isScanOn) {
         jeedomUtils.showAlert({ message: '{{Mode SCAN actif pendant 60 secondes. (Cliquez sur STOP SCAN pour arrêter la découverte des équipements)}}', level: 'warning' })
+      } else if (window.jeeFrontEnd?.modifyWithoutSave) {
+        // Modifications non sauvegardées : pas de rechargement, qui les perdrait
+        jeedomUtils.showAlert({ message: '{{Scan terminé. Sauvegardez vos modifications, puis rechargez la page pour voir les équipements trouvés.}}', level: 'warning' })
       } else {
         window.location.reload()
       }
